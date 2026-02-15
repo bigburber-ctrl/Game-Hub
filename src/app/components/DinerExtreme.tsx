@@ -426,11 +426,47 @@ interface DinerExtremeProps {
 
 const ROOM_EXPIRATION_MS = 30 * 60 * 1000;
 const DISMISSED_RESUME_CODES_KEY = "diner_resume_dismissed_codes";
+const DINER_ROOM_KEY_PREFIX = "diner_room_";
+const DINER_API_BASE =
+  import.meta.env.VITE_DINER_API_BASE ||
+  "https://vbvxqxadidrsfxzaixaa.supabase.co/functions/v1/supabase/make-supabase-0cd99078";
 
 function isRoomExpired(room: GameRoom) {
   const createdAt = room.createdAt;
   if (!createdAt) return false;
   return Date.now() - createdAt > ROOM_EXPIRATION_MS;
+}
+
+function getRoomStorageKey(code: string) {
+  return `${DINER_ROOM_KEY_PREFIX}${code.toUpperCase()}`;
+}
+
+async function getRemoteRoom(code: string): Promise<GameRoom | null> {
+  try {
+    const response = await fetch(`${DINER_API_BASE}/room/${code.toUpperCase()}`);
+    if (!response.ok) return null;
+    return (await response.json()) as GameRoom;
+  } catch {
+    return null;
+  }
+}
+
+async function saveRemoteRoom(code: string, room: GameRoom) {
+  try {
+    await fetch(`${DINER_API_BASE}/room/${code.toUpperCase()}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(room),
+    });
+  } catch {}
+}
+
+async function deleteRemoteRoom(code: string) {
+  try {
+    await fetch(`${DINER_API_BASE}/room/${code.toUpperCase()}`, {
+      method: "DELETE",
+    });
+  } catch {}
 }
 
 export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
@@ -444,6 +480,35 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
   const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
   const [showResumeGame, setShowResumeGame] = useState(false);
   const [resumeGameData, setResumeGameData] = useState<{ code: string; room: GameRoom } | null>(null);
+
+  const readLocalRoom = (code: string) => {
+    const roomData = localStorage.getItem(getRoomStorageKey(code));
+    if (!roomData) return null;
+    try {
+      return JSON.parse(roomData) as GameRoom;
+    } catch {
+      return null;
+    }
+  };
+
+  const writeRoomEverywhere = async (code: string, room: GameRoom) => {
+    localStorage.setItem(getRoomStorageKey(code), JSON.stringify(room));
+    await saveRemoteRoom(code, room);
+  };
+
+  const removeRoomEverywhere = async (code: string) => {
+    localStorage.removeItem(getRoomStorageKey(code));
+    await deleteRemoteRoom(code);
+  };
+
+  const loadBestRoom = async (code: string) => {
+    const remote = await getRemoteRoom(code);
+    if (remote) {
+      localStorage.setItem(getRoomStorageKey(code), JSON.stringify(remote));
+      return remote;
+    }
+    return readLocalRoom(code);
+  };
 
   const getDismissedResumeCodes = () => {
     try {
@@ -640,43 +705,41 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
     }
   }, [currentPlayerIndex, players]);
 
-  // Synchroniser les données du localStorage en temps réel
+  // Synchroniser les données room (remote + local fallback) en temps réel
   useEffect(() => {
     if (!roomCode) return;
-    const sync = () => {
-      const roomData = localStorage.getItem(`diner_room_${roomCode}`);
-      if (roomData) {
-        try {
-            const parsed = JSON.parse(roomData);
+    const sync = async () => {
+      const parsed = await loadBestRoom(roomCode);
+      if (!parsed) return;
 
-            if (parsed.gameEnded || isRoomExpired(parsed)) {
-              localStorage.removeItem(`diner_room_${roomCode}`);
-              return;
-            }
+      if (parsed.gameEnded || isRoomExpired(parsed)) {
+        await removeRoomEverywhere(roomCode);
+        return;
+      }
 
-            setGameData(parsed);
-            // Keep UI state in sync with room public flags
-            // Check gameEnded FIRST, then gameStarted
-            if (parsed.gameEnded) {
-              setGameState("results");
-            } else if (parsed.gameStarted) {
-              setGameState("playing");
-            } else if (!parsed.gameStarted && !parsed.gameEnded) {
-              setGameState("lobby");
-            }
-        } catch {}
+      setGameData(parsed);
+      if (parsed.gameEnded) {
+        setGameState("results");
+      } else if (parsed.gameStarted) {
+        setGameState("playing");
+      } else if (!parsed.gameStarted && !parsed.gameEnded) {
+        setGameState("lobby");
       }
     };
-    window.addEventListener("storage", sync);
+    const handleStorage = () => {
+      void sync();
+    };
+    window.addEventListener("storage", handleStorage);
     const interval = setInterval(sync, 500);
+    void sync();
     return () => {
-      window.removeEventListener("storage", sync);
+      window.removeEventListener("storage", handleStorage);
       clearInterval(interval);
     };
   }, [roomCode]);
 
   // Créer une lobby
-  const createLobby = () => {
+  const createLobby = async () => {
     if (!currentPlayer) {
       toast.error("Aucun joueur sélectionné!");
       return;
@@ -714,12 +777,12 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
     setGameData(newRoom);
     setGameState("lobby");
 
-    localStorage.setItem(`diner_room_${code}`, JSON.stringify(newRoom));
+    await writeRoomEverywhere(code, newRoom);
     toast.success(`Lobby créée! Code: ${code}`);
   };
 
   // Rejoindre une lobby
-  const joinLobby = () => {
+  const joinLobby = async () => {
     if (!currentPlayer) {
       toast.error("Aucun joueur sélectionné!");
       return;
@@ -730,13 +793,12 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
       return;
     }
 
-    const roomData = localStorage.getItem(`diner_room_${joinCode}`);
-    if (!roomData) {
+    const room = await loadBestRoom(joinCode);
+    if (!room) {
       toast.error("Code invalide ou expiré!");
       return;
     }
 
-    const room = JSON.parse(roomData) as GameRoom;
     room.usedMWords = room.usedMWords || [];
     
     // Si la partie est terminée, impossible de rejoindre
@@ -750,7 +812,7 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
     const now = Date.now();
     const thirtyMinutesMs = 30 * 60 * 1000;
     if (now - createdAt > thirtyMinutesMs) {
-      localStorage.removeItem(`diner_room_${joinCode}`);
+      await removeRoomEverywhere(joinCode);
       toast.error("Cette lobby a expiré!");
       return;
     }
@@ -773,12 +835,12 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
     setMyPlayerId(currentPlayer.id);
     setGameData(room);
     setGameState("lobby");
-    localStorage.setItem(`diner_room_${joinCode}`, JSON.stringify(room));
+    await writeRoomEverywhere(joinCode, room);
     toast.success("Rejoint!");
   };
 
   // Lancer la partie
-  const startGame = () => {
+  const startGame = async () => {
     if (!gameData) return;
     if (gameData.players.length < 3) {
       toast.error("Il faut au moins 3 joueurs pour lancer la partie.");
@@ -795,7 +857,7 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
       });
     }
     setGameData(updated);
-    localStorage.setItem(`diner_room_${roomCode}`, JSON.stringify(updated));
+    await writeRoomEverywhere(roomCode, updated);
     setGameState("playing");
   };
 
@@ -806,7 +868,7 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
   };
 
   // Mettre à jour une mission
-  const updateMission = (playerId: string, missionId: string, status: MissionStatus, bustedBy?: string) => {
+  const updateMission = async (playerId: string, missionId: string, status: MissionStatus, bustedBy?: string) => {
     if (!gameData) return;
 
     const updated = { ...gameData };
@@ -845,16 +907,16 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
     }
 
     setGameData(updated);
-    localStorage.setItem(`diner_room_${roomCode}`, JSON.stringify(updated));
+    await writeRoomEverywhere(roomCode, updated);
   };
 
   // Finaliser la partie
-  const endGame = () => {
+  const endGame = async () => {
     if (!gameData) return;
 
     const updated = { ...gameData, gameEnded: true };
     setGameData(updated);
-    localStorage.setItem(`diner_room_${roomCode}`, JSON.stringify(updated));
+    await writeRoomEverywhere(roomCode, updated);
     setGameState("results");
   };
 
@@ -892,7 +954,7 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
   };
 
   // Quitter la partie et retirer le joueur de la liste
-  const handleQuitGame = () => {
+  const handleQuitGame = async () => {
     if (gameData && myPlayerId) {
       const updated = { ...gameData };
       // Retirer le joueur de la liste
@@ -902,12 +964,12 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
         updated.host = updated.players[0];
       }
       
-      // Si la lobby est vide, la supprimer du localStorage
+      // Si la lobby est vide, la supprimer
       if (updated.players.length === 0) {
-        localStorage.removeItem(`diner_room_${roomCode}`);
+        await removeRoomEverywhere(roomCode);
       } else {
         // Sinon, sauvegarder les changements
-        localStorage.setItem(`diner_room_${roomCode}`, JSON.stringify(updated));
+        await writeRoomEverywhere(roomCode, updated);
       }
     }
     onBack();

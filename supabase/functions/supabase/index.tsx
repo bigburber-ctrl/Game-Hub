@@ -41,6 +41,27 @@ function generateCode() {
 
 // --- ROUTES ---
 
+// Shared custom room state (used by Diner Extreme multi-device sync)
+app.get(`${routePrefix}/room/:code`, async (c) => {
+  const code = c.req.param("code").toUpperCase();
+  const room = await kv.get(`custom_room:${code}`);
+  if (!room) return c.json({ error: "Room introuvable" }, 404);
+  return c.json(room);
+});
+
+app.post(`${routePrefix}/room/:code`, async (c) => {
+  const code = c.req.param("code").toUpperCase();
+  const room = await c.req.json();
+  await kv.set(`custom_room:${code}`, room);
+  return c.json({ success: true });
+});
+
+app.delete(`${routePrefix}/room/:code`, async (c) => {
+  const code = c.req.param("code").toUpperCase();
+  await kv.del(`custom_room:${code}`);
+  return c.json({ success: true });
+});
+
 // Create Lobby
 app.post(`${routePrefix}/create-lobby`, async (c) => {
   const { hostName } = await c.req.json();
