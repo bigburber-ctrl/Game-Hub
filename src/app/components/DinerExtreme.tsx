@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Copy, Check, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -417,6 +417,7 @@ export interface GameRoom {
   gameStarted: boolean;
   gameEnded: boolean;
   createdAt?: number; // Timestamp de création pour l'expiration après 30 min
+  updatedAt?: number;
 }
 
 interface DinerExtremeProps {
@@ -435,6 +436,10 @@ function isRoomExpired(room: GameRoom) {
   const createdAt = room.createdAt;
   if (!createdAt) return false;
   return Date.now() - createdAt > ROOM_EXPIRATION_MS;
+}
+
+function getRoomVersion(room: GameRoom) {
+  return room.updatedAt ?? room.createdAt ?? 0;
 }
 
 function getRoomStorageKey(code: string) {
@@ -480,6 +485,7 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
   const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
   const [showResumeGame, setShowResumeGame] = useState(false);
   const [resumeGameData, setResumeGameData] = useState<{ code: string; room: GameRoom } | null>(null);
+  const latestRoomVersionRef = useRef<number>(0);
 
   const readLocalRoom = (code: string) => {
     const roomData = localStorage.getItem(getRoomStorageKey(code));
@@ -492,8 +498,15 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
   };
 
   const writeRoomEverywhere = async (code: string, room: GameRoom) => {
-    localStorage.setItem(getRoomStorageKey(code), JSON.stringify(room));
-    await saveRemoteRoom(code, room);
+    const now = Date.now();
+    const roomToSave: GameRoom = {
+      ...room,
+      updatedAt: Math.max(now, room.updatedAt ?? 0),
+    };
+    latestRoomVersionRef.current = Math.max(latestRoomVersionRef.current, getRoomVersion(roomToSave));
+    localStorage.setItem(getRoomStorageKey(code), JSON.stringify(roomToSave));
+    await saveRemoteRoom(code, roomToSave);
+    return roomToSave;
   };
 
   const removeRoomEverywhere = async (code: string) => {
@@ -503,11 +516,20 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
 
   const loadBestRoom = async (code: string) => {
     const remote = await getRemoteRoom(code);
+    const local = readLocalRoom(code);
+
+    if (remote && local) {
+      const chosen = getRoomVersion(remote) >= getRoomVersion(local) ? remote : local;
+      localStorage.setItem(getRoomStorageKey(code), JSON.stringify(chosen));
+      return chosen;
+    }
+
     if (remote) {
       localStorage.setItem(getRoomStorageKey(code), JSON.stringify(remote));
       return remote;
     }
-    return readLocalRoom(code);
+
+    return local;
   };
 
   const getDismissedResumeCodes = () => {
@@ -712,6 +734,12 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
       const parsed = await loadBestRoom(roomCode);
       if (!parsed) return;
 
+      const incomingVersion = getRoomVersion(parsed);
+      if (incomingVersion < latestRoomVersionRef.current) {
+        return;
+      }
+      latestRoomVersionRef.current = incomingVersion;
+
       if (parsed.gameEnded || isRoomExpired(parsed)) {
         await removeRoomEverywhere(roomCode);
         return;
@@ -760,6 +788,7 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
       gameStarted: false,
       gameEnded: false,
       createdAt: Date.now(), // Timestamp de création pour l'expiration
+      updatedAt: Date.now(),
     };
 
     // Générer la première mission pour le joueur
@@ -777,7 +806,8 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
     setGameData(newRoom);
     setGameState("lobby");
 
-    await writeRoomEverywhere(code, newRoom);
+    const savedRoom = await writeRoomEverywhere(code, newRoom);
+    setGameData(savedRoom);
     toast.success(`Lobby créée! Code: ${code}`);
   };
 
@@ -833,21 +863,24 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
 
     setRoomCode(joinCode);
     setMyPlayerId(currentPlayer.id);
+    room.updatedAt = Math.max(Date.now(), room.updatedAt ?? 0);
     setGameData(room);
     setGameState("lobby");
-    await writeRoomEverywhere(joinCode, room);
+    const savedRoom = await writeRoomEverywhere(joinCode, room);
+    setGameData(savedRoom);
     toast.success("Rejoint!");
   };
 
   // Lancer la partie
   const startGame = async () => {
     if (!gameData) return;
+    if (gameData.gameEnded) return;
     if (gameData.players.length < 3) {
       toast.error("Il faut au moins 3 joueurs pour lancer la partie.");
       return;
     }
 
-    const updated = { ...gameData, gameStarted: true };
+    const updated = { ...gameData, gameStarted: true, updatedAt: Date.now() };
     // Initialiser startedAt pour toutes les missions actives
     for (const playerId in updated.missions) {
       updated.missions[playerId].forEach(mission => {
@@ -856,8 +889,8 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
         }
       });
     }
-    setGameData(updated);
-    await writeRoomEverywhere(roomCode, updated);
+    const savedRoom = await writeRoomEverywhere(roomCode, updated);
+    setGameData(savedRoom);
     setGameState("playing");
   };
 
@@ -870,8 +903,9 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
   // Mettre à jour une mission
   const updateMission = async (playerId: string, missionId: string, status: MissionStatus, bustedBy?: string) => {
     if (!gameData) return;
+    if (gameData.gameEnded) return;
 
-    const updated = { ...gameData };
+    const updated = { ...gameData, updatedAt: Date.now() };
     const mission = updated.missions[playerId]?.find(m => m.id === missionId);
     if (mission) {
       if (bustedBy) {
@@ -906,17 +940,17 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
       }
     }
 
-    setGameData(updated);
-    await writeRoomEverywhere(roomCode, updated);
+    const savedRoom = await writeRoomEverywhere(roomCode, updated);
+    setGameData(savedRoom);
   };
 
   // Finaliser la partie
   const endGame = async () => {
     if (!gameData) return;
 
-    const updated = { ...gameData, gameEnded: true };
-    setGameData(updated);
-    await writeRoomEverywhere(roomCode, updated);
+    const updated = { ...gameData, gameEnded: true, updatedAt: Date.now() };
+    const savedRoom = await writeRoomEverywhere(roomCode, updated);
+    setGameData(savedRoom);
     setGameState("results");
   };
 
