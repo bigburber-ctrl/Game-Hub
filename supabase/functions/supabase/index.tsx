@@ -6,7 +6,7 @@ import * as kv from "./kv_store.tsx";
 
 const app = new Hono();
 const projectId = Deno.env.get("SUPABASE_URL")?.split(".")[0].split("//")[1];
-const routePrefix = "/make-server-0cd99078";
+const routePrefix = "/make-supabase-0cd99078";
 
 app.use("*", logger(console.log));
 app.use("*", cors());
