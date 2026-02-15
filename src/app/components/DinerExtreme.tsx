@@ -740,7 +740,7 @@ export function DinerExtreme({ players, onBack }: DinerExtremeProps) {
       }
       latestRoomVersionRef.current = incomingVersion;
 
-      if (parsed.gameEnded || isRoomExpired(parsed)) {
+      if (isRoomExpired(parsed)) {
         await removeRoomEverywhere(roomCode);
         return;
       }
