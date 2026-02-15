@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/link-root-node-modules.cjs",
     "build": "vite build"
   },
   "dependencies": {
