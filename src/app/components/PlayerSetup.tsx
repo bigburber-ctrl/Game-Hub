@@ -39,6 +39,11 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const reorderPlayersByIds = (orderedIds: string[]) => {
     setPlayers((prevPlayers) => {
+      const currentIds = prevPlayers.map((player) => player.id);
+      if (currentIds.length === orderedIds.length && currentIds.every((id, index) => id === orderedIds[index])) {
+        return prevPlayers;
+      }
+
       const playersById = new Map(prevPlayers.map((player) => [player.id, player]));
       return orderedIds
         .map((id) => playersById.get(id))
@@ -84,7 +89,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[60vh]">
+      <div className="flex-1 overflow-y-auto pr-1 max-h-[60vh]">
         {players.length === 0 ? (
           <div className="text-center py-12 text-slate-500">
             <User size={48} className="mx-auto mb-4 opacity-20" />
@@ -96,7 +101,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             values={players.map((player) => player.id)}
             onReorder={reorderPlayersByIds}
             layoutScroll
-            className="space-y-3"
+            className="flex flex-col gap-3"
           >
             {players.map((player, index) => (
               <PlayerRow
@@ -148,10 +153,12 @@ function PlayerRow({
   return (
     <Reorder.Item
       value={player.id}
+      layout="position"
       dragListener={false}
       dragControls={dragControls}
       dragMomentum={false}
-      whileDrag={{ scale: 1.01 }}
+      whileDrag={{ scale: 1.02, zIndex: 10 }}
+      transition={{ type: "tween", duration: 0.12 }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
