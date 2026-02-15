@@ -96,7 +96,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             values={players.map((player) => player.id)}
             onReorder={reorderPlayersByIds}
             layoutScroll
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-3 w-full"
           >
             {players.map((player, index) => (
               <PlayerRow
@@ -148,15 +148,17 @@ function PlayerRow({
   return (
     <Reorder.Item
       value={player.id}
+      drag="y"
       dragListener={false}
       dragControls={dragControls}
       dragMomentum={false}
+      dragElastic={0}
       layout="position"
-      whileDrag={{ scale: 1.02, zIndex: 10 }}
+      whileDrag={{ zIndex: 10 }}
       transition={{ type: "tween", duration: 0.12 }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
+      className="group w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
     >
       <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
       <button
