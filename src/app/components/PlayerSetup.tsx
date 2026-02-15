@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { motion, Reorder } from "framer-motion";
+import { motion, Reorder, useDragControls } from "framer-motion";
 import { Player } from "@/app/App";
 import { Plus, Trash2, User, ChevronLeft, Pencil, GripVertical } from "lucide-react";
 import { toast } from "sonner";
@@ -82,19 +82,72 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             <p>Ajoutez au moins 1 joueurs pour commencer</p>
           </div>
         ) : (
-          <Reorder.Group axis="y" values={players} onReorder={setPlayers} className="space-y-3">
+          <Reorder.Group axis="y" values={players} onReorder={setPlayers} layoutScroll className="space-y-3">
             {players.map((player, index) => (
-              <Reorder.Item
+              <PlayerRow
                 key={player.id}
-                value={player}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm touch-none"
-              >
+                player={player}
+                index={index}
+                nameInputRefs={nameInputRefs}
+                removePlayer={removePlayer}
+                updatePlayerName={updatePlayerName}
+              />
+            ))}
+          </Reorder.Group>
+        )}
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-slate-800">
+        <button
+          onClick={onBack}
+          disabled={players.length < 1}
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:scale-100"
+        >
+          Valider la Liste
+        </button>
+        <p className="text-center text-slate-500 text-xs mt-4">
+          Les joueurs sont automatiquement sauvegardés sur cet appareil.
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+interface PlayerRowProps {
+  player: Player;
+  index: number;
+  nameInputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
+  removePlayer: (id: string) => void;
+  updatePlayerName: (id: string, name: string) => void;
+}
+
+function PlayerRow({
+  player,
+  index,
+  nameInputRefs,
+  removePlayer,
+  updatePlayerName,
+}: PlayerRowProps) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={player}
+      dragListener={false}
+      dragControls={dragControls}
+      whileDrag={{ scale: 1.01 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
+    >
                 <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
                 <button
                   type="button"
-                  className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing"
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    dragControls.start(event);
+                  }}
+                  className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none"
                   aria-label={`Déplacer ${player.name}`}
                 >
                   <GripVertical size={16} />
@@ -121,24 +174,6 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
                 >
                   <Trash2 size={18} />
                 </button>
-              </Reorder.Item>
-            ))}
-          </Reorder.Group>
-        )}
-      </div>
-
-      <div className="mt-8 pt-6 border-t border-slate-800">
-        <button
-          onClick={onBack}
-          disabled={players.length < 1}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:scale-100"
-        >
-          Valider la Liste
-        </button>
-        <p className="text-center text-slate-500 text-xs mt-4">
-          Les joueurs sont automatiquement sauvegardés sur cet appareil.
-        </p>
-      </div>
-    </motion.div>
+    </Reorder.Item>
   );
 }
