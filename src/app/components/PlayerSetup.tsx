@@ -1,5 +1,22 @@
 import React, { useRef, useState } from "react";
-import { motion, Reorder, useDragControls } from "framer-motion";
+import { motion } from "framer-motion";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { Player } from "@/app/App";
 import { Plus, Trash2, User, ChevronLeft, Pencil, GripVertical } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +30,14 @@ interface PlayerSetupProps {
 export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const [newName, setNewName] = useState("");
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 120, tolerance: 8 },
+    })
+  );
 
   const addPlayer = () => {
     if (!newName.trim()) return;
@@ -37,17 +62,14 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     setPlayers(players.map((p) => (p.id === id ? { ...p, name } : p)));
   };
 
-  const reorderPlayersByIds = (orderedIds: string[]) => {
-    setPlayers((prevPlayers) => {
-      const currentIds = prevPlayers.map((player) => player.id);
-      if (currentIds.length === orderedIds.length && currentIds.every((id, index) => id === orderedIds[index])) {
-        return prevPlayers;
-      }
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
 
-      const playersById = new Map(prevPlayers.map((player) => [player.id, player]));
-      return orderedIds
-        .map((id) => playersById.get(id))
-        .filter((player): player is Player => Boolean(player));
+    setPlayers((prevPlayers) => {
+      const oldIndex = prevPlayers.findIndex((player) => player.id === active.id);
+      const newIndex = prevPlayers.findIndex((player) => player.id === over.id);
+      if (oldIndex < 0 || newIndex < 0) return prevPlayers;
+      return arrayMove(prevPlayers, oldIndex, newIndex);
     });
   };
 
@@ -96,24 +118,30 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             <p>Ajoutez au moins 1 joueurs pour commencer</p>
           </div>
         ) : (
-          <Reorder.Group
-            axis="y"
-            values={players.map((player) => player.id)}
-            onReorder={reorderPlayersByIds}
-            layoutScroll
-            className="flex flex-col gap-3"
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            modifiers={[restrictToVerticalAxis]}
+            onDragEnd={handleDragEnd}
           >
-            {players.map((player, index) => (
-              <PlayerRow
-                key={player.id}
-                player={player}
-                index={index}
-                nameInputRefs={nameInputRefs}
-                removePlayer={removePlayer}
-                updatePlayerName={updatePlayerName}
-              />
-            ))}
-          </Reorder.Group>
+            <SortableContext
+              items={players.map((player) => player.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="flex flex-col gap-3">
+                {players.map((player, index) => (
+                  <PlayerRow
+                    key={player.id}
+                    player={player}
+                    index={index}
+                    nameInputRefs={nameInputRefs}
+                    removePlayer={removePlayer}
+                    updatePlayerName={updatePlayerName}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
@@ -148,55 +176,56 @@ function PlayerRow({
   removePlayer,
   updatePlayerName,
 }: PlayerRowProps) {
-  const dragControls = useDragControls();
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+    useSortable({ id: player.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 20 : undefined,
+  };
 
   return (
-    <Reorder.Item
-      value={player.id}
-      layout="position"
-      dragListener={false}
-      dragControls={dragControls}
-      dragMomentum={false}
-      whileDrag={{ scale: 1.02, zIndex: 10 }}
-      transition={{ type: "tween", duration: 0.12 }}
+    <motion.div
+      ref={setNodeRef}
+      style={style}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
     >
-                <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
-                <button
-                  type="button"
-                  onPointerDown={(event) => {
-                    event.preventDefault();
-                    dragControls.start(event);
-                  }}
-                  className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none"
-                  aria-label={`Déplacer ${player.name}`}
-                >
-                  <GripVertical size={16} />
-                </button>
-                <input
-                  type="text"
-                  value={player.name}
-                  ref={(element) => {
-                    nameInputRefs.current[player.id] = element;
-                  }}
-                  onChange={(e) => updatePlayerName(player.id, e.target.value)}
-                  className="flex-1 bg-transparent border-none p-0 focus:ring-0 text-white font-medium"
-                />
-                <button
-                  onClick={() => nameInputRefs.current[player.id]?.focus()}
-                  className="p-2 text-slate-500 hover:text-sky-400 transition-colors"
-                  aria-label={`Modifier le nom de ${player.name}`}
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  onClick={() => removePlayer(player.id)}
-                  className="p-2 text-slate-500 hover:text-red-400 transition-colors"
-                >
-                  <Trash2 size={18} />
-                </button>
-    </Reorder.Item>
+      <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
+      <button
+        type="button"
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none"
+        aria-label={`Déplacer ${player.name}`}
+      >
+        <GripVertical size={16} />
+      </button>
+      <input
+        type="text"
+        value={player.name}
+        ref={(element) => {
+          nameInputRefs.current[player.id] = element;
+        }}
+        onChange={(e) => updatePlayerName(player.id, e.target.value)}
+        className="flex-1 bg-transparent border-none p-0 focus:ring-0 text-white font-medium"
+      />
+      <button
+        onClick={() => nameInputRefs.current[player.id]?.focus()}
+        className="p-2 text-slate-500 hover:text-sky-400 transition-colors"
+        aria-label={`Modifier le nom de ${player.name}`}
+      >
+        <Pencil size={16} />
+      </button>
+      <button
+        onClick={() => removePlayer(player.id)}
+        className="p-2 text-slate-500 hover:text-red-400 transition-colors"
+      >
+        <Trash2 size={18} />
+      </button>
+    </motion.div>
   );
 }
