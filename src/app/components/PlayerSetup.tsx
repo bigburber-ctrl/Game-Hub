@@ -29,6 +29,7 @@ interface PlayerSetupProps {
 export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const [newName, setNewName] = useState("");
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
+  const [activeOverlayWidth, setActiveOverlayWidth] = useState<number | null>(null);
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -64,10 +65,13 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const handleDragStart = ({ active }: DragStartEvent) => {
     setActivePlayerId(String(active.id));
+    const initialRect = active.rect.current.initial;
+    setActiveOverlayWidth(initialRect?.width ?? null);
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     setActivePlayerId(null);
+    setActiveOverlayWidth(null);
     if (!over || active.id === over.id) return;
 
     setPlayers((prevPlayers) => {
@@ -80,6 +84,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const handleDragCancel = (_event: DragCancelEvent) => {
     setActivePlayerId(null);
+    setActiveOverlayWidth(null);
   };
 
   const activePlayer = activePlayerId
@@ -153,7 +158,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
               ))}
             </div>
             <DragOverlay>
-              {activePlayer ? <PlayerRowPreview player={activePlayer} /> : null}
+              {activePlayer ? <PlayerRowPreview player={activePlayer} width={activeOverlayWidth} /> : null}
             </DragOverlay>
           </DndContext>
         )}
@@ -201,7 +206,7 @@ function PlayerRow({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm ${
-        isGhosted ? "opacity-40" : "opacity-100"
+        isGhosted ? "opacity-0" : "opacity-100"
       }`}
     >
       <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
@@ -243,11 +248,15 @@ function PlayerRow({
 
 interface PlayerRowPreviewProps {
   player: Player;
+  width?: number | null;
 }
 
-function PlayerRowPreview({ player }: PlayerRowPreviewProps) {
+function PlayerRowPreview({ player, width }: PlayerRowPreviewProps) {
   return (
-    <div className="flex items-center gap-3 bg-slate-700 p-2 pl-4 rounded-xl border border-slate-500 shadow-2xl w-[min(92vw,640px)]">
+    <div
+      className="flex items-center gap-3 bg-slate-700 p-2 pl-4 rounded-xl border border-slate-500 shadow-2xl"
+      style={{ width: width ?? undefined }}
+    >
       <span className="text-slate-300 font-mono text-sm w-4">•</span>
       <span className="p-1 text-slate-200">
         <GripVertical size={16} />
