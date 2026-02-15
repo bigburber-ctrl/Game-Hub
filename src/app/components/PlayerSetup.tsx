@@ -37,6 +37,15 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     setPlayers(players.map((p) => (p.id === id ? { ...p, name } : p)));
   };
 
+  const reorderPlayersByIds = (orderedIds: string[]) => {
+    setPlayers((prevPlayers) => {
+      const playersById = new Map(prevPlayers.map((player) => [player.id, player]));
+      return orderedIds
+        .map((id) => playersById.get(id))
+        .filter((player): player is Player => Boolean(player));
+    });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -82,7 +91,13 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             <p>Ajoutez au moins 1 joueurs pour commencer</p>
           </div>
         ) : (
-          <Reorder.Group axis="y" values={players} onReorder={setPlayers} layoutScroll className="space-y-3">
+          <Reorder.Group
+            axis="y"
+            values={players.map((player) => player.id)}
+            onReorder={reorderPlayersByIds}
+            layoutScroll
+            className="space-y-3"
+          >
             {players.map((player, index) => (
               <PlayerRow
                 key={player.id}
@@ -132,9 +147,10 @@ function PlayerRow({
 
   return (
     <Reorder.Item
-      value={player}
+      value={player.id}
       dragListener={false}
       dragControls={dragControls}
+      dragMomentum={false}
       whileDrag={{ scale: 1.01 }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
