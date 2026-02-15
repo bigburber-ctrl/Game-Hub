@@ -110,7 +110,7 @@ const MISSIONS = [
 "Redire la réponse d’un autre joueur mots pour mots",
 "Répéter subtilement ce que dit les autres joueurs",
 "Répondre à la question du tour d'avant (La partie d'avant pour le tour 1)",
-"Faire une remarque hors sujet",,
+"Faire une remarque hors sujet",
 "Expliquer quelque chose d’évident",
 "Demander confirmation à quelqu’un",
 "Toujours réagir exagérément aux réponses d’un même joueur",
@@ -198,17 +198,17 @@ export function TrappedRound({ players, config, onBack }: TrappedRoundProps) {
 
     const missionMap: Record<string, string> = {};
     selectedImpostors.forEach(id => {
-      missionMap[id] = MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
+      missionMap[id] = MISSIONS[Math.floor(Math.random() * MISSIONS.length)] ?? "Fais une remarque hors sujet";
     });
     setMissions(missionMap);
     
     // Pick first constraint
-    const firstConstraint = CONSTRAINTS[Math.floor(Math.random() * CONSTRAINTS.length)];
+    const firstConstraint = CONSTRAINTS[Math.floor(Math.random() * CONSTRAINTS.length)] ?? CONSTRAINTS[0] ?? "";
     setConstraint(firstConstraint);
     setUsedConstraints([firstConstraint]);
     
     // Random starting player
-    setStartingPlayerId(players[Math.floor(Math.random() * players.length)].id);
+    setStartingPlayerId(players[Math.floor(Math.random() * players.length)]?.id ?? players[0]?.id ?? "");
   }, [players, config]);
 
   const handleNextReveal = () => {
@@ -224,14 +224,14 @@ export function TrappedRound({ players, config, onBack }: TrappedRoundProps) {
     setRound(round + 1);
     const available = CONSTRAINTS.filter(c => !usedConstraints.includes(c));
     const next = available.length > 0 
-      ? available[Math.floor(Math.random() * available.length)]
-      : CONSTRAINTS[Math.floor(Math.random() * CONSTRAINTS.length)]; // Fallback if all used
+      ? (available[Math.floor(Math.random() * available.length)] ?? available[0] ?? "")
+      : (CONSTRAINTS[Math.floor(Math.random() * CONSTRAINTS.length)] ?? CONSTRAINTS[0] ?? ""); // Fallback if all used
     
     setConstraint(next);
     setUsedConstraints(prev => [...prev, next]);
     
     // Random starting player for each round
-    setStartingPlayerId(players[Math.floor(Math.random() * players.length)].id);
+    setStartingPlayerId(players[Math.floor(Math.random() * players.length)]?.id ?? players[0]?.id ?? "");
     
     setStep("round_start");
   };
@@ -248,13 +248,13 @@ export function TrappedRound({ players, config, onBack }: TrappedRoundProps) {
     setImpostorsIds(selectedImpostors);
     const missionMap: Record<string, string> = {};
     selectedImpostors.forEach(id => {
-      missionMap[id] = MISSIONS[Math.floor(Math.random() * MISSIONS.length)];
+      missionMap[id] = MISSIONS[Math.floor(Math.random() * MISSIONS.length)] ?? "Fais une remarque hors sujet";
     });
     setMissions(missionMap);
-    const first = CONSTRAINTS[Math.floor(Math.random() * CONSTRAINTS.length)];
+    const first = CONSTRAINTS[Math.floor(Math.random() * CONSTRAINTS.length)] ?? CONSTRAINTS[0] ?? "";
     setConstraint(first);
     setUsedConstraints([first]);
-    setStartingPlayerId(players[Math.floor(Math.random() * players.length)].id);
+    setStartingPlayerId(players[Math.floor(Math.random() * players.length)]?.id ?? players[0]?.id ?? "");
   };
 
   return (

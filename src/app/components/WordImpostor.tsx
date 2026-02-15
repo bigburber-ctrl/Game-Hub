@@ -11,6 +11,20 @@ interface WordImpostorProps {
   onBack: () => void;
 }
 
+const SPECIAL_RANDOM_CATEGORY = "🎲 Catégorie aléatoire";
+const EXCLUDED_FROM_RANDOM_CATEGORIES = new Set(["Mobs Minecraft", "Cartes Clash Royale"]);
+
+function resolveEffectiveCategory(selectedCategory: string): string {
+  if (selectedCategory !== SPECIAL_RANDOM_CATEGORY) return selectedCategory;
+
+  const eligible = Object.keys(WORD_CATEGORIES).filter(
+    (cat) => !EXCLUDED_FROM_RANDOM_CATEGORIES.has(cat)
+  );
+
+  if (eligible.length === 0) return "Objets du quotidien";
+  return eligible[Math.floor(Math.random() * eligible.length)];
+}
+
 const WORD_CATEGORIES: Record<string, { word: string; hint: string }[]> = {
   "Objets du quotidien": [
     { word: "Balai", hint: "Poussière" },
@@ -69,7 +83,51 @@ const WORD_CATEGORIES: Record<string, { word: string; hint: string }[]> = {
     { word: "Agenda", hint: "Organisation" },
     { word: "Ciseaux", hint: "Découpe" },
     { word: "Colle", hint: "Fixer" },
-    { word: "Ruban adhésif", hint: "Coller" }
+    { word: "Ruban adhésif", hint: "Coller" },
+    { word: "Bouteille", hint: "Bouchon" },
+    { word: "Bocal", hint: "Conserve" },
+    { word: "Boîte", hint: "Rangement" },
+    { word: "Trombone", hint: "Papier" },
+    { word: "Agrafeuse", hint: "Agrafe" },
+    { word: "Efface", hint: "École" },
+    { word: "Règle", hint: "Mesure" },
+    { word: "Punaise", hint: "Piquante" },
+    { word: "Marteau", hint: "Clou" },
+    { word: "Tournevis", hint: "Vis" },
+    { word: "Pince", hint: "Serrer" },
+    { word: "Ruban mètre", hint: "Centimètres" },
+    { word: "Cadenas", hint: "Verrou" },
+    { word: "Portefeuille", hint: "Cartes" },
+    { word: "Briquet", hint: "Flamme" },
+    { word: "Allumettes", hint: "Gratter" },
+    { word: "Bougie", hint: "Cire" },
+    { word: "Ventilateur", hint: "Air" },
+    { word: "Radiateur", hint: "Chaleur" },
+    { word: "Thermomètre", hint: "Température" },
+    { word: "Ampoule", hint: "Lumière" },
+    { word: "Pile", hint: "Énergie" },
+    { word: "Multiprise", hint: "Prises" },
+    { word: "Adaptateur", hint: "Brancher" },
+    { word: "Flashlight", hint: "Torche" },
+    { word: "Batterie externe", hint: "Recharge" },
+    { word: "Éponge", hint: "Vaisselle" },
+    { word: "Seau", hint: "Eau" },
+    { word: "Serpillière", hint: "Sol" },
+    { word: "Cintre", hint: "Garde-robe" },
+    { word: "Coussin", hint: "Confort" },
+    { word: "Casserole", hint: "Cuisson" },
+    { word: "Poêle", hint: "Frire" },
+    { word: "Louche", hint: "Servir" },
+    { word: "Égoutteur", hint: "Spaghetti" },
+    { word: "Planche à découper", hint: "Cuisine" },
+    { word: "Fouet", hint: "Mélanger" },
+    { word: "Tasse", hint: "Boisson" },
+    { word: "Rasoir", hint: "Barbe" },
+    { word: "Déodorant", hint: "Odeur" },
+    { word: "Parfum", hint: "Senteur" },
+    { word: "Crème", hint: "Hydratation" },
+    { word: "Écouteurs", hint: "Musique" },
+    { word: "Câble", hint: "Brancher" }
   ],
 
   "Lieux": [
@@ -117,7 +175,33 @@ const WORD_CATEGORIES: Record<string, { word: string; hint: string }[]> = {
     { word: "Chambre", hint: "Lit" },
     { word: "Salon", hint: "Canapé" },
     { word: "Cuisine", hint: "Four" },
-    { word: "Salle de bain", hint: "Douche" }
+    { word: "Salle de bain", hint: "Douche" },
+    { word: "Pharmacie", hint: "Médicaments" },
+    { word: "Boulangerie", hint: "Pain" },
+    { word: "Mairie", hint: "Mariage" },
+    { word: "Banque", hint: "Compte" },
+    { word: "Hôtel", hint: "Chambre" },
+    { word: "Camping", hint: "Tente" },
+    { word: "Dépanneur", hint: "Essence" },
+    { word: "Centre commercial", hint: "Boutiques" },
+    { word: "Salle de concert", hint: "Scène" },
+    { word: "Galerie d'art", hint: "Tableaux" },
+    { word: "Commissariat", hint: "Police" },
+    { word: "Tribunal", hint: "Jugement" },
+    { word: "Prison", hint: "Cellule" },
+    { word: "Pont", hint: "Rivière" },
+    { word: "Tunnel", hint: "Souterrain" },
+    { word: "Autoroute", hint: "Voitures" },
+    { word: "Rond-point", hint: "Carrefour" },
+    { word: "Station de ski", hint: "Pistes" },
+    { word: "Refuge", hint: "Montagne" },
+    { word: "Observatoire", hint: "Étoiles" },
+    { word: "Planétarium", hint: "Dôme" },
+    { word: "Grotte", hint: "Stalactites" },
+    { word: "Volcan", hint: "Lave" },
+    { word: "Lac", hint: "Eau" },
+    { word: "Cascade", hint: "Chute" },
+    { word: "Canyon", hint: "Falaises" }
   ],
 
   "Animaux": [
@@ -159,7 +243,36 @@ const WORD_CATEGORIES: Record<string, { word: string; hint: string }[]> = {
     { word: "Écureuil", hint: "Noix" },
     { word: "Renne", hint: "Neige" },
     { word: "Castor", hint: "Barrages" },
-    { word: "Otarie", hint: "Phoque" }
+    { word: "Otarie", hint: "Phoque" },
+    { word: "Singe", hint: "Banane" },
+    { word: "Gorille", hint: "Force" },
+    { word: "Chameau", hint: "Désert" },
+    { word: "Loutre", hint: "Rivière" },
+    { word: "Hérisson", hint: "Piques" },
+    { word: "Blaireau", hint: "Terrier" },
+    { word: "Marmotte", hint: "Sifflet" },
+    { word: "Sanglier", hint: "Forêt" },
+    { word: "Cerf", hint: "Bois" },
+    { word: "Biche", hint: "Forêt" },
+    { word: "Flamant rose", hint: "Rose" },
+    { word: "Paon", hint: "Plumes" },
+    { word: "Perroquet", hint: "Parler" },
+    { word: "Pigeon", hint: "Ville" },
+    { word: "Corbeau", hint: "Noir" },
+    { word: "Mouette", hint: "Mer" },
+    { word: "Méduse", hint: "Piqûre" },
+    { word: "Crabe", hint: "Pinces" },
+    { word: "Homard", hint: "Rouge" },
+    { word: "Tortue", hint: "Carapace" },
+    { word: "Crocodile", hint: "Dents" },
+    { word: "Hippopotame", hint: "Fleuve" },
+    { word: "Rhinocéros", hint: "Corne" },
+    { word: "Léopard", hint: "Taches" },
+    { word: "Guépard", hint: "Vitesse" },
+    { word: "Autruche", hint: "Œuf" },
+    { word: "Manchot", hint: "Glace" },
+    { word: "Phoque", hint: "Banquise" },
+    { word: "Morse", hint: "Défenses" }
   ],
 
   "Nourriture": [
@@ -199,7 +312,244 @@ const WORD_CATEGORIES: Record<string, { word: string; hint: string }[]> = {
     { word: "Beignet", hint: "Sucre" },
     { word: "Croissant", hint: "Petit déjeuner" },
     { word: "Confiture", hint: "Pot" },
-    { word: "Chips", hint: "Sel" }
+    { word: "Chips", hint: "Sel" },
+    { word: "Sushi", hint: "Riz" },
+    { word: "Ramen", hint: "Bouillon" },
+    { word: "Tacos", hint: "Tortilla" },
+    { word: "Burrito", hint: "Wrap" },
+    { word: "Couscous", hint: "Semoule" },
+    { word: "Quiche", hint: "Tarte" },
+    { word: "Crêpe", hint: "Chandeleur" },
+    { word: "Gaufre", hint: "Carrés" },
+    { word: "Muffin", hint: "Four" },
+    { word: "Brownie", hint: "Chocolat" },
+    { word: "Lasagnes", hint: "Couches" },
+    { word: "Purée", hint: "Écrasée" },
+    { word: "Compote", hint: "Pommes" },
+    { word: "Curry", hint: "Épices" },
+    { word: "Houmous", hint: "Pois chiches" },
+    { word: "Guacamole", hint: "Avocat" },
+    { word: "Ketchup", hint: "Rouge" },
+    { word: "Mayonnaise", hint: "Œufs" },
+    { word: "Moutarde", hint: "Piquante" },
+    { word: "Café", hint: "Expresso" },
+    { word: "Thé", hint: "Infusion" },
+    { word: "Jus d'orange", hint: "Pressé" },
+    { word: "Limonade", hint: "Bulles" }
+  ],
+
+  "Vêtements": [
+    { word: "T-shirt", hint: "Manches" },
+    { word: "Pantalon", hint: "Jambes" },
+    { word: "Jean", hint: "Denim" },
+    { word: "Short", hint: "Été" },
+    { word: "Robe", hint: "Élégante" },
+    { word: "Jupe", hint: "Plis" },
+    { word: "Coton ouaté", hint: "Capuche" },
+    { word: "Veste", hint: "Fermeture" },
+    { word: "Manteau", hint: "Hiver" },
+    { word: "Chemise", hint: "Boutons" },
+    { word: "Blouse", hint: "Léger" },
+    { word: "Costume", hint: "Deux pièces" },
+    { word: "Cravate", hint: "Nœud" },
+    { word: "Nœud papillon", hint: "Papillon" },
+    { word: "Bas", hint: "Paires" },
+    { word: "Collants", hint: "Transparents" },
+    { word: "Pyjama", hint: "Nuit" },
+    { word: "Peignoir", hint: "Sortie de bain" },
+    { word: "Écharpe", hint: "Cou" },
+    { word: "Tuque", hint: "Tête" },
+    { word: "Casquette", hint: "Visière" },
+    { word: "Chapeau", hint: "Bord" },
+    { word: "Gants", hint: "Mains" },
+    { word: "Ceinture", hint: "Boucle" },
+    { word: "Bretelles", hint: "Épaules" },
+    { word: "Souliers", hint: "Semelle" },
+    { word: "Bottes", hint: "Tige" },
+    { word: "Sandales", hint: "Ouvert" },
+    { word: "Talons Hauts", hint: "Hauteur" },
+    { word: "Imperméable", hint: "Gouttes" },
+    { word: "Maillot", hint: "Piscine" },
+    { word: "Legging", hint: "Stretch" },
+    { word: "Jogging", hint: "Mou" },
+    { word: "Gilet de sauvetage", hint: "Sans manches" },
+    { word: "Tablier", hint: "Cuisine" }
+  ],
+
+  "Métiers": [
+    { word: "Médecin", hint: "Diagnostic" },
+    { word: "Infirmier", hint: "Soins" },
+    { word: "Pompier", hint: "Incendie" },
+    { word: "Policier", hint: "Enquête" },
+    { word: "Professeur", hint: "Cours" },
+    { word: "Boulanger", hint: "Pétrir" },
+    { word: "Cuisinier", hint: "Recette" },
+    { word: "Serveur", hint: "Plateau" },
+    { word: "Vendeur", hint: "Conseil" },
+    { word: "Caissier", hint: "Ticket" },
+    { word: "Livreur", hint: "Colis" },
+    { word: "Facteur", hint: "Courrier" },
+    { word: "Chauffeur", hint: "Volant" },
+    { word: "Mécanicien", hint: "Moteur" },
+    { word: "Électricien", hint: "Câbles" },
+    { word: "Plombier", hint: "Tuyaux" },
+    { word: "Coiffeur", hint: "Ciseaux" },
+    { word: "Dentiste", hint: "Carie" },
+    { word: "Pharmacien", hint: "Ordonnance" },
+    { word: "Vétérinaire", hint: "Animaux" },
+    { word: "Avocat", hint: "Plaidoirie" },
+    { word: "Juge", hint: "Verdict" },
+    { word: "Comptable", hint: "Bilan" },
+    { word: "Architecte", hint: "Plans" },
+    { word: "Ingénieur", hint: "Calculs" },
+    { word: "Développeur", hint: "Code" },
+    { word: "Designer", hint: "Maquette" },
+    { word: "Photographe", hint: "Objectif" },
+    { word: "Journaliste", hint: "Reportage" },
+    { word: "Pilote", hint: "Cockpit" },
+    { word: "Hôtesse", hint: "Cabine" },
+    { word: "Marin", hint: "Bateau" },
+    { word: "Agriculteur", hint: "Champs" },
+    { word: "Jardinier", hint: "Taille" },
+    { word: "Barman", hint: "Cocktail" },
+    { word: "Barista", hint: "Mousse" },
+    { word: "Boulangère", hint: "Baguette" },
+    { word: "Conducteur de train", hint: "Rails" },
+    { word: "Chauffeur de bus", hint: "Arrêt" },
+    { word: "Scientifique", hint: "Laboratoire" },
+    { word: "Enquêteur", hint: "Hypothèse" },
+    { word: "Astronaute", hint: "Espace" },
+    { word: "Traducteur", hint: "Langues" },
+    { word: "Musicien", hint: "Scène" },
+    { word: "Acteur", hint: "Rôle" },
+    { word: "Réalisateur", hint: "Caméra" },
+    { word: "Maçon", hint: "Briques" },
+    { word: "Peintre", hint: "Pinceau" },
+    { word: "Menuisier", hint: "Bois" },
+    { word: "Couturier", hint: "Aiguille" }
+  ],
+
+  "Sports": [
+    { word: "Football", hint: "But" },
+    { word: "Basketball", hint: "Panier" },
+    { word: "Tennis", hint: "Raquette" },
+    { word: "Rugby", hint: "Essai" },
+    { word: "Handball", hint: "Passe" },
+    { word: "Volleyball", hint: "Filet" },
+    { word: "Badminton", hint: "Volant" },
+    { word: "Ping-pong", hint: "Rebond" },
+    { word: "Natation", hint: "Longueur" },
+    { word: "Course", hint: "Sprint" },
+    { word: "Cyclisme", hint: "Peloton" },
+    { word: "Boxe", hint: "Gants" },
+    { word: "Judo", hint: "Kimono" },
+    { word: "Karaté", hint: "Kata" },
+    { word: "Taekwondo", hint: "Coup de pied" },
+    { word: "Gymnastique", hint: "Agrès" },
+    { word: "Escalade", hint: "Prises" },
+    { word: "Ski", hint: "Piste" },
+    { word: "Snowboard", hint: "Planche" },
+    { word: "Surf", hint: "Vagues" },
+    { word: "Skateboard", hint: "Rampe" },
+    { word: "Patinage", hint: "Glace" },
+    { word: "Hockey", hint: "Crosse" },
+    { word: "Golf", hint: "Trou" },
+    { word: "Baseball", hint: "Batte" },
+    { word: "Athlétisme", hint: "Piste" },
+    { word: "Triathlon", hint: "3 sports" },
+    { word: "Escrime", hint: "Fleuret" },
+    { word: "Tir à l'arc", hint: "Cible" },
+    { word: "Équitation", hint: "Selle" },
+    { word: "Aviron", hint: "Rame" },
+    { word: "Canoë", hint: "Pagayer" },
+    { word: "Kayak", hint: "Rivière" },
+    { word: "Plongée", hint: "Bouteille" },
+    { word: "Yoga", hint: "Posture" },
+    { word: "Musculation", hint: "Haltères" },
+    { word: "Danse", hint: "Chorégraphie" },
+    { word: "Parkour", hint: "Sauts" },
+    { word: "Pétanque", hint: "Cochonnet" },
+    { word: "Bowling", hint: "Quilles" }
+  ],
+
+  "Transports": [
+    { word: "Voiture", hint: "Volant" },
+    { word: "Bus", hint: "Arrêt" },
+    { word: "Métro", hint: "Quai" },
+    { word: "Tramway", hint: "Rails" },
+    { word: "Train", hint: "Wagons" },
+    { word: "TGV", hint: "Vitesse" },
+    { word: "Avion", hint: "Ailes" },
+    { word: "Hélicoptère", hint: "Rotor" },
+    { word: "Bateau", hint: "Coque" },
+    { word: "Ferry", hint: "Traversée" },
+    { word: "Voilier", hint: "Voile" },
+    { word: "Sous-marin", hint: "Profondeur" },
+    { word: "Moto", hint: "Casque" },
+    { word: "Scooter", hint: "Ville" },
+    { word: "Vélo", hint: "Pédales" },
+    { word: "Trottinette", hint: "Pliée" },
+    { word: "Camion", hint: "Remorque" },
+    { word: "Taxi", hint: "Compteur" },
+    { word: "Ambulance", hint: "Sirène" },
+    { word: "Camion de pompier", hint: "Échelle" },
+    { word: "Caravane", hint: "Attelage" },
+    { word: "Camping-car", hint: "Maison" },
+    { word: "Téléphérique", hint: "Câble" },
+    { word: "Funiculaire", hint: "Pente" },
+    { word: "Monorail", hint: "Unique rail" },
+    { word: "Montgolfière", hint: "Ballon" },
+    { word: "Dirigeable", hint: "Air" },
+    { word: "Fusée", hint: "Décollage" },
+    { word: "Navette spatiale", hint: "Orbiter" },
+    { word: "Satellite", hint: "Orbite" },
+    { word: "Roller", hint: "Roues" },
+    { word: "Skate", hint: "Planche" },
+    { word: "Tracteur", hint: "Champs" },
+    { word: "Péniche", hint: "Canal" },
+    { word: "Jet-ski", hint: "Mer" }
+  ],
+
+  "Pays": [
+    { word: "France", hint: "Paris" },
+    { word: "Espagne", hint: "Madrid" },
+    { word: "Italie", hint: "Rome" },
+    { word: "Portugal", hint: "Lisbonne" },
+    { word: "Allemagne", hint: "Berlin" },
+    { word: "Belgique", hint: "Bruxelles" },
+    { word: "Suisse", hint: "Montagnes" },
+    { word: "Royaume-Uni", hint: "Londres" },
+    { word: "Irlande", hint: "Dublin" },
+    { word: "Pays-Bas", hint: "Amsterdam" },
+    { word: "Suède", hint: "Stockholm" },
+    { word: "Norvège", hint: "Fjords" },
+    { word: "Danemark", hint: "Copenhague" },
+    { word: "Finlande", hint: "Helsinki" },
+    { word: "Islande", hint: "Volcans" },
+    { word: "Grèce", hint: "Athènes" },
+    { word: "Turquie", hint: "Istanbul" },
+    { word: "Maroc", hint: "Marrakech" },
+    { word: "Algérie", hint: "Sahara" },
+    { word: "Tunisie", hint: "Carthage" },
+    { word: "Égypte", hint: "Pyramides" },
+    { word: "Afrique du Sud", hint: "Cape Town" },
+    { word: "Canada", hint: "Érable" },
+    { word: "États-Unis", hint: "New York" },
+    { word: "Mexique", hint: "Tacos" },
+    { word: "Brésil", hint: "Carnaval" },
+    { word: "Argentine", hint: "Tango" },
+    { word: "Chili", hint: "Andes" },
+    { word: "Pérou", hint: "Machu Picchu" },
+    { word: "Colombie", hint: "Café" },
+    { word: "Japon", hint: "Tokyo" },
+    { word: "Chine", hint: "Grande muraille" },
+    { word: "Corée du Sud", hint: "Séoul" },
+    { word: "Inde", hint: "Épices" },
+    { word: "Thaïlande", hint: "Bangkok" },
+    { word: "Vietnam", hint: "Hanoï" },
+    { word: "Indonésie", hint: "Bali" },
+    { word: "Australie", hint: "Sydney" },
+    { word: "Nouvelle-Zélande", hint: "Wellington" }
   ],
   
     "Films": [
@@ -586,6 +936,7 @@ export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
   const [playerHints, setPlayerHints] = useState<Record<string, string>>({});
   const [startingPlayerId, setStartingPlayerId] = useState("");
   const [showWord, setShowWord] = useState(false);
+  const [effectiveCategory, setEffectiveCategory] = useState<string>(() => resolveEffectiveCategory(config.category));
 
   useEffect(() => {
     if (!players || players.length === 0) return;
@@ -594,11 +945,13 @@ export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
     const selectedImpostors = shuffledPlayers.slice(0, config.impostorCount).map(p => p.id);
     setImpostorsIds(selectedImpostors);
 
-    const categoryData = WORD_CATEGORIES[config.category] || WORD_CATEGORIES["Objets du quotidien"];
+    const effectiveCategory = resolveEffectiveCategory(config.category);
+    setEffectiveCategory(effectiveCategory);
+    const categoryData = WORD_CATEGORIES[effectiveCategory] || WORD_CATEGORIES["Objets du quotidien"];
     const shuffledWords = [...categoryData].sort(() => Math.random() - 0.5);
     
-    const innocentItem = shuffledWords[0];
-    const impostorItem = shuffledWords[1];
+    const innocentItem = shuffledWords[0] ?? { word: "Mystère", hint: "Inconnu" };
+    const impostorItem = shuffledWords[1] ?? innocentItem;
 
     const wordMap: Record<string, string> = {};
     const hintMap: Record<string, string> = {};
@@ -635,11 +988,13 @@ export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
     const selectedImpostors = shuffledPlayers.slice(0, config.impostorCount).map(p => p.id);
     setImpostorsIds(selectedImpostors);
 
-    const categoryData = WORD_CATEGORIES[config.category] || WORD_CATEGORIES["Objets du quotidien"];
+    const effectiveCategory = resolveEffectiveCategory(config.category);
+    setEffectiveCategory(effectiveCategory);
+    const categoryData = WORD_CATEGORIES[effectiveCategory] || WORD_CATEGORIES["Objets du quotidien"];
     const shuffledWords = [...categoryData].sort(() => Math.random() - 0.5);
     
-    const innocentItem = shuffledWords[0];
-    const impostorItem = shuffledWords[1];
+    const innocentItem = shuffledWords[0] ?? { word: "Mystère", hint: "Inconnu" };
+    const impostorItem = shuffledWords[1] ?? innocentItem;
 
     const wordMap: Record<string, string> = {};
     const hintMap: Record<string, string> = {};
@@ -665,6 +1020,9 @@ export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
           <h2 className="text-xs font-bold text-emerald-500 uppercase tracking-widest italic">🕵️ Qui est l'Imposteur ?</h2>
           <p className="text-sm font-black text-slate-300 uppercase italic tracking-tighter">
             {config.impostorCount} {config.impostorCount > 1 ? "Imposteurs" : "Imposteur"} parmi vous
+          </p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+            Catégorie : {effectiveCategory}
           </p>
         </div>
         <div className="w-10"></div>
@@ -732,21 +1090,23 @@ export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
                   </p>
                 </div>
 
-                <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700">
-                  <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Ordre de parole :</p>
-                  <div className="flex flex-wrap gap-2">
-                    {(() => {
-                      const startIndex = players.findIndex(p => p.id === startingPlayerId);
-                      const ordered = [...players.slice(startIndex), ...players.slice(0, startIndex)];
-                      return ordered.map((p, i) => (
-                        <div key={p.id} className="flex items-center gap-2">
-                          <span className="text-white font-bold text-sm uppercase italic">{p.name}</span>
-                          {i < ordered.length - 1 && <span className="text-slate-700 text-xs">→</span>}
-                        </div>
-                      ));
-                    })()}
+                {config.category !== SPECIAL_RANDOM_CATEGORY && (
+                  <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700">
+                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Ordre de parole :</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(() => {
+                        const startIndex = players.findIndex(p => p.id === startingPlayerId);
+                        const ordered = [...players.slice(startIndex), ...players.slice(0, startIndex)];
+                        return ordered.map((p, i) => (
+                          <div key={p.id} className="flex items-center gap-2">
+                            <span className="text-white font-bold text-sm uppercase italic">{p.name}</span>
+                            {i < ordered.length - 1 && <span className="text-slate-700 text-xs">→</span>}
+                          </div>
+                        ));
+                      })()}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
             

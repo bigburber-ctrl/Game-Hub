@@ -78,7 +78,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
         {players.length === 0 ? (
           <div className="text-center py-12 text-slate-500">
             <User size={48} className="mx-auto mb-4 opacity-20" />
-            <p>Ajoutez au moins 3 joueurs pour commencer</p>
+            <p>Ajoutez au moins 1 joueurs pour commencer</p>
           </div>
         ) : (
           players.map((player, index) => (
@@ -110,7 +110,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
       <div className="mt-8 pt-6 border-t border-slate-800">
         <button
           onClick={onBack}
-          disabled={players.length < 3}
+          disabled={players.length < 1}
           className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:scale-100"
         >
           Valider la Liste

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Player } from "@/app/App";
-import { ChevronLeft, Send, RotateCcw, HelpCircle, Users } from "lucide-react";
+import { ChevronLeft, Send, RotateCcw, HelpCircle, Users, Eye } from "lucide-react";
 
 interface QuestionImpostorProps {
   players: Player[];
@@ -12,186 +12,145 @@ interface QuestionImpostorProps {
 }
 
 const NUMBER_QUESTIONS = [
-  { question: "À quel âge as-tu appris à marcher ?", range: "Entre 0 et 20" },
-  { question: "Combien d'heures par jour passes-tu sur ton téléphone ?", range: "Entre 0 et 24" },
-  { question: "Combien de verres d'eau bois-tu par jour ?", range: "Entre 0 et 15" },
-  { question: "Combien de pays as-tu visités ?", range: "Entre 0 et 50" },
-  { question: "Combien d'heures dors-tu par nuit ?", range: "Entre 0 et 15" },
-  { question: "Combien d'applications as-tu sur ton téléphone ?", range: "Entre 0 et 200" },
-  { question: "À quel âge as-tu eu ton premier téléphone ?", range: "Entre 5 et 25" },
-  { question: "Combien de minutes dure ta douche en moyenne ?", range: "Entre 0 et 60" },
-  { question: "Combien de pas fais-tu par jour ?", range: "Entre 0 et 30000" },
-  { question: "Combien de livres as-tu lus l'année dernière ?", range: "Entre 0 et 50" },
-  { question: "Combien de fois par semaine manges-tu au restaurant/fast-food ?", range: "Entre 0 et 14" },
-  { question: "Combien d'onglets as-tu ouverts sur ton navigateur en ce moment ?", range: "Entre 0 et 100" },
-  { question: "Combien de photos as-tu dans ta galerie ?", range: "Entre 0 et 10000" },
-  { question: "Combien de kilomètres fais-tu pour aller au travail/école ?", range: "Entre 0 et 100" },
-  { question: "Combien de langues parles-tu ?", range: "Entre 1 et 10" },
-  { question: "Combien de fois par jour vérifies-tu tes emails ?", range: "Entre 0 et 50" },
-  { question: "Combien d'amis proches as-tu ?", range: "Entre 0 et 30" },
-  { question: "Combien de paires de chaussures possèdes-tu ?", range: "Entre 0 et 50" },
-  { question: "À quelle heure te réveilles-tu en moyenne ?", range: "Entre 0 et 12" },
-  { question: "Combien de tasses de café/thé bois-tu par jour ?", range: "Entre 0 et 10" },
-  { question: "Combien de messages envoies-tu par jour en moyenne ?", range: "Entre 20 et 300" },
-{ question: "Combien de messages ignores-tu par jour en moyenne ?", range: "Entre 0 et 150" },
-{ question: "Combien de fois regardes-tu ton téléphone par jour ?", range: "Entre 30 et 250" },
-{ question: "Combien d’heures passes-tu sur ton téléphone par jour ?", range: "Entre 1 et 14" },
-{ question: "Combien de fois manges-tu par jour ?", range: "Entre 2 et 7" },
-{ question: "Combien de collations manges-tu par jour ?", range: "Entre 0 et 5" },
-{ question: "Combien de boissons autres que l’eau bois-tu par jour ?", range: "Entre 0 et 8" },
-{ question: "Combien de fois ris-tu vraiment par jour ?", range: "Entre 5 et 120" },
-{ question: "Combien de fois souris-tu sans rire par jour ?", range: "Entre 10 et 200" },
-{ question: "Combien de fois par jour te parles-tu dans ta tête ?", range: "Entre 10 et 300" },
-{ question: "Combien de pensées te traversent l’esprit en une journée ?", range: "Entre 200 et 4000" },
-{ question: "Combien de fois te laves-tu les mains par jour ?", range: "Entre 3 et 25" },
-{ question: "Combien de fois touches-tu ton visage par jour ?", range: "Entre 20 et 150" },
-{ question: "Combien de fois vas-tu aux toilettes par jour ?", range: "Entre 2 et 12" },
-{ question: "Combien de minutes passes-tu aux toilettes par jour ?", range: "Entre 5 et 90" },
-{ question: "Combien de notifications reçois-tu par jour ?", range: "Entre 20 et 350" },
-{ question: "Combien de notifications supprimes-tu sans les lire par jour ?", range: "Entre 0 et 250" },
-{ question: "Combien de photos prends-tu par semaine ?", range: "Entre 0 et 200" },
-{ question: "Combien de photos gardes-tu vraiment par semaine ?", range: "Entre 0 et 120" },
-{ question: "Combien de personnes vois-tu en vrai par jour ?", range: "Entre 1 et 25" },
-{ question: "Combien de personnes contactes-tu en ligne par jour ?", range: "Entre 5 et 120" },
-{ question: "Combien de conversations différentes as-tu par jour ?", range: "Entre 3 et 40" },
-{ question: "Combien de conversations durent plus de 5 minutes par jour ?", range: "Entre 1 et 20" },
-{ question: "Combien de fois te réveilles-tu pendant la nuit ?", range: "Entre 0 et 8" },
-{ question: "Combien de jours par semaine fais-tu du sport ?", range: "Entre 0 et 6" },
-{ question: "Combien de minutes dure une séance de sport pour toi ?", range: "Entre 20 et 150" },
-{ question: "Combien d’applications utilises-tu chaque jour ?", range: "Entre 3 et 30" },
-{ question: "Combien de fois changes-tu de musique par jour ?", range: "Entre 5 et 120" },
-{ question: "Combien de chansons écoutes-tu en entier par jour ?", range: "Entre 5 et 60" },
-{ question: "À partir de combien d’années un film devient vieux selon toi ?", range: "Entre 5 et 60" },
-{ question: "Après combien d’années un film devient culte selon toi ?", range: "Entre 5 et 50" },
-{ question: "À partir de combien de messages une conversation devient lourde ?", range: "Entre 10 et 150" },
-{ question: "Combien de messages sont nécessaires pour vraiment discuter ?", range: "Entre 5 et 120" },
-{ question: "À partir de combien d’argent un achat fait culpabiliser ?", range: "Entre 20 et 3000" },
-{ question: "À partir de combien d’argent un achat fait plaisir longtemps ?", range: "Entre 50 et 5000" },
-{ question: "À partir de combien de répétitions une blague n’est plus drôle ?", range: "Entre 2 et 25" },
-{ question: "Combien de fois une blague peut faire rire avant de lasser ?", range: "Entre 2 et 30" },
-{ question: "À partir de combien de personnes te sens-tu de trop dans un groupe ?", range: "Entre 3 et 25" },
-{ question: "Combien de personnes rendent un groupe vivant selon toi ?", range: "Entre 3 et 20" },
-{ question: "À partir de combien de minutes un silence devient gênant ?", range: "Entre 5 et 90" },
-{ question: "Combien de minutes de silence peuvent être confortables ?", range: "Entre 1 et 60" },
-{ question: "À partir de combien d’échecs faut-il changer de stratégie ?", range: "Entre 2 et 20" },
-{ question: "Combien d’échecs sont nécessaires pour apprendre ?", range: "Entre 1 et 30" },
-{ question: "À partir de combien d’années une relation devient routinière ?", range: "Entre 2 et 30" },
-{ question: "Après combien d’années une relation devient stable ?", range: "Entre 1 et 25" },
-{ question: "À partir de combien de tentatives on force trop ?", range: "Entre 2 et 20" },
-{ question: "Combien de tentatives montrent de la détermination ?", range: "Entre 2 et 25" },
-{ question: "Combien de contacts as-tu dans ton téléphone ?", range: "Entre 20 et 800" },
-{ question: "Combien d’alarmes différentes as-tu programmées ?", range: "Entre 0 et 30" },
-{ question: "Combien de playlists as-tu créées ?", range: "Entre 0 et 60" },
-{ question: "Combien de chaînes YouTube es-tu abonné ?", range: "Entre 0 et 300" },
-{ question: "Combien de vêtements as-tu dans ton garde-robe ?", range: "Entre 30 et 400" },
-{ question: "Combien de manteaux possèdes-tu ?", range: "Entre 0 et 15" },
-{ question: "Combien de paires de bas possèdes-tu ?", range: "Entre 10 et 120" },
-{ question: "Combien de paires de souliers possèdes-tu ?", range: "Entre 2 et 40" },
-{ question: "Combien de jeux as-tu dans ta bibliothèque (toutes plateformes confondues) ?", range: "Entre 0 et 300" },
-{ question: "Combien de jeux as-tu terminés dans ta vie ?", range: "Entre 0 et 150" },
-{ question: "Combien de films as-tu vus dans la dernière année ?", range: "Entre 0 et 150" },
-{ question: "Combien de séries as-tu terminées dans ta vie ?", range: "Entre 0 et 80" },
-{ question: "Combien d’objets y a-t-il sur ton bureau en ce moment ?", range: "Entre 0 et 80" },
-{ question: "Combien d’onglets gardes-tu habituellement ouverts ?", range: "Entre 1 et 60" },
-{ question: "Combien de comptes réseaux sociaux possèdes-tu ?", range: "Entre 0 et 15" },
-{ question: "Combien de groupes de discussion fais-tu partie ?", range: "Entre 0 et 80" },
-{ question: "Combien de mots de passe différents utilises-tu ?", range: "Entre 1 et 50" },
-{ question: "Combien d’emails non lus as-tu actuellement ?", range: "Entre 0 et 5000" },
-{ question: "Combien de photos as-tu prises dans le dernier mois ?", range: "Entre 0 et 500" },
-{ question: "Combien de selfies as-tu pris dans ta vie ?", range: "Entre 0 et 1000" },
-{ question: "Combien d’objets décoratifs as-tu dans ta chambre ?", range: "Entre 0 et 120" },
-{ question: "Combien d’affiches ou cadres as-tu sur tes murs ?", range: "Entre 0 et 40" },
-{ question: "Combien de sacs possèdes-tu (sac d’école, sac de sport, etc.) ?", range: "Entre 1 et 25" },
-{ question: "Combien de casquettes ou chapeaux possèdes-tu ?", range: "Entre 0 et 30" },
-{ question: "Combien d’appareils électroniques possèdes-tu ?", range: "Entre 2 et 25" },
-{ question: "Combien de chargeurs différents as-tu chez toi ?", range: "Entre 2 et 40" },
-{ question: "Combien de comptes de jeux en ligne as-tu créés ?", range: "Entre 0 et 30" },
-{ question: "Combien de skins ou cosmétiques as-tu dans ton jeu principal ?", range: "Entre 0 et 500" },
-{ question: "Combien de captures d’écran as-tu dans ton téléphone ?", range: "Entre 0 et 2000" },
-{ question: "Combien de vidéos as-tu dans ta galerie ?", range: "Entre 0 et 1500" },
-{ question: "Combien de livres possèdes-tu chez toi ?", range: "Entre 0 et 300" },
-{ question: "Combien de cahiers ou carnets as-tu remplis dans ta vie ?", range: "Entre 0 et 80" }
+{ question: "Quel est le meilleur âge pour prendre sa retraite ?", range: "Entre 45 et 75" },
+{ question: "À partir de quel âge est-on vraiment adulte ?", range: "Entre 16 et 35" },
+{ question: "Quel âge est trop vieux pour aller en boîte de nuit ?", range: "Entre 30 et 65" },
+{ question: "À quel âge idéal devrait-on quitter chez ses parents ?", range: "Entre 16 et 30" },
+{ question: "Quel est l’âge parfait pour avoir son premier enfant ?", range: "Entre 20 et 40" },
+{ question: "À quel âge commence-t-on à devenir 'plate' ?", range: "Entre 25 et 55" },
+{ question: "Quel est l’âge idéal pour arrêter l’école définitivement ?", range: "Entre 16 et 30" },
+{ question: "À partir de quel âge devient-on trop vieux pour jouer aux jeux vidéo ?", range: "Entre 35 et 80" },
+{ question: "Quel âge est trop jeune pour avoir une relation sérieuse ?", range: "Entre 12 et 22" },
+{ question: "À quel âge devrait-on arrêter de fêter son anniversaire ?", range: "Entre 50 et 95" },
+{ question: "Combien d’amis proches est le nombre parfait ?", range: "Entre 2 et 12" },
+{ question: "Combien de relations amoureuses sérieuses devrait-on vivre dans une vie ?", range: "Entre 1 et 8" },
+{ question: "Combien de fois devrait-on déménager dans une vie ?", range: "Entre 1 et 10" },
+{ question: "Combien d’heures par jour est acceptable de passer sur son téléphone ?", range: "Entre 2 et 10" },
+{ question: "Combien de voyages importants devrait-on faire dans une vie ?", range: "Entre 3 et 25" },
+{ question: "Combien d’emplois différents devrait-on avoir dans une vie ?", range: "Entre 2 et 12" },
+{ question: "Combien d’années devrait durer une relation idéale ?", range: "Entre 5 et 40" },
+{ question: "Combien d’heures par semaine devrait-on travailler ?", range: "Entre 20 et 60" },
+{ question: "Combien de fois est-il acceptable de changer complètement de carrière ?", range: "Entre 0 et 6" },
+{ question: "Combien d’heures par jour devrait-on dormir idéalement ?", range: "Entre 6 et 10" },
+{ question: "Combien d’enfants représente une famille parfaite ?", range: "Entre 0 et 6" },
+{ question: "Combien de jours de vacances devrait-on avoir par année ?", range: "Entre 10 et 60" },
+{ question: "Combien de fois par semaine devrait-on sortir voir des amis ?", range: "Entre 1 et 6" },
+{ question: "Combien de temps devrait durer un premier rendez-vous ?", range: "Entre 30 et 180" },
+{ question: "Combien de fois par mois est-il acceptable de manger du fast-food ?", range: "Entre 0 et 12" },
+{ question: "Combien de loisirs différents devrait-on avoir pour être équilibré ?", range: "Entre 1 et 8" },
+{ question: "Combien de fois devrait-on changer de style vestimentaire dans sa vie ?", range: "Entre 1 et 12" },
+{ question: "Combien de langues devrait-on parler pour être considéré cultivé ?", range: "Entre 1 et 5" },
+{ question: "Combien de temps devrait durer un deuil normal ?", range: "Entre 1 et 8" },
+{ question: "Combien d’heures par semaine devrait-on consacrer à ses passions ?", range: "Entre 2 et 25" },
+{ question: "Combien de fois par année devrait-on voir sa famille élargie ?", range: "Entre 1 et 12" },
+{ question: "Combien d’années devrait durer un téléphone avant de le changer ?", range: "Entre 2 et 8" },
+{ question: "Combien de repas par semaine devrait-on cuisiner soi-même ?", range: "Entre 3 et 18" },
+{ question: "Combien d’heures par semaine est acceptable de regarder des séries ?", range: "Entre 2 et 25" },
+{ question: "Combien de fois devrait-on essayer un nouveau hobby dans sa vie ?", range: "Entre 2 et 20" },
+{ question: "Combien d’années devrait durer une amitié forte ?", range: "Entre 5 et 60" },
+{ question: "Combien de fois devrait-on faire du sport par semaine ?", range: "Entre 1 et 7" },
+{ question: "Combien d’heures devrait durer une soirée idéale ?", range: "Entre 2 et 10" },
+{ question: "Combien de fois par mois est-il acceptable de commander en ligne ?", range: "Entre 0 et 20" },
+{ question: "Combien de fois devrait-on changer de coupe de cheveux dans sa vie ?", range: "Entre 5 et 60" },
+{ question: "Combien d’heures par semaine devrait-on passer seul ?", range: "Entre 5 et 60" },
+{ question: "Combien de fois devrait-on prendre des risques importants dans sa vie ?", range: "Entre 1 et 12" },
+{ question: "Combien de projets personnels devrait-on terminer dans une vie ?", range: "Entre 3 et 40" },
+{ question: "Combien de fois est-il acceptable d’annuler des plans à la dernière minute par mois ?", range: "Entre 0 et 8" },
+{ question: "Combien de fois devrait-on changer de ville dans sa vie ?", range: "Entre 0 et 8" },
+{ question: "Combien d’heures devrait durer une conversation profonde ?", range: "Entre 1 et 6" },
+{ question: "Combien de fois par semaine devrait-on appeler ses proches ?", range: "Entre 1 et 10" },
+{ question: "Combien de passions peut-on gérer sérieusement en même temps ?", range: "Entre 1 et 6" },
+{ question: "Combien de fois devrait-on réinventer sa vie complètement ?", range: "Entre 0 et 6" },
+{ question: "Combien de souvenirs importants devrait-on créer par année ?", range: "Entre 3 et 40" },
 ];
 
 const QUESTION_PAIRS = [
-  { q1: "Un plat que tu adores vraiment ?", q2: "Un plat que tu n’as jamais mangé ?" },
-  { q1: "Un aliment que tu pourrais manger sans faim ?", q2: "Un aliment que tu goûterais par curiosité ?" },
-  { q1: "Un plat qui te rappelle un bon souvenir ?", q2: "Un plat que tu associes à quelqu’un d’autre ?" },
-  { q1: "Un plat que tu sais parfaitement cuisiner ?", q2: "Un plat que tu aimerais apprendre à faire ?" },
-  { q1: "Un pays où tu te sentirais bien vivre ?", q2: "Un pays que tu connais seulement de nom ?" },
-  { q1: "Un endroit que tu voudrais visiter seul ?", q2: "Un endroit où tu irais seulement accompagné ?" },
-  { q1: "Un pays que tu connais déjà un peu ?", q2: "Un pays sur lequel tu ne sais presque rien ?" },
-  { q1: "Un lieu qui te semble fascinant ?", q2: "Un lieu que tu trouves mystérieux ?" },
-  { q1: "Un film que tu pourrais revoir sans te lasser ?", q2: "Un film que tu n’as jamais vu mais qui t’intrigue ?" },
-  { q1: "Un univers fictif que tu comprends bien ?", q2: "Un univers fictif que tu trouves compliqué ?" },
-  { q1: "Un personnage de film auquel tu t’identifies ?", q2: "Un personnage de film que tu observes de loin ?" },
-  { q1: "Un film que tu recommandes souvent ?", q2: "Un film que tout le monde connaît mais pas toi ?" },
-  { q1: "Une activité qui te détend vraiment ?", q2: "Une activité que tu n’as jamais essayée ?" },
-  { q1: "Un passe-temps que tu fais souvent ?", q2: "Un passe-temps que tu trouves original ?" },
-  { q1: "Une activité où tu te débrouilles bien ?", q2: "Une activité où tu serais totalement nul ?" },
-  { q1: "Une activité que tu fais seul ?", q2: "Une activité que tu fais surtout avec d’autres ?" },
-  { q1: "Un objet que tu utilises tous les jours ?", q2: "Un objet que tu oublies toujours ?" },
-  { q1: "Un objet que tu garderais longtemps ?", q2: "Un objet que tu remplacerais facilement ?" },
-  { q1: "Un objet qui te simplifie la vie ?", q2: "Un objet que tu ne sais pas vraiment utiliser ?" },
-  { q1: "Un objet auquel tu tiens ?", q2: "Un objet que tu possèdes mais n’utilises jamais ?" },
-  { q1: "Un moment de la journée que tu apprécies ?", q2: "Un moment de la journée que tu remarques à peine ?" },
-  { q1: "Un moment où tu es le plus productif ?", q2: "Un moment où ton cerveau est au ralenti ?" },
-  { q1: "Un moment que tu prends pour toi ?", q2: "Un moment que tu passes surtout avec les autres ?" },
-  { q1: "Une musique que tu connais par cœur ?", q2: "Une musique que tu as découverte récemment ?" },
-  { q1: "Un style de musique que tu écoutes souvent ?", q2: "Un style de musique que tu comprends mal ?" },
-  { q1: "Une musique qui te donne de l’énergie ?", q2: "Une musique que tu trouves relaxante ?" },
-  { q1: "Une chose que tu fais sans réfléchir ?", q2: "Une chose que tu fais toujours avec attention ?" },
-  { q1: "Une habitude que tu as depuis longtemps ?", q2: "Une habitude que tu as prise récemment ?" },
-  { q1: "Une chose qui te motive facilement ?", q2: "Une chose qui te demande beaucoup d’effort ?" },
-  { q1: "Un plat que tu pourrais manger n’importe quand ?", q2: "Un plat que tu manges seulement à certaines occasions ?" },
-  { q1: "Un goût que tu as appris à aimer ?", q2: "Un goût que tu n’as jamais vraiment compris ?" },
-  { q1: "Un plat que tu partages facilement ?", q2: "Un plat que tu préfères garder pour toi ?" },
-  { q1: "Un endroit où tu te verrais rester longtemps ?", q2: "Un endroit où tu passerais seulement quelques jours ?" },
-  { q1: "Un lieu qui te semble rassurant ?", q2: "Un lieu qui te semble impressionnant ?" },
-  { q1: "Un pays qui te paraît familier ?", q2: "Un pays qui te paraît très dépaysant ?" },
-  { q1: "Un film que tu comprends dès le premier visionnage ?", q2: "Un film que tu as compris après coup ?" },
-  { q1: "Un film que tu regardes pour l’histoire ?", q2: "Un film que tu regardes surtout pour l’ambiance ?" },
-  { q1: "Un film qui te met dans un certain mood ?", q2: "Un film que tu regardes sans trop t’impliquer ?" },
-  { q1: "Une activité où tu te sens à l’aise ?", q2: "Une activité où tu te sens un peu maladroit ?" },
-  { q1: "Une activité que tu fais spontanément ?", q2: "Une activité que tu dois planifier ?" },
-  { q1: "Une activité qui te fatigue ?", q2: "Une activité qui te recharge ?" },
-  { q1: "Un objet que tu remarques toujours ?", q2: "Un objet que tu oublies facilement ?" },
-  { q1: "Un objet qui te rassure ?", q2: "Un objet qui t’agace un peu ?" },
-  { q1: "Un objet que tu utiliserais même cassé ?", q2: "Un objet que tu jetterais au moindre défaut ?" },
-  { q1: "Un moment où tu réfléchis beaucoup ?", q2: "Un moment où tu fais les choses en automatique ?" },
-  { q1: "Un moment qui passe vite ?", q2: "Un moment qui te semble long ?" },
-  { q1: "Une musique que tu écoutes en fond ?", q2: "Une musique que tu écoutes attentivement ?" },
-  { q1: "Une musique liée à un souvenir ?", q2: "Une musique que tu écoutes sans y penser ?" },
-  { q1: "Une musique qui te calme ?", q2: "Une musique qui te booste ?" },
-  { q1: "Une décision que tu prends rapidement ?", q2: "Une décision que tu mets du temps à prendre ?" },
-  { q1: "Une chose que tu fais par habitude ?", q2: "Une chose que tu fais par envie ?" },
-  { q1: "Une chose que tu fais pour toi ?", q2: "Une chose que tu fais surtout pour les autres ?" },
-  { q1: "Combien de messages envoies-tu par jour en moyenne ?", q2: "Combien de messages ignores-tu par jour en moyenne ?" },
-  { q1: "Combien de fois regardes-tu ton téléphone par jour ?", q2: "Combien d’heures passes-tu sur ton téléphone par jour ?" },
-  { q1: "Combien de fois manges-tu par jour ?", q2: "Combien de collations manges-tu par jour ?" },
-  { q1: "Combien de verres d’eau bois-tu par jour ?", q2: "Combien de boissons autres que l’eau bois-tu par jour ?" },
-  { q1: "Combien de fois ris-tu vraiment par jour ?", q2: "Combien de fois souris-tu sans rire par jour ?" },
-  { q1: "Combien de fois par jour tu te parles dans ta tête ?", q2: "Combien de pensées te traversent l’esprit en une journée ?" },
-  { q1: "Combien de fois te laves-tu les mains par jour ?", q2: "Combien de fois touches-tu ton visage par jour ?" },
-  { q1: "Combien de fois vas-tu aux toilettes par jour ?", q2: "Combien de minutes passes-tu aux toilettes par jour ?" },
-  { q1: "Combien de notifications reçois-tu par jour ?", q2: "Combien de notifications supprimes-tu sans les lire par jour ?" },
-  { q1: "Combien de photos prends-tu par semaine ?", q2: "Combien de photos gardes-tu vraiment par semaine ?" },
-  { q1: "Combien de personnes vois-tu en vrai par jour ?", q2: "Combien de personnes contactes-tu en ligne par jour ?" },
-  { q1: "Combien de conversations différentes as-tu par jour ?", q2: "Combien de conversations durent plus de 5 minutes par jour ?" },
-  { q1: "Combien d’heures dors-tu par nuit ?", q2: "Combien de fois te réveilles-tu pendant la nuit ?" },
-  { q1: "Combien de jours par semaine fais-tu du sport ?", q2: "Combien de minutes dure une séance de sport pour toi ?" },
-  { q1: "Combien d’applications utilises-tu chaque jour ?", q2: "Combien d’applications as-tu installées sur ton téléphone ?" },
-  { q1: "Combien de fois changes-tu de musique par jour ?", q2: "Combien de chansons écoutes-tu en entier par jour ?" },
-  { q1: "À partir de combien d’années un film devient vieux ?", q2: "Après combien d’années un film devient culte ?" },
-  { q1: "À partir de combien de messages une conversation devient lourde ?", q2: "Combien de messages sont nécessaires pour vraiment discuter ?" },
-  { q1: "À partir de combien d’argent un achat fait culpabiliser ?", q2: "À partir de combien d’argent un achat fait plaisir longtemps ?" },
-  { q1: "À partir de combien de répétitions une blague n’est plus drôle ?", q2: "Combien de fois une blague peut faire rire avant de lasser ?" },
-  { q1: "À partir de combien de personnes on se sent de trop ?", q2: "Combien de personnes rendent un groupe vivant ?" },
-  { q1: "À partir de combien de minutes un silence devient gênant ?", q2: "Combien de minutes de silence peuvent être confortables ?" },
-  { q1: "À partir de combien d’échecs il faut changer de stratégie ?", q2: "Combien d’échecs sont nécessaires pour apprendre ?" },
-  { q1: "À partir de combien d’années une relation devient routinière ?", q2: "Après combien d’années une relation devient stable ?" },
-  { q1: "À partir de combien de tentatives on force trop ?", q2: "Combien de tentatives montrent de la détermination ?" },
+{ q1: "Quel objet tu traînes presque toujours avec toi ?", q2: "Quel objet les gens transportent souvent mais que tu trouves inutile ?" },
+{ q1: "Quel moment simple te rend vraiment heureux ?", q2: "Quel moment banal peut ruiner ta journée ?" },
+{ q1: "Quel talent te rendrait impressionnant dans un party ?", q2: "Quel talent serait cool mais impossible à utiliser dans la vraie vie ?" },
+{ q1: "Quelle activité te fait perdre la notion du temps ?", q2: "Quelle activité te paraît interminable même si elle dure 10 minutes ?" },
+{ q1: "Quel endroit te donne instantanément envie de rester longtemps ?", q2: "Quel endroit te donne envie de partir dès que tu arrives ?" },
+{ q1: "Quel job d’été t’aurais aimé essayer ?", q2: "Quel job d’été tu refuserais même très bien payé ?" },
+{ q1: "Quel bruit te relaxe ?", q2: "Quel bruit te rend fou rapidement ?" },
+{ q1: "Quelle habitude d’un ami te fait rire ?", q2: "Quelle habitude d’un ami peut devenir agaçante ?" },
+{ q1: "Quel plat tu pourrais manger chaque semaine sans te tanner ?", q2: "Quel plat tu trouves bon mais jamais assez pour le choisir toi-même ?" },
+{ q1: "Quel sport serait le plus drôle à regarder avec des amis ?", q2: "Quel sport serait le pire à regarder pendant 2 heures ?" },
+{ q1: "Quel moment de l’année te motive le plus ?", q2: "Quel moment de l’année te vide d’énergie ?" },
+{ q1: "Quel type de vidéo internet tu peux binge facilement ?", q2: "Quel type de vidéo tu skip presque toujours ?" },
+{ q1: "Quelle compétence scolaire devrait être obligatoire ?", q2: "Quelle matière scolaire t’a semblé inutile personnellement ?" },
+{ q1: "Quel endroit public te met de bonne humeur ?", q2: "Quel endroit public te met mal à l’aise ?" },
+{ q1: "Quel vêtement te fait sentir confiant ?", q2: "Quel vêtement te rend inconfortable même s’il est beau ?" },
+{ q1: "Quelle invention récente améliore vraiment la vie ?", q2: "Quelle invention récente complique tout selon toi ?" },
+{ q1: "Quel type de fête tu trouves le plus fun ?", q2: "Quel type de fête te fatigue rapidement ?" },
+{ q1: "Quel sujet pourrait te garder en discussion pendant des heures ?", q2: "Quel sujet te fait décrocher immédiatement ?" },
+{ q1: "Quelle odeur te rappelle un bon souvenir ?", q2: "Quelle odeur te rappelle quelque chose de désagréable ?" },
+{ q1: "Quel film ou série tu peux revoir plusieurs fois ?", q2: "Quel film ou série tu as abandonné malgré sa popularité ?" },
+{ q1: "Quel animal serait le meilleur compagnon de vie ?", q2: "Quel animal serait impossible à vivre avec ?" },
+{ q1: "Quelle activité sociale te recharge ?", q2: "Quelle activité sociale te draine mentalement ?" },
+{ q1: "Quel gadget technologique te semble indispensable ?", q2: "Quel gadget technologique te semble exagéré ?" },
+{ q1: "Quel petit luxe vaut la peine de payer plus cher ?", q2: "Quel petit luxe ne vaut pas du tout son prix ?" },
+{ q1: "Quel repas te rappelle ton enfance ?", q2: "Quel repas te rappelle un mauvais souvenir ?" },
+{ q1: "Quel endroit naturel te fascine ?", q2: "Quel endroit naturel te met mal à l’aise ?" },
+{ q1: "Quel métier semble passionnant à observer ?", q2: "Quel métier semble stressant juste à imaginer ?" },
+{ q1: "Quelle tradition familiale tu trouves cool ?", q2: "Quelle tradition familiale te semble inutile ?" },
+{ q1: "Quel jeu tu pourrais jouer pendant des heures ?", q2: "Quel jeu te fait décrocher rapidement ?" },
+{ q1: "Quel souvenir d’école te fait rire aujourd’hui ?", q2: "Quel souvenir d’école tu préfèrerais oublier ?" },
+{ q1: "Quelle qualité te rend fier ?", q2: "Quel défaut tu trouves difficile à corriger ?" },
+{ q1: "Quel type de météo te met de bonne humeur ?", q2: "Quel type de météo te donne envie de rester chez toi ?" },
+{ q1: "Quelle ville te semble pleine de vie ?", q2: "Quelle ville te semble trop stressante ?" },
+{ q1: "Quel moment de la journée tu préfères ?", q2: "Quel moment de la journée te semble le plus long ?" },
+{ q1: "Quel loisir semble relaxant à apprendre ?", q2: "Quel loisir semble frustrant à apprendre ?" },
+{ q1: "Quel objet chez quelqu’un attire toujours ton attention ?", q2: "Quel objet chez quelqu’un te semble bizarre ou inutile ?" },
+{ q1: "Quelle musique te met de bonne humeur instantanément ?", q2: "Quelle musique te fatigue rapidement ?" },
+{ q1: "Quel type de restaurant tu choisis souvent ?", q2: "Quel type de restaurant tu évites ?" },
+{ q1: "Quel souvenir de voyage t’a marqué ?", q2: "Quel moment de voyage t’a déçu ?" },
+{ q1: "Quel événement futur t’excite ?", q2: "Quel événement futur te stresse ?" },
+{ q1: "Quel type de cadeau tu aimes recevoir ?", q2: "Quel type de cadeau tu trouves difficile à apprécier ?" },
+{ q1: "Quel réseau social te divertit le plus ?", q2: "Quel réseau social te fatigue mentalement ?" },
+{ q1: "Quelle activité d’hiver tu apprécies ?", q2: "Quelle activité d’hiver tu trouves pénible ?" },
+{ q1: "Quelle activité d’été tu attends chaque année ?", q2: "Quelle activité d’été tu évites ?" },
+{ q1: "Quel endroit calme te ressource ?", q2: "Quel endroit calme te rend mal à l’aise ?" },
+{ q1: "Quel type de transport tu trouves agréable ?", q2: "Quel type de transport te rend nerveux ?" },
+{ q1: "Quel moment avec des amis reste mémorable ?", q2: "Quel moment social t’a déjà mis mal à l’aise ?" },
+{ q1: "Quel jeu de société tu trouves drôle ?", q2: "Quel jeu de société devient trop compétitif selon toi ?" },
+{ q1: "Quel défi personnel tu aimerais réussir ?", q2: "Quel défi personnel tu refuses de tenter ?" },
+{ q1: "Quel souvenir d’enfance te fait sourire ?", q2: "Quel souvenir d’enfance te semble gênant aujourd’hui ?" },
+{ q1: "Quel personnage fictif serait un bon ami ?", q2: "Quel personnage fictif serait insupportable en vrai ?" },
+{ q1: "Quel style vestimentaire te plaît ?", q2: "Quel style vestimentaire te surprend négativement ?" },
+{ q1: "Quel moment te rend nostalgique ?", q2: "Quel moment te rappelle quelque chose que tu veux oublier ?" },
+{ q1: "Quel aliment tu trouves sous-estimé ?", q2: "Quel aliment tu trouves surestimé ?" },
+{ q1: "Quel type de conversation te passionne ?", q2: "Quel type de conversation t’ennuie ?" },
+{ q1: "Quel endroit pour étudier ou travailler te motive ?", q2: "Quel endroit te déconcentre complètement ?" },
+{ q1: "Quelle activité artistique t’attire ?", q2: "Quelle activité artistique te semble incompréhensible ?" },
+{ q1: "Quel moment spontané t’a rendu heureux ?", q2: "Quel moment spontané t’a causé du stress ?" },
+{ q1: "Quel jeu vidéo te semble immersif ?", q2: "Quel jeu vidéo te semble répétitif ?" },
+{ q1: "Quel style d’humour te fait rire ?", q2: "Quel style d’humour te met mal à l’aise ?" },
+{ q1: "Quel type de fête familiale tu apprécies ?", q2: "Quel type de fête familiale tu trouves longue ?" },
+{ q1: "Quel endroit historique te fascine ?", q2: "Quel endroit historique te laisse indifférent ?" },
+{ q1: "Quel objet ancien tu trouves cool ?", q2: "Quel objet ancien te semble dépassé ?" },
+{ q1: "Quelle activité matinale te motive ?", q2: "Quelle activité matinale te fatigue ?" },
+{ q1: "Quel film t’a déjà inspiré ?", q2: "Quel film t’a laissé confus ?" },
+{ q1: "Quel animal te fascine ?", q2: "Quel animal te rend nerveux ?" },
+{ q1: "Quel type de voyage te correspond ?", q2: "Quel type de voyage te stresse ?" },
+{ q1: "Quel souvenir avec un professeur t’a marqué ?", q2: "Quel souvenir avec un professeur t’a frustré ?" },
+{ q1: "Quel jeu d’enfance tu rejouerais ?", q2: "Quel jeu d’enfance semble plate aujourd’hui ?" },
+{ q1: "Quel objet décoratif te plaît ?", q2: "Quel objet décoratif te semble inutile ?" },
+{ q1: "Quelle activité de groupe te motive ?", q2: "Quelle activité de groupe te fatigue ?" },
+{ q1: "Quel endroit pour relaxer est parfait ?", q2: "Quel endroit pour relaxer ne fonctionne pas pour toi ?" },
+{ q1: "Quel défi sportif te motive ?", q2: "Quel défi sportif te semble impossible ?" },
+{ q1: "Quel moment passé avec ta famille te rend heureux ?", q2: "Quel moment familial peut devenir stressant ?" },
+{ q1: "Quel objet technologique futur te ferait rêver ?", q2: "Quel objet technologique futur te ferait peur ?" },
+{ q1: "Quel loisir calme te plaît ?", q2: "Quel loisir calme te semble ennuyant ?" },
+{ q1: "Quel moment dans un film te captive ?", q2: "Quel moment dans un film te fait décrocher ?" },
+{ q1: "Quel talent social tu admires ?", q2: "Quel talent social te met mal à l’aise ?" },
+{ q1: "Quel type d’événement public tu apprécies ?", q2: "Quel type d’événement public tu évites ?" },
+{ q1: "Quel style de maison te plaît ?", q2: "Quel style de maison te semble inconfortable ?" },
+{ q1: "Quel souvenir lié à la nourriture te fait sourire ?", q2: "Quel souvenir lié à la nourriture t’a déçu ?" },
+{ q1: "Quel moment imprévu peut être excitant ?", q2: "Quel moment imprévu peut être stressant ?" },
+{ q1: "Quel loisir créatif te tente ?", q2: "Quel loisir créatif te semble trop compliqué ?" },
+{ q1: "Quel endroit touristique vaut le détour ?", q2: "Quel endroit touristique te semble surcoté ?" },
 ];
+
 
 type Step = "answering" | "discussion" | "results";
 
@@ -204,6 +163,7 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [mainQuestion, setMainQuestion] = useState("");
   const [impostorQuestion, setImpostorQuestion] = useState("");
+  const [showQuestion, setShowQuestion] = useState(false);
 
   const setupGame = () => {
     if (!players || players.length === 0) return;
@@ -246,6 +206,7 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
     const newAnswers = { ...answers, [players[currentPlayerIdx].id]: currentAnswer };
     setAnswers(newAnswers);
     setCurrentAnswer("");
+    setShowQuestion(false);
 
     if (currentPlayerIdx < players.length - 1) {
       setCurrentPlayerIdx(currentPlayerIdx + 1);
@@ -259,6 +220,7 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
     setCurrentPlayerIdx(0);
     setAnswers({});
     setCurrentAnswer("");
+    setShowQuestion(false);
     setupGame();
   };
 
@@ -283,29 +245,40 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
             </div>
 
             <div className="bg-slate-800 p-6 rounded-3xl border-2 border-slate-700 space-y-4">
-              <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">
-                {config.questionMode === "numbers" && players[currentPlayerIdx].id === impostorId 
-                  ? "Indice de Fourchette :" 
-                  : "Ta Question Secrète :"}
-              </p>
-              <p className="text-xl font-black text-white italic uppercase">"{questions[players[currentPlayerIdx].id]}"</p>
+              {!showQuestion ? (
+                <button onClick={() => setShowQuestion(true)} className="flex flex-col items-center gap-4 w-full py-6">
+                  <div className="p-6 bg-amber-500/20 rounded-full text-amber-400">
+                    <Eye size={48} />
+                  </div>
+                  <p className="font-bold text-amber-400 uppercase tracking-widest text-[10px]">Voir ma question</p>
+                </button>
+              ) : (
+                <div className="space-y-4 animate-in zoom-in duration-300">
+                  <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">
+                    {config.questionMode === "numbers" && players[currentPlayerIdx].id === impostorId
+                      ? "Indice de Fourchette :"
+                      : "Ta Question Secrète :"}
+                  </p>
+                  <p className="text-xl font-black text-white italic uppercase">"{questions[players[currentPlayerIdx].id]}"</p>
 
-              <input
-                type={config.questionMode === "numbers" ? "number" : "text"}
-                autoFocus
-                placeholder={config.questionMode === "numbers" ? "Ex: 15" : "Ta réponse..."}
-                value={currentAnswer}
-                onChange={(e) => setCurrentAnswer(e.target.value)}
-                className="w-full bg-slate-900 border-2 border-slate-700 p-4 rounded-xl text-white font-bold focus:border-amber-500 outline-none transition-all"
-              />
+                  <input
+                    type={config.questionMode === "numbers" ? "number" : "text"}
+                    autoFocus
+                    placeholder={config.questionMode === "numbers" ? "Ex: 15" : "Ta réponse..."}
+                    value={currentAnswer}
+                    onChange={(e) => setCurrentAnswer(e.target.value)}
+                    className="w-full bg-slate-900 border-2 border-slate-700 p-4 rounded-xl text-white font-bold focus:border-amber-500 outline-none transition-all"
+                  />
 
-              <button
-                onClick={submitAnswer}
-                disabled={!currentAnswer.trim()}
-                className="w-full py-4 bg-white text-black font-black uppercase italic rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <Send size={18} /> Valider
-              </button>
+                  <button
+                    onClick={submitAnswer}
+                    disabled={!currentAnswer.trim()}
+                    className="w-full py-4 bg-white text-black font-black uppercase italic rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <Send size={18} /> Valider
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -382,7 +355,7 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
               </div>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="mt-auto flex flex-col gap-3">
               <button onClick={restart} className="w-full py-4 bg-amber-500 text-black font-black uppercase italic rounded-2xl flex items-center justify-center gap-2">
                 <RotateCcw size={20} /> Rejouer
               </button>
