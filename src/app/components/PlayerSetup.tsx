@@ -13,6 +13,7 @@ interface PlayerSetupProps {
 export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const [newName, setNewName] = useState("");
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
 
   const addPlayer = () => {
     if (!newName.trim()) return;
@@ -35,6 +36,19 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const updatePlayerName = (id: string, name: string) => {
     setPlayers(players.map((p) => (p.id === id ? { ...p, name } : p)));
+  };
+
+  const reorderPlayers = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return;
+
+    const draggedIndex = players.findIndex((p) => p.id === draggedId);
+    const targetIndex = players.findIndex((p) => p.id === targetId);
+    if (draggedIndex < 0 || targetIndex < 0) return;
+
+    const nextPlayers = [...players];
+    const [movedPlayer] = nextPlayers.splice(draggedIndex, 1);
+    nextPlayers.splice(targetIndex, 0, movedPlayer);
+    setPlayers(nextPlayers);
   };
 
   return (
@@ -88,6 +102,15 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
               key={player.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              draggable
+              onDragStart={() => setDraggedPlayerId(player.id)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => {
+                if (!draggedPlayerId) return;
+                reorderPlayers(draggedPlayerId, player.id);
+                setDraggedPlayerId(null);
+              }}
+              onDragEnd={() => setDraggedPlayerId(null)}
               className="group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
             >
               <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
