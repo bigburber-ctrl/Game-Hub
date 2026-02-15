@@ -180,8 +180,8 @@ function PlayerRow({
     useSortable({ id: player.id });
 
   const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: isDragging ? CSS.Transform.toString(transform) : undefined,
+    transition: isDragging ? transition : undefined,
     zIndex: isDragging ? 20 : undefined,
   };
 
