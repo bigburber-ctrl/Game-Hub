@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Player } from "@/app/App";
-import { Plus, Trash2, User, ChevronLeft, Save } from "lucide-react";
+import { Plus, Trash2, User, ChevronLeft, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlayerSetupProps {
@@ -12,6 +12,7 @@ interface PlayerSetupProps {
 
 export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const [newName, setNewName] = useState("");
+  const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const addPlayer = () => {
     if (!newName.trim()) return;
@@ -51,7 +52,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
           <ChevronLeft size={24} />
         </button>
         <h1 className="text-2xl font-bold uppercase tracking-tight italic">
-          Config <span className="text-purple-500">Joueurs</span>
+          Gérer les <span className="text-purple-500">Joueurs</span>
         </h1>
       </header>
 
@@ -93,12 +94,22 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
               <input
                 type="text"
                 value={player.name}
+                ref={(element) => {
+                  nameInputRefs.current[player.id] = element;
+                }}
                 onChange={(e) => updatePlayerName(player.id, e.target.value)}
                 className="flex-1 bg-transparent border-none p-0 focus:ring-0 text-white font-medium"
               />
               <button
+                onClick={() => nameInputRefs.current[player.id]?.focus()}
+                className="p-2 text-slate-500 hover:text-sky-400 transition-colors"
+                aria-label={`Modifier le nom de ${player.name}`}
+              >
+                <Pencil size={16} />
+              </button>
+              <button
                 onClick={() => removePlayer(player.id)}
-                className="p-2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="p-2 text-slate-500 hover:text-red-400 transition-colors"
               >
                 <Trash2 size={18} />
               </button>
