@@ -2,20 +2,19 @@ import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   TouchSensor,
   closestCenter,
+  useDraggable,
+  useDroppable,
   useSensor,
   useSensors,
+  type DragCancelEvent,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { arrayMove } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { Player } from "@/app/App";
 import { Plus, Trash2, User, ChevronLeft, Pencil, GripVertical } from "lucide-react";
@@ -29,6 +28,7 @@ interface PlayerSetupProps {
 
 export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const [newName, setNewName] = useState("");
+  const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -62,7 +62,12 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     setPlayers(players.map((p) => (p.id === id ? { ...p, name } : p)));
   };
 
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setActivePlayerId(String(active.id));
+  };
+
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setActivePlayerId(null);
     if (!over || active.id === over.id) return;
 
     setPlayers((prevPlayers) => {
@@ -72,6 +77,14 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
       return arrayMove(prevPlayers, oldIndex, newIndex);
     });
   };
+
+  const handleDragCancel = (_event: DragCancelEvent) => {
+    setActivePlayerId(null);
+  };
+
+  const activePlayer = activePlayerId
+    ? players.find((player) => player.id === activePlayerId) ?? null
+    : null;
 
   return (
     <motion.div
@@ -122,25 +135,26 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             sensors={sensors}
             collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
           >
-            <SortableContext
-              items={players.map((player) => player.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="flex flex-col gap-3">
-                {players.map((player, index) => (
-                  <PlayerRow
-                    key={player.id}
-                    player={player}
-                    index={index}
-                    nameInputRefs={nameInputRefs}
-                    removePlayer={removePlayer}
-                    updatePlayerName={updatePlayerName}
-                  />
-                ))}
-              </div>
-            </SortableContext>
+            <div className="flex flex-col gap-3">
+              {players.map((player, index) => (
+                <PlayerRow
+                  key={player.id}
+                  player={player}
+                  index={index}
+                  isGhosted={activePlayerId === player.id}
+                  nameInputRefs={nameInputRefs}
+                  removePlayer={removePlayer}
+                  updatePlayerName={updatePlayerName}
+                />
+              ))}
+            </div>
+            <DragOverlay>
+              {activePlayer ? <PlayerRowPreview player={activePlayer} /> : null}
+            </DragOverlay>
           </DndContext>
         )}
       </div>
@@ -164,6 +178,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 interface PlayerRowProps {
   player: Player;
   index: number;
+  isGhosted: boolean;
   nameInputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
   removePlayer: (id: string) => void;
   updatePlayerName: (id: string, name: string) => void;
@@ -172,31 +187,27 @@ interface PlayerRowProps {
 function PlayerRow({
   player,
   index,
+  isGhosted,
   nameInputRefs,
   removePlayer,
   updatePlayerName,
 }: PlayerRowProps) {
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
-    useSortable({ id: player.id });
-
-  const style: React.CSSProperties = {
-    transform: isDragging ? CSS.Transform.toString(transform) : undefined,
-    transition: isDragging ? transition : undefined,
-    zIndex: isDragging ? 20 : undefined,
-  };
+  const { setNodeRef: setDropRef } = useDroppable({ id: player.id });
+  const { attributes, listeners, setNodeRef: setDragRef } = useDraggable({ id: player.id });
 
   return (
     <motion.div
-      ref={setNodeRef}
-      style={style}
+      ref={setDropRef}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
+      className={`group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm ${
+        isGhosted ? "opacity-40" : "opacity-100"
+      }`}
     >
       <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
       <button
         type="button"
-        ref={setActivatorNodeRef}
+        ref={setDragRef}
         {...attributes}
         {...listeners}
         className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none"
@@ -227,5 +238,27 @@ function PlayerRow({
         <Trash2 size={18} />
       </button>
     </motion.div>
+  );
+}
+
+interface PlayerRowPreviewProps {
+  player: Player;
+}
+
+function PlayerRowPreview({ player }: PlayerRowPreviewProps) {
+  return (
+    <div className="flex items-center gap-3 bg-slate-700 p-2 pl-4 rounded-xl border border-slate-500 shadow-2xl w-[min(92vw,640px)]">
+      <span className="text-slate-300 font-mono text-sm w-4">•</span>
+      <span className="p-1 text-slate-200">
+        <GripVertical size={16} />
+      </span>
+      <span className="flex-1 text-white font-medium truncate">{player.name}</span>
+      <span className="p-2 text-slate-300">
+        <Pencil size={16} />
+      </span>
+      <span className="p-2 text-slate-300">
+        <Trash2 size={18} />
+      </span>
+    </div>
   );
 }
