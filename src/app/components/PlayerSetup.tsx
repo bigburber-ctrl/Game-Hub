@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, Reorder } from "framer-motion";
 import { Player } from "@/app/App";
-import { Plus, Trash2, User, ChevronLeft, Pencil } from "lucide-react";
+import { Plus, Trash2, User, ChevronLeft, Pencil, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlayerSetupProps {
@@ -13,7 +13,6 @@ interface PlayerSetupProps {
 export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const [newName, setNewName] = useState("");
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
 
   const addPlayer = () => {
     if (!newName.trim()) return;
@@ -36,19 +35,6 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const updatePlayerName = (id: string, name: string) => {
     setPlayers(players.map((p) => (p.id === id ? { ...p, name } : p)));
-  };
-
-  const reorderPlayers = (draggedId: string, targetId: string) => {
-    if (draggedId === targetId) return;
-
-    const draggedIndex = players.findIndex((p) => p.id === draggedId);
-    const targetIndex = players.findIndex((p) => p.id === targetId);
-    if (draggedIndex < 0 || targetIndex < 0) return;
-
-    const nextPlayers = [...players];
-    const [movedPlayer] = nextPlayers.splice(draggedIndex, 1);
-    nextPlayers.splice(targetIndex, 0, movedPlayer);
-    setPlayers(nextPlayers);
   };
 
   return (
@@ -96,48 +82,48 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             <p>Ajoutez au moins 1 joueurs pour commencer</p>
           </div>
         ) : (
-          players.map((player, index) => (
-            <motion.div
-              layout
-              key={player.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              draggable
-              onDragStart={() => setDraggedPlayerId(player.id)}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={() => {
-                if (!draggedPlayerId) return;
-                reorderPlayers(draggedPlayerId, player.id);
-                setDraggedPlayerId(null);
-              }}
-              onDragEnd={() => setDraggedPlayerId(null)}
-              className="group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
-            >
-              <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
-              <input
-                type="text"
-                value={player.name}
-                ref={(element) => {
-                  nameInputRefs.current[player.id] = element;
-                }}
-                onChange={(e) => updatePlayerName(player.id, e.target.value)}
-                className="flex-1 bg-transparent border-none p-0 focus:ring-0 text-white font-medium"
-              />
-              <button
-                onClick={() => nameInputRefs.current[player.id]?.focus()}
-                className="p-2 text-slate-500 hover:text-sky-400 transition-colors"
-                aria-label={`Modifier le nom de ${player.name}`}
+          <Reorder.Group axis="y" values={players} onReorder={setPlayers} className="space-y-3">
+            {players.map((player, index) => (
+              <Reorder.Item
+                key={player.id}
+                value={player}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="group flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm touch-none"
               >
-                <Pencil size={16} />
-              </button>
-              <button
-                onClick={() => removePlayer(player.id)}
-                className="p-2 text-slate-500 hover:text-red-400 transition-colors"
-              >
-                <Trash2 size={18} />
-              </button>
-            </motion.div>
-          ))
+                <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
+                <button
+                  type="button"
+                  className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing"
+                  aria-label={`Déplacer ${player.name}`}
+                >
+                  <GripVertical size={16} />
+                </button>
+                <input
+                  type="text"
+                  value={player.name}
+                  ref={(element) => {
+                    nameInputRefs.current[player.id] = element;
+                  }}
+                  onChange={(e) => updatePlayerName(player.id, e.target.value)}
+                  className="flex-1 bg-transparent border-none p-0 focus:ring-0 text-white font-medium"
+                />
+                <button
+                  onClick={() => nameInputRefs.current[player.id]?.focus()}
+                  className="p-2 text-slate-500 hover:text-sky-400 transition-colors"
+                  aria-label={`Modifier le nom de ${player.name}`}
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  onClick={() => removePlayer(player.id)}
+                  className="p-2 text-slate-500 hover:text-red-400 transition-colors"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </Reorder.Item>
+            ))}
+          </Reorder.Group>
         )}
       </div>
 
