@@ -11,6 +11,36 @@ const routePrefix = "/make-supabase-0cd99078";
 app.use("*", logger(console.log));
 app.use("*", cors());
 
+// Path-tolerant fallback for shared room routes across different gateway prefixes
+app.all("*", async (c, next) => {
+  const pathname = new URL(c.req.url).pathname;
+  const roomMatch = pathname.match(/\/room\/([A-Za-z0-9_-]+)$/);
+  if (!roomMatch) {
+    return next();
+  }
+
+  const code = roomMatch[1].toUpperCase();
+
+  if (c.req.method === "GET") {
+    const room = await kv.get(`custom_room:${code}`);
+    if (!room) return c.json({ error: "Room introuvable" }, 404);
+    return c.json(room);
+  }
+
+  if (c.req.method === "POST") {
+    const room = await c.req.json();
+    await kv.set(`custom_room:${code}`, room);
+    return c.json({ success: true });
+  }
+
+  if (c.req.method === "DELETE") {
+    await kv.del(`custom_room:${code}`);
+    return c.json({ success: true });
+  }
+
+  return next();
+});
+
 // --- MISSIONS DATA ---
 const DINER_MISSIONS = [
   "Dire 'C'est pas faux' 3 fois dans la conversation.",
