@@ -151,11 +151,11 @@ function PlayerRow({
       drag="y"
       dragListener={false}
       dragControls={dragControls}
-      dragMomentum={false}
-      dragElastic={0}
+      dragMomentum={true}
+      dragElastic={0.12}
       layout="position"
-      whileDrag={{ zIndex: 10 }}
-      transition={{ type: "tween", duration: 0.12 }}
+      whileDrag={{ zIndex: 10, scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 520, damping: 38, mass: 0.55 }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="group w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
