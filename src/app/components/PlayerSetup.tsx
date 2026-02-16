@@ -35,13 +35,12 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const resetDragTimeoutRef = useRef<number | null>(null);
-  const lastSwapAtRef = useRef<number>(0);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 60, tolerance: 10 },
+      activationConstraint: { delay: 80, tolerance: 8 },
     })
   );
 
@@ -89,7 +88,6 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const handleDragStart = ({ active }: DragStartEvent) => {
     const activeId = String(active.id);
-    lastSwapAtRef.current = 0;
     setActivePlayerId(activeId);
     setHiddenPlayerId(activeId);
 
@@ -113,61 +111,24 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    lastSwapAtRef.current = 0;
     clearDragStates(120);
     if (!over || active.id === over.id) return;
-
-    setPlayers((prevPlayers) => {
-      const oldIndex = prevPlayers.findIndex((player) => player.id === active.id);
-      const newIndex = prevPlayers.findIndex((player) => player.id === over.id);
-      if (oldIndex < 0 || newIndex < 0) return prevPlayers;
-      return arrayMove(prevPlayers, oldIndex, newIndex);
-    });
   };
 
   const handleDragOver = ({ active, over }: DragOverEvent) => {
-    if (!over || active.id === over.id) {
-      return;
-    }
-
-    const now = Date.now();
-    if (now - lastSwapAtRef.current < 45) {
-      return;
-    }
+    if (!over || active.id === over.id) return;
 
     setPlayers((prevPlayers) => {
       const oldIndex = prevPlayers.findIndex((player) => player.id === active.id);
       const newIndex = prevPlayers.findIndex((player) => player.id === over.id);
       if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return prevPlayers;
 
-      const translatedRect = active.rect.current.translated;
-      const overRect = over.rect;
-      if (translatedRect && overRect) {
-        const activeCenterY = translatedRect.top + translatedRect.height / 2;
-        const overCenterY = overRect.top + overRect.height / 2;
-        const movingDown = newIndex > oldIndex;
-
-        const downSwitchOffset = overRect.height * 0.2;
-        const upSwitchOffset = overRect.height * 0.2;
-
-        const shouldSwap = movingDown
-          ? activeCenterY >= overCenterY - downSwitchOffset
-          : activeCenterY <= overCenterY - upSwitchOffset;
-
-        if (!shouldSwap) return prevPlayers;
-      }
-
-      // Move only one slot at a time to avoid jumpy multi-position swaps
-      const stepTargetIndex =
-        newIndex > oldIndex ? oldIndex + 1 : oldIndex - 1;
-      lastSwapAtRef.current = now;
-
-      return arrayMove(prevPlayers, oldIndex, stepTargetIndex);
+      const direction = newIndex > oldIndex ? 1 : -1;
+      return arrayMove(prevPlayers, oldIndex, oldIndex + direction);
     });
   };
 
   const handleDragCancel = (_event: DragCancelEvent) => {
-    lastSwapAtRef.current = 0;
     clearDragStates(0);
   };
 
@@ -292,7 +253,7 @@ function PlayerRow({
   removePlayer,
   updatePlayerName,
 }: PlayerRowProps) {
-  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: player.id });
+  const { setNodeRef: setDropRef } = useDroppable({ id: player.id });
   const { attributes, listeners, setNodeRef: setDragRef } = useDraggable({ id: player.id });
 
   const setRowRefs = (element: HTMLDivElement | null) => {
@@ -305,9 +266,7 @@ function PlayerRow({
       ref={setRowRefs}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`group w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border transition-all shadow-sm ${
-        isOver ? "border-purple-500" : "border-slate-700 hover:border-slate-600"
-      } ${isHidden ? "invisible" : "visible"}`}
+      className={`group w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm ${isHidden ? "invisible" : "visible"}`}
       data-player-row-id={player.id}
     >
       <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
