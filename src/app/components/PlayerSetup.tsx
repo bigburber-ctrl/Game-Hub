@@ -5,7 +5,7 @@ import {
   DragOverlay,
   PointerSensor,
   TouchSensor,
-  pointerWithin,
+  closestCenter,
   useDraggable,
   useDroppable,
   useSensor,
@@ -37,10 +37,10 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const resetDragTimeoutRef = useRef<number | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
+      activationConstraint: { distance: 2 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 80, tolerance: 8 },
+      activationConstraint: { delay: 50, tolerance: 10 },
     })
   );
 
@@ -186,7 +186,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
         ) : (
           <DndContext
             sensors={sensors}
-            collisionDetection={pointerWithin}
+            collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
