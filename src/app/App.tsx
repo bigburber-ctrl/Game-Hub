@@ -7,6 +7,7 @@ import { CustomImpostor } from "@/app/components/CustomImpostor";
 import { QuestionImpostor } from "@/app/components/QuestionImpostor";
 import { DinerExtreme } from "@/app/components/DinerExtreme";
 import { TrouveRegle } from "@/app/components/TrouveRegle";
+import { RoueDeLaChance } from "@/app/components/RoueDeLaChance";
 import { RAW_DINER_TRI_POOL } from "@/app/components/DinerMissionsTriPool";
 
 import { GameSettings, GameConfig } from "@/app/components/GameSettings";
@@ -32,7 +33,7 @@ type MissionHistoryItem = {
   draft: string;
 };
 
-type GameState = "home" | "setup" | "settings" | "playing" | "custom-impostor" | "diner-extreme" | "mission-review";
+type GameState = "home" | "setup" | "settings" | "playing" | "custom-impostor" | "diner-extreme" | "mission-review" | "fortune-wheel";
 type GameType = "trapped-round" | "word-impostor" | "question-impostor" | "trouve-regle" | "diner-extreme";
 type ConfigurableGameType = Exclude<GameType, "diner-extreme">;
 
@@ -294,6 +295,13 @@ export default function App() {
 
                 {showMoreOptions && (
                   <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => setGameState("fortune-wheel")}
+                      className="w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all bg-slate-800/50 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95"
+                    >
+                      🎡 Roue de la chance
+                    </button>
+
                     <button
                       onClick={() => {
                         if (players.length < 3) {
@@ -615,6 +623,10 @@ export default function App() {
               players={players}
               onBack={resetToHome}
             />
+          )}
+
+          {gameState === "fortune-wheel" && (
+            <RoueDeLaChance onBack={resetToHome} />
           )}
         </AnimatePresence>
       </div>

@@ -1,0 +1,271 @@
+import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { ChevronLeft, Plus, Trash2, RotateCcw, CircleOff } from "lucide-react";
+import { toast } from "sonner";
+
+type WheelItem = {
+  id: string;
+  label: string;
+  crossed: boolean;
+};
+
+interface RoueDeLaChanceProps {
+  onBack: () => void;
+}
+
+const STORAGE_KEY = "gamehub_fortune_wheel_items";
+const DEFAULT_ITEMS: WheelItem[] = [
+  { id: "1", label: "1", crossed: false },
+  { id: "2", label: "2", crossed: false },
+  { id: "3", label: "3", crossed: false },
+];
+
+function readInitialItems(): WheelItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_ITEMS;
+    const parsed = JSON.parse(raw) as WheelItem[];
+    if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_ITEMS;
+    return parsed.map((item, index) => ({
+      id: item.id || `${Date.now().toString(36)}_${index}`,
+      label: typeof item.label === "string" ? item.label : String(index + 1),
+      crossed: Boolean(item.crossed),
+    }));
+  } catch {
+    return DEFAULT_ITEMS;
+  }
+}
+
+export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
+  const [items, setItems] = useState<WheelItem[]>(() => readInitialItems());
+  const [newLabel, setNewLabel] = useState("");
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [rotationDeg, setRotationDeg] = useState(0);
+  const [pendingChoiceId, setPendingChoiceId] = useState<string | null>(null);
+
+  const activeItems = useMemo(
+    () => items.filter((item) => !item.crossed && item.label.trim().length > 0),
+    [items]
+  );
+
+  const pendingChoice = pendingChoiceId
+    ? items.find((item) => item.id === pendingChoiceId) ?? null
+    : null;
+
+  const persist = (nextItems: WheelItem[]) => {
+    setItems(nextItems);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextItems));
+    } catch {
+      // ignore
+    }
+  };
+
+  const addItem = () => {
+    const value = newLabel.trim();
+    if (!value) return;
+    const nextItems = [
+      ...items,
+      {
+        id: `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`,
+        label: value,
+        crossed: false,
+      },
+    ];
+    persist(nextItems);
+    setNewLabel("");
+  };
+
+  const updateItem = (id: string, label: string) => {
+    persist(items.map((item) => (item.id === id ? { ...item, label } : item)));
+  };
+
+  const removeItem = (id: string) => {
+    persist(items.filter((item) => item.id !== id));
+    if (pendingChoiceId === id) {
+      setPendingChoiceId(null);
+    }
+  };
+
+  const setCrossed = (id: string, crossed: boolean) => {
+    persist(items.map((item) => (item.id === id ? { ...item, crossed } : item)));
+  };
+
+  const spinWheel = () => {
+    if (isSpinning) return;
+    if (activeItems.length === 0) {
+      toast.error("Ajoute au moins 1 choix non barré");
+      return;
+    }
+
+    const selectedIndex = Math.floor(Math.random() * activeItems.length);
+    const selected = activeItems[selectedIndex];
+    const segmentSize = 360 / activeItems.length;
+    const selectedCenterAngle = selectedIndex * segmentSize + segmentSize / 2;
+    const offsetToPointer = 360 - selectedCenterAngle;
+    const extraTurns = 4 + Math.floor(Math.random() * 2);
+    const nextRotation = rotationDeg + extraTurns * 360 + offsetToPointer;
+
+    setPendingChoiceId(null);
+    setIsSpinning(true);
+    setRotationDeg(nextRotation);
+
+    window.setTimeout(() => {
+      setIsSpinning(false);
+      setPendingChoiceId(selected.id);
+    }, 1800);
+  };
+
+  const segmentColors = [
+    "#7c3aed",
+    "#4f46e5",
+    "#2563eb",
+    "#0891b2",
+    "#db2777",
+    "#ea580c",
+    "#16a34a",
+  ];
+
+  const wheelBackground = useMemo(() => {
+    if (activeItems.length === 0) {
+      return "#1e293b";
+    }
+
+    const segment = 360 / activeItems.length;
+    const stops = activeItems.map((_, index) => {
+      const start = index * segment;
+      const end = start + segment;
+      const color = segmentColors[index % segmentColors.length];
+      return `${color} ${start}deg ${end}deg`;
+    });
+
+    return `conic-gradient(${stops.join(", ")})`;
+  }, [activeItems]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="flex flex-col flex-1 h-full"
+    >
+      <header className="flex items-center gap-4 mb-6">
+        <button
+          onClick={onBack}
+          className="p-2 hover:bg-slate-800 rounded-full text-slate-400"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <h1 className="text-2xl font-bold uppercase tracking-tight italic">
+          Roue de la <span className="text-purple-500">Chance</span>
+        </h1>
+      </header>
+
+      <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 mb-5">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Ajouter un choix..."
+            value={newLabel}
+            onChange={(event) => setNewLabel(event.target.value)}
+            onKeyDown={(event) => event.key === "Enter" && addItem()}
+            className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+          />
+          <button
+            onClick={addItem}
+            className="bg-purple-600 hover:bg-purple-500 text-white p-3 rounded-xl transition-colors active:scale-95"
+          >
+            <Plus size={22} />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pr-1 max-h-[36vh]">
+        <div className="flex flex-col gap-3 w-full">
+          {items.map((item, index) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full flex items-center gap-2 sm:gap-3 bg-slate-800 p-2 pl-3 pr-2 sm:pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
+            >
+              <span className="text-slate-500 font-mono text-sm w-4 shrink-0">{index + 1}</span>
+              <button
+                onClick={() => setCrossed(item.id, !item.crossed)}
+                className={`p-1 rounded-md shrink-0 transition-colors ${
+                  item.crossed ? "text-emerald-400 hover:text-emerald-300" : "text-slate-500 hover:text-slate-300"
+                }`}
+                aria-label={item.crossed ? `Débarrer ${item.label}` : `Barrer ${item.label}`}
+              >
+                {item.crossed ? <RotateCcw size={16} /> : <CircleOff size={16} />}
+              </button>
+              <input
+                type="text"
+                value={item.label}
+                onChange={(event) => updateItem(item.id, event.target.value)}
+                className={`flex-1 min-w-0 bg-transparent border-none p-0 focus:ring-0 font-medium ${
+                  item.crossed ? "text-slate-500 line-through" : "text-white"
+                }`}
+              />
+              <button
+                onClick={() => removeItem(item.id)}
+                className="p-2 text-slate-500 hover:text-red-400 transition-colors shrink-0"
+                aria-label={`Supprimer ${item.label}`}
+              >
+                <Trash2 size={18} />
+              </button>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-col items-center gap-4">
+        <div className="relative">
+          <div className="absolute left-1/2 -top-2 -translate-x-1/2 z-10 w-0 h-0 border-l-[10px] border-r-[10px] border-t-0 border-b-[14px] border-l-transparent border-r-transparent border-b-white" />
+          <motion.div
+            animate={{ rotate: rotationDeg }}
+            transition={{ duration: 1.8, ease: [0.12, 0.8, 0.2, 1] }}
+            className="w-64 h-64 rounded-full border-4 border-slate-700 shadow-xl"
+            style={{ background: wheelBackground }}
+          />
+        </div>
+
+        <button
+          onClick={spinWheel}
+          disabled={isSpinning || activeItems.length === 0}
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:scale-100"
+        >
+          {isSpinning ? "Ça tourne..." : "Lancer la roue"}
+        </button>
+
+        {pendingChoice && (
+          <div className="w-full bg-slate-800/70 border border-slate-700 rounded-2xl p-4 space-y-3">
+            <p className="text-center text-slate-200 font-bold">
+              Résultat: <span className="text-purple-400">{pendingChoice.label}</span>
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  setCrossed(pendingChoice.id, true);
+                  setPendingChoiceId(null);
+                }}
+                className="w-full py-3 rounded-xl bg-red-600/80 text-white font-bold hover:bg-red-600 transition"
+              >
+                Supprimer de la liste
+              </button>
+              <button
+                onClick={() => setPendingChoiceId(null)}
+                className="w-full py-3 rounded-xl bg-slate-700 text-white font-bold hover:bg-slate-600 transition"
+              >
+                Conserver
+              </button>
+            </div>
+            <p className="text-center text-[11px] text-slate-400">
+              Supprimer de la liste barre l’élément (il n’est pas effacé).
+            </p>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
