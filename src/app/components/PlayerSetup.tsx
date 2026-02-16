@@ -39,10 +39,18 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const reorderPlayersByIds = (orderedIds: string[]) => {
     setPlayers((prevPlayers) => {
+      const uniqueOrderedIds = Array.from(new Set(orderedIds));
       const playersById = new Map(prevPlayers.map((player) => [player.id, player]));
-      return orderedIds
+
+      const reordered = uniqueOrderedIds
         .map((id) => playersById.get(id))
         .filter((player): player is Player => Boolean(player));
+
+      const missing = prevPlayers.filter(
+        (player) => !uniqueOrderedIds.includes(player.id)
+      );
+
+      return [...reordered, ...missing];
     });
   };
 
@@ -154,8 +162,8 @@ function PlayerRow({
       dragMomentum={false}
       dragElastic={0}
       layout="position"
-      whileDrag={{ zIndex: 10, scale: 1.01 }}
-      transition={{ type: "tween", duration: 0.06 }}
+      whileDrag={{ zIndex: 10 }}
+      transition={{ type: "spring", stiffness: 700, damping: 45, mass: 0.4 }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="group w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
@@ -165,7 +173,7 @@ function PlayerRow({
         type="button"
         onPointerDown={(event) => {
           event.preventDefault();
-          dragControls.start(event);
+          dragControls.start(event, { snapToCursor: true });
         }}
         className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none"
         aria-label={`Déplacer ${player.name}`}
