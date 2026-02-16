@@ -131,7 +131,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     }
 
     const now = Date.now();
-    if (now - lastSwapAtRef.current < 70) {
+    if (now - lastSwapAtRef.current < 45) {
       return;
     }
 
@@ -139,6 +139,23 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
       const oldIndex = prevPlayers.findIndex((player) => player.id === active.id);
       const newIndex = prevPlayers.findIndex((player) => player.id === over.id);
       if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return prevPlayers;
+
+      const translatedRect = active.rect.current.translated;
+      const overRect = over.rect;
+      if (translatedRect && overRect) {
+        const activeCenterY = translatedRect.top + translatedRect.height / 2;
+        const overCenterY = overRect.top + overRect.height / 2;
+        const movingDown = newIndex > oldIndex;
+
+        const downSwitchOffset = overRect.height * 0.2;
+        const upSwitchOffset = overRect.height * 0.2;
+
+        const shouldSwap = movingDown
+          ? activeCenterY >= overCenterY - downSwitchOffset
+          : activeCenterY <= overCenterY - upSwitchOffset;
+
+        if (!shouldSwap) return prevPlayers;
+      }
 
       // Move only one slot at a time to avoid jumpy multi-position swaps
       const stepTargetIndex =
