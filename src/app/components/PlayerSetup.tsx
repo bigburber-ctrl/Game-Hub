@@ -5,7 +5,7 @@ import {
   DragOverlay,
   PointerSensor,
   TouchSensor,
-  pointerWithin,
+  closestCenter,
   useDraggable,
   useDroppable,
   useSensor,
@@ -35,7 +35,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const resetDragTimeoutRef = useRef<number | null>(null);
-  const lastSwapTargetRef = useRef<string | null>(null);
+  const lastOverIdRef = useRef<string | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -89,9 +89,9 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const handleDragStart = ({ active }: DragStartEvent) => {
     const activeId = String(active.id);
+    lastOverIdRef.current = null;
     setActivePlayerId(activeId);
     setHiddenPlayerId(activeId);
-    lastSwapTargetRef.current = null;
 
     const activeRow = document.querySelector<HTMLElement>(`[data-player-row-id="${activeId}"]`);
     const rowWidth = activeRow?.getBoundingClientRect().width;
@@ -113,8 +113,8 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    lastOverIdRef.current = null;
     clearDragStates(120);
-    lastSwapTargetRef.current = null;
     if (!over || active.id === over.id) return;
 
     setPlayers((prevPlayers) => {
@@ -126,25 +126,17 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   };
 
   const handleDragOver = ({ active, over }: DragOverEvent) => {
-    if (!over || active.id === over.id) return;
+    if (!over || active.id === over.id) {
+      lastOverIdRef.current = null;
+      return;
+    }
 
-    const oldIndexInView = players.findIndex((player) => player.id === active.id);
-    const newIndexInView = players.findIndex((player) => player.id === over.id);
-    if (oldIndexInView < 0 || newIndexInView < 0 || oldIndexInView === newIndexInView) return;
+    const overId = String(over.id);
+    if (lastOverIdRef.current === overId) {
+      return;
+    }
 
-    const movingDown = newIndexInView > oldIndexInView;
-    const activeRect = active.rect.current.translated ?? active.rect.current.initial;
-    const overRect = over.rect;
-    if (!activeRect || !overRect) return;
-
-    const activeCenterY = activeRect.top + activeRect.height / 2;
-    const overCenterY = overRect.top + overRect.height / 2;
-    const crossedMidpoint = movingDown ? activeCenterY > overCenterY : activeCenterY < overCenterY;
-    if (!crossedMidpoint) return;
-
-    const targetSignature = `${active.id}:${String(over.id)}:${movingDown ? "down" : "up"}`;
-    if (lastSwapTargetRef.current === targetSignature) return;
-    lastSwapTargetRef.current = targetSignature;
+    lastOverIdRef.current = overId;
 
     setPlayers((prevPlayers) => {
       const oldIndex = prevPlayers.findIndex((player) => player.id === active.id);
@@ -160,8 +152,8 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   };
 
   const handleDragCancel = (_event: DragCancelEvent) => {
+    lastOverIdRef.current = null;
     clearDragStates(0);
-    lastSwapTargetRef.current = null;
   };
 
   const activePlayer = activePlayerId
@@ -218,7 +210,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
         ) : (
           <DndContext
             sensors={sensors}
-            collisionDetection={pointerWithin}
+            collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
