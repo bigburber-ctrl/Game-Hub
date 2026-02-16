@@ -29,17 +29,38 @@ interface PlayerSetupProps {
 export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const [newName, setNewName] = useState("");
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
+  const [hiddenPlayerId, setHiddenPlayerId] = useState<string | null>(null);
   const [activeOverlayWidth, setActiveOverlayWidth] = useState<number>(320);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const resetDragTimeoutRef = useRef<number | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 120, tolerance: 8 },
+      activationConstraint: { delay: 80, tolerance: 8 },
     })
   );
+
+  const clearDragStates = (delayMs = 0) => {
+    if (resetDragTimeoutRef.current !== null) {
+      window.clearTimeout(resetDragTimeoutRef.current);
+      resetDragTimeoutRef.current = null;
+    }
+
+    if (delayMs <= 0) {
+      setActivePlayerId(null);
+      setHiddenPlayerId(null);
+      return;
+    }
+
+    resetDragTimeoutRef.current = window.setTimeout(() => {
+      setActivePlayerId(null);
+      setHiddenPlayerId(null);
+      resetDragTimeoutRef.current = null;
+    }, delayMs);
+  };
 
   const addPlayer = () => {
     if (!newName.trim()) return;
@@ -67,6 +88,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const handleDragStart = ({ active }: DragStartEvent) => {
     const activeId = String(active.id);
     setActivePlayerId(activeId);
+    setHiddenPlayerId(activeId);
 
     const activeRow = document.querySelector<HTMLElement>(`[data-player-row-id="${activeId}"]`);
     const rowWidth = activeRow?.getBoundingClientRect().width;
@@ -88,7 +110,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    setActivePlayerId(null);
+    clearDragStates(120);
     if (!over || active.id === over.id) return;
 
     setPlayers((prevPlayers) => {
@@ -100,7 +122,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   };
 
   const handleDragCancel = (_event: DragCancelEvent) => {
-    setActivePlayerId(null);
+    clearDragStates(0);
   };
 
   const activePlayer = activePlayerId
@@ -169,7 +191,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
                   key={player.id}
                   player={player}
                   index={index}
-                  isHidden={activePlayerId === player.id}
+                  isHidden={hiddenPlayerId === player.id}
                   nameInputRefs={nameInputRefs}
                   removePlayer={removePlayer}
                   updatePlayerName={updatePlayerName}
