@@ -102,7 +102,8 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     const selected = activeItems[selectedIndex];
     const segmentSize = 360 / activeItems.length;
     const selectedCenterAngle = selectedIndex * segmentSize + segmentSize / 2;
-    const offsetToPointer = 360 - selectedCenterAngle;
+    const pointerAngle = 270;
+    const offsetToPointer = ((pointerAngle - selectedCenterAngle) % 360 + 360) % 360;
     const extraTurns = 4 + Math.floor(Math.random() * 2);
     const nextRotation = rotationDeg + extraTurns * 360 + offsetToPointer;
 
@@ -221,13 +222,31 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
 
       <div className="mt-5 flex flex-col items-center gap-4">
         <div className="relative">
-          <div className="absolute left-1/2 -top-2 -translate-x-1/2 z-10 w-0 h-0 border-l-[10px] border-r-[10px] border-t-0 border-b-[14px] border-l-transparent border-r-transparent border-b-white" />
+          <div className="absolute left-1/2 -top-1 -translate-x-1/2 z-10 w-0 h-0 border-l-[10px] border-r-[10px] border-b-0 border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
           <motion.div
             animate={{ rotate: rotationDeg }}
             transition={{ duration: 1.8, ease: [0.12, 0.8, 0.2, 1] }}
-            className="w-64 h-64 rounded-full border-4 border-slate-700 shadow-xl"
+            className="relative w-64 h-64 rounded-full border-4 border-slate-700 shadow-xl"
             style={{ background: wheelBackground }}
-          />
+          >
+            {activeItems.map((item, index) => {
+              const segmentSize = 360 / activeItems.length;
+              const angle = index * segmentSize + segmentSize / 2;
+              return (
+                <div
+                  key={item.id}
+                  className="absolute left-1/2 top-1/2 w-24 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none"
+                  style={{
+                    transform: `translate(-50%, -50%) rotate(${angle}deg) translateY(-86px) rotate(${-angle}deg)`,
+                  }}
+                >
+                  <span className="text-[10px] sm:text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] break-words leading-tight">
+                    {item.label}
+                  </span>
+                </div>
+              );
+            })}
+          </motion.div>
         </div>
 
         <button
