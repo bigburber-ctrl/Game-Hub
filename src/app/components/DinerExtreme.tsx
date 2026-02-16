@@ -1161,29 +1161,31 @@ function SetupScreen({ currentPlayer, joinCode, setJoinCode, onCreateLobby, onJo
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen flex flex-col items-center justify-center p-4 text-white relative"
+      className="min-h-screen flex flex-col items-center justify-center p-4 text-white"
     >
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={onBack}
-        className="absolute top-24 left-4 p-2 bg-orange-700/50 rounded-lg hover:bg-orange-700 transition"
-      >
-        <ChevronLeft size={24} />
-      </motion.button>
+      <div className="w-full max-w-sm flex items-center justify-between mb-6">
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={onBack}
+          className="p-2 bg-orange-700/50 rounded-lg hover:bg-orange-700 transition"
+        >
+          <ChevronLeft size={24} />
+        </motion.button>
 
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setShowRules(true)}
-        className="absolute top-24 right-4 px-3 py-2 bg-orange-700/50 rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
-      >
-        <AlertCircle size={16} />
-        <span className="text-[10px] font-black uppercase tracking-widest">RÈGLES</span>
-      </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowRules(true)}
+          className="px-3 py-2 bg-orange-700/50 rounded-lg hover:bg-orange-700 transition flex items-center gap-2"
+        >
+          <AlertCircle size={16} />
+          <span className="text-[10px] font-black uppercase tracking-widest">RÈGLES</span>
+        </motion.button>
+      </div>
 
-      <div className="text-center space-y-8 max-w-sm">
-        <h1 className="text-5xl font-black tracking-tight">
+      <div className="text-center space-y-8 max-w-sm w-full">
+        <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
           🍽️ DÎNER DE L'EXTRÊME
         </h1>
         <p className="text-xl text-orange-100">

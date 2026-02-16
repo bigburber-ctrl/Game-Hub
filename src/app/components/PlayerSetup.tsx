@@ -329,10 +329,10 @@ function PlayerRow({
       ref={setRowRefs}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`group w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm ${isHidden ? "invisible" : "visible"}`}
+      className={`group w-full flex items-center gap-2 sm:gap-3 bg-slate-800 p-2 pl-3 pr-2 sm:pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm ${isHidden ? "invisible" : "visible"}`}
       data-player-row-id={player.id}
     >
-      <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
+      <span className="text-slate-500 font-mono text-sm w-4 shrink-0">{index + 1}</span>
       <button
         type="button"
         onPointerDown={(event) => {
@@ -340,7 +340,7 @@ function PlayerRow({
         }}
         {...attributes}
         {...listeners}
-        className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none"
+        className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none shrink-0"
         aria-label={`Déplacer ${player.name}`}
       >
         <GripVertical size={16} />
@@ -352,18 +352,18 @@ function PlayerRow({
           nameInputRefs.current[player.id] = element;
         }}
         onChange={(e) => updatePlayerName(player.id, e.target.value)}
-        className="flex-1 bg-transparent border-none p-0 focus:ring-0 text-white font-medium"
+        className="flex-1 min-w-0 bg-transparent border-none p-0 focus:ring-0 text-white font-medium"
       />
       <button
         onClick={() => nameInputRefs.current[player.id]?.focus()}
-        className="p-2 text-slate-500 hover:text-sky-400 transition-colors"
+        className="p-2 text-slate-500 hover:text-sky-400 transition-colors shrink-0"
         aria-label={`Modifier le nom de ${player.name}`}
       >
         <Pencil size={16} />
       </button>
       <button
         onClick={() => removePlayer(player.id)}
-        className="p-2 text-slate-500 hover:text-red-400 transition-colors"
+        className="p-2 text-slate-500 hover:text-red-400 transition-colors shrink-0"
       >
         <Trash2 size={18} />
       </button>
