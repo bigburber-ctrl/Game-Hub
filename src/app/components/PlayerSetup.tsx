@@ -11,7 +11,7 @@ import {
   useSensor,
   useSensors,
   type DragCancelEvent,
-  type DragOverEvent,
+  type DragMoveEvent,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -36,8 +36,8 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const rowElementRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const resetDragTimeoutRef = useRef<number | null>(null);
-  const lastOverIdRef = useRef<string | null>(null);
-  const swapLockRef = useRef(false);
+  const lastSwapAtRef = useRef<number>(0);
+  const SWAP_COOLDOWN_MS = 90;
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 2 },
@@ -93,7 +93,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     const activeId = String(active.id);
     setActivePlayerId(activeId);
     setHiddenPlayerId(activeId);
-    lastOverIdRef.current = null;
+    lastSwapAtRef.current = 0;
 
     const activeRow = document.querySelector<HTMLElement>(`[data-player-row-id="${activeId}"]`);
     const rowWidth = activeRow?.getBoundingClientRect().width;
@@ -116,39 +116,62 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     clearDragStates(120);
-    lastOverIdRef.current = null;
     if (!over || active.id === over.id) return;
   };
 
-  const handleDragOver = ({ active, over }: DragOverEvent) => {
-    if (!over || active.id === over.id || swapLockRef.current) return;
+  const handleDragMove = ({ active, delta }: DragMoveEvent) => {
+    const now = Date.now();
+    if (now - lastSwapAtRef.current < SWAP_COOLDOWN_MS) return;
 
-    const overId = String(over.id);
-    if (lastOverIdRef.current === overId) return;
-    lastOverIdRef.current = overId;
+    const activeId = String(active.id);
+    const activeRow = rowElementRefs.current[activeId];
+    if (!activeRow) return;
 
-    swapLockRef.current = true;
-    window.requestAnimationFrame(() => {
-      swapLockRef.current = false;
-    });
+    const activeRect = activeRow.getBoundingClientRect();
+    const projectedTop = activeRect.top + delta.y;
+    const projectedBottom = activeRect.bottom + delta.y;
 
     setPlayers((prevPlayers) => {
-      const activeIndex = prevPlayers.findIndex((player) => player.id === active.id);
+      const activeIndex = prevPlayers.findIndex((player) => player.id === activeId);
       if (activeIndex < 0) return prevPlayers;
 
-      const overIndex = prevPlayers.findIndex((player) => player.id === over.id);
-      if (overIndex < 0 || overIndex === activeIndex) return prevPlayers;
+      if (delta.y < 0 && activeIndex > 0) {
+        const upperId = prevPlayers[activeIndex - 1].id;
+        const upperRow = rowElementRefs.current[upperId];
+        if (upperRow) {
+          const upperRect = upperRow.getBoundingClientRect();
+          const middleTop = upperRect.top + upperRect.height * 0.45;
+          const middleBottom = upperRect.top + upperRect.height * 0.55;
+          const touchesMiddle = projectedTop <= middleBottom && projectedBottom >= middleTop;
+          if (touchesMiddle) {
+            lastSwapAtRef.current = now;
+            return arrayMove(prevPlayers, activeIndex, activeIndex - 1);
+          }
+        }
+      }
 
-      // Swap uniquement avec un voisin direct pour éviter les sauts/cascades.
-      if (Math.abs(overIndex - activeIndex) !== 1) return prevPlayers;
+      if (delta.y > 0 && activeIndex < prevPlayers.length - 1) {
+        const lowerId = prevPlayers[activeIndex + 1].id;
+        const lowerRow = rowElementRefs.current[lowerId];
+        if (lowerRow) {
+          const lowerRect = lowerRow.getBoundingClientRect();
+          const middleTop = lowerRect.top + lowerRect.height * 0.45;
+          const middleBottom = lowerRect.top + lowerRect.height * 0.55;
+          const touchesMiddle = projectedTop <= middleBottom && projectedBottom >= middleTop;
+          if (touchesMiddle) {
+            lastSwapAtRef.current = now;
+            return arrayMove(prevPlayers, activeIndex, activeIndex + 1);
+          }
+        }
+      }
 
-      return arrayMove(prevPlayers, activeIndex, overIndex);
+      return prevPlayers;
     });
   };
 
   const handleDragCancel = (_event: DragCancelEvent) => {
     clearDragStates(0);
-    lastOverIdRef.current = null;
+    lastSwapAtRef.current = 0;
   };
 
   const activePlayer = activePlayerId
@@ -208,7 +231,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}
             onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
+            onDragMove={handleDragMove}
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
