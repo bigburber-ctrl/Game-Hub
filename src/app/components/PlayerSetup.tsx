@@ -37,8 +37,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const resetDragTimeoutRef = useRef<number | null>(null);
   const lastCenterYRef = useRef<number | null>(null);
-  const lastSwapAtRef = useRef<number>(0);
-  const SWAP_COOLDOWN_MS = 70;
+  const DIRECTION_DEADZONE_PX = 1.5;
   const SWAP_UP_OVERLAP_RATIO = 0.55;
   const SWAP_DOWN_OVERLAP_RATIO = 0.45;
   const sensors = useSensors(
@@ -97,7 +96,6 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     setActivePlayerId(activeId);
     setHiddenPlayerId(activeId);
     lastCenterYRef.current = null;
-    lastSwapAtRef.current = 0;
 
     const activeRow = document.querySelector<HTMLElement>(`[data-player-row-id="${activeId}"]`);
     const rowWidth = activeRow?.getBoundingClientRect().width;
@@ -121,14 +119,10 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     clearDragStates(120);
     lastCenterYRef.current = null;
-    lastSwapAtRef.current = 0;
     if (!over || active.id === over.id) return;
   };
 
   const handleDragMove = ({ active }: DragMoveEvent) => {
-    const now = Date.now();
-    if (now - lastSwapAtRef.current < SWAP_COOLDOWN_MS) return;
-
     const activeId = String(active.id);
     const translatedRect = active.rect.current.translated;
     const currentTopY = translatedRect?.top ?? null;
@@ -143,44 +137,58 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     lastCenterYRef.current = currentCenterY;
     if (previousCenterY == null) return;
 
-    const direction: "up" | "down" = currentCenterY < previousCenterY ? "up" : "down";
+    const movementDeltaY = currentCenterY - previousCenterY;
+    if (Math.abs(movementDeltaY) < DIRECTION_DEADZONE_PX) return;
+
+    const direction: "up" | "down" = movementDeltaY < 0 ? "up" : "down";
 
     setPlayers((prevPlayers) => {
-      const activeIndex = prevPlayers.findIndex((player) => player.id === activeId);
+      let nextPlayers = prevPlayers;
+      let activeIndex = nextPlayers.findIndex((player) => player.id === activeId);
       if (activeIndex < 0) return prevPlayers;
+      let hasMoved = false;
 
-      if (direction === "up" && activeIndex > 0) {
-        const upperId = prevPlayers[activeIndex - 1].id;
-        const upperRow = rowElementRefs.current[upperId];
-        if (!upperRow) return prevPlayers;
-        const upperRect = upperRow.getBoundingClientRect();
-        const upperTriggerY = upperRect.top + upperRect.height * SWAP_UP_OVERLAP_RATIO;
-        if (currentTopY <= upperTriggerY) {
-          lastSwapAtRef.current = now;
-          return arrayMove(prevPlayers, activeIndex, activeIndex - 1);
+      if (direction === "up") {
+        while (activeIndex > 0) {
+          const upperId = nextPlayers[activeIndex - 1].id;
+          const upperRow = rowElementRefs.current[upperId];
+          if (!upperRow) break;
+          const upperRect = upperRow.getBoundingClientRect();
+          const upperTriggerY = upperRect.top + upperRect.height * SWAP_UP_OVERLAP_RATIO;
+          if (currentTopY <= upperTriggerY) {
+            nextPlayers = arrayMove(nextPlayers, activeIndex, activeIndex - 1);
+            activeIndex -= 1;
+            hasMoved = true;
+            continue;
+          }
+          break;
         }
       }
 
-      if (direction === "down" && activeIndex < prevPlayers.length - 1) {
-        const lowerId = prevPlayers[activeIndex + 1].id;
-        const lowerRow = rowElementRefs.current[lowerId];
-        if (!lowerRow) return prevPlayers;
-        const lowerRect = lowerRow.getBoundingClientRect();
-        const lowerTriggerY = lowerRect.top + lowerRect.height * SWAP_DOWN_OVERLAP_RATIO;
-        if (currentBottomY >= lowerTriggerY) {
-          lastSwapAtRef.current = now;
-          return arrayMove(prevPlayers, activeIndex, activeIndex + 1);
+      if (direction === "down") {
+        while (activeIndex < nextPlayers.length - 1) {
+          const lowerId = nextPlayers[activeIndex + 1].id;
+          const lowerRow = rowElementRefs.current[lowerId];
+          if (!lowerRow) break;
+          const lowerRect = lowerRow.getBoundingClientRect();
+          const lowerTriggerY = lowerRect.top + lowerRect.height * SWAP_DOWN_OVERLAP_RATIO;
+          if (currentBottomY >= lowerTriggerY) {
+            nextPlayers = arrayMove(nextPlayers, activeIndex, activeIndex + 1);
+            activeIndex += 1;
+            hasMoved = true;
+            continue;
+          }
+          break;
         }
       }
 
-      return prevPlayers;
+      return hasMoved ? nextPlayers : prevPlayers;
     });
   };
 
   const handleDragCancel = (_event: DragCancelEvent) => {
     clearDragStates(0);
     lastCenterYRef.current = null;
-    lastSwapAtRef.current = 0;
   };
 
   const activePlayer = activePlayerId
