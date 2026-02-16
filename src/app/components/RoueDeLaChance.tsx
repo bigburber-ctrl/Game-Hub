@@ -239,9 +239,12 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
         </button>
 
         {pendingChoice && (
-          <div className="w-full bg-slate-800/70 border border-slate-700 rounded-2xl p-4 space-y-3">
-            <p className="text-center text-slate-200 font-bold">
-              Résultat: <span className="text-purple-400">{pendingChoice.label}</span>
+          <div className="w-full bg-slate-800/80 border border-slate-700 rounded-2xl p-5 space-y-4">
+            <p className="text-center text-slate-300 font-black uppercase tracking-widest text-xs">
+              Résultat:
+            </p>
+            <p className="text-center text-white font-black text-3xl sm:text-4xl leading-tight">
+              {pendingChoice.label}
             </p>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -251,17 +254,17 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                 }}
                 className="w-full py-3 rounded-xl bg-red-600/80 text-white font-bold hover:bg-red-600 transition"
               >
-                Supprimer de la liste
+                Retirer
               </button>
               <button
                 onClick={() => setPendingChoiceId(null)}
                 className="w-full py-3 rounded-xl bg-slate-700 text-white font-bold hover:bg-slate-600 transition"
               >
-                Conserver
+                Fermer
               </button>
             </div>
             <p className="text-center text-[11px] text-slate-400">
-              Supprimer de la liste barre l’élément (il n’est pas effacé).
+              Retirer barre l’élément (il n’est pas effacé).
             </p>
           </div>
         )}
