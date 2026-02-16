@@ -11,7 +11,7 @@ import {
   useSensor,
   useSensors,
   type DragCancelEvent,
-  type DragOverEvent,
+  type DragMoveEvent,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -33,6 +33,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const [hiddenPlayerId, setHiddenPlayerId] = useState<string | null>(null);
   const [activeOverlayWidth, setActiveOverlayWidth] = useState<number>(320);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const rowElementRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const resetDragTimeoutRef = useRef<number | null>(null);
   const swapLockRef = useRef(false);
@@ -116,8 +117,16 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     if (!over || active.id === over.id) return;
   };
 
-  const handleDragOver = ({ active, over }: DragOverEvent) => {
-    if (!over || active.id === over.id || swapLockRef.current) return;
+  const handleDragMove = ({ active, delta }: DragMoveEvent) => {
+    if (swapLockRef.current) return;
+
+    const activeId = String(active.id);
+    const activeRow = rowElementRefs.current[activeId];
+    if (!activeRow) return;
+
+    const activeRect = activeRow.getBoundingClientRect();
+    const projectedTop = activeRect.top + delta.y;
+    const projectedBottom = activeRect.bottom + delta.y;
 
     swapLockRef.current = true;
     window.requestAnimationFrame(() => {
@@ -125,12 +134,40 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     });
 
     setPlayers((prevPlayers) => {
-      const activeIndex = prevPlayers.findIndex((player) => player.id === active.id);
-      const overIndex = prevPlayers.findIndex((player) => player.id === over.id);
-      if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) return prevPlayers;
+      const activeIndex = prevPlayers.findIndex((player) => player.id === activeId);
+      if (activeIndex < 0) return prevPlayers;
 
-      const direction = overIndex > activeIndex ? 1 : -1;
-      return arrayMove(prevPlayers, activeIndex, activeIndex + direction);
+      if (delta.y < 0 && activeIndex > 0) {
+        const upperId = prevPlayers[activeIndex - 1].id;
+        const upperRow = rowElementRefs.current[upperId];
+        if (upperRow) {
+          const upperRect = upperRow.getBoundingClientRect();
+          const upperMiddleTop = upperRect.top + upperRect.height * 0.45;
+          const upperMiddleBottom = upperRect.top + upperRect.height * 0.55;
+          const touchesUpperMiddle =
+            projectedBottom >= upperMiddleTop && projectedTop <= upperMiddleBottom;
+          if (touchesUpperMiddle) {
+            return arrayMove(prevPlayers, activeIndex, activeIndex - 1);
+          }
+        }
+      }
+
+      if (delta.y > 0 && activeIndex < prevPlayers.length - 1) {
+        const lowerId = prevPlayers[activeIndex + 1].id;
+        const lowerRow = rowElementRefs.current[lowerId];
+        if (lowerRow) {
+          const lowerRect = lowerRow.getBoundingClientRect();
+          const lowerMiddleTop = lowerRect.top + lowerRect.height * 0.45;
+          const lowerMiddleBottom = lowerRect.top + lowerRect.height * 0.55;
+          const touchesLowerMiddle =
+            projectedBottom >= lowerMiddleTop && projectedTop <= lowerMiddleBottom;
+          if (touchesLowerMiddle) {
+            return arrayMove(prevPlayers, activeIndex, activeIndex + 1);
+          }
+        }
+      }
+
+      return prevPlayers;
     });
   };
 
@@ -195,7 +232,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}
             onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
+            onDragMove={handleDragMove}
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
@@ -206,6 +243,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
                   player={player}
                   index={index}
                   isHidden={hiddenPlayerId === player.id}
+                  rowElementRefs={rowElementRefs}
                   nameInputRefs={nameInputRefs}
                   removePlayer={removePlayer}
                   updatePlayerName={updatePlayerName}
@@ -246,6 +284,7 @@ interface PlayerRowProps {
   player: Player;
   index: number;
   isHidden: boolean;
+  rowElementRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
   nameInputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
   removePlayer: (id: string) => void;
   updatePlayerName: (id: string, name: string) => void;
@@ -255,6 +294,7 @@ function PlayerRow({
   player,
   index,
   isHidden,
+  rowElementRefs,
   nameInputRefs,
   removePlayer,
   updatePlayerName,
@@ -263,6 +303,7 @@ function PlayerRow({
   const { attributes, listeners, setNodeRef: setDragRef } = useDraggable({ id: player.id });
 
   const setRowRefs = (element: HTMLDivElement | null) => {
+    rowElementRefs.current[player.id] = element;
     setDropRef(element);
     setDragRef(element);
   };
