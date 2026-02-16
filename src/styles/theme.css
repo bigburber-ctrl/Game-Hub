@@ -124,8 +124,19 @@
     @apply border-border outline-ring/50;
   }
 
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    margin: 0;
+    background-color: #0f172a !important;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    min-height: 100dvh;
+    overscroll-behavior-y: none;
+    background-color: #0f172a !important;
   }
 
   /**
