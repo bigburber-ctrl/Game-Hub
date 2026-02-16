@@ -39,8 +39,8 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const lastCenterYRef = useRef<number | null>(null);
   const lastSwapAtRef = useRef<number>(0);
   const SWAP_COOLDOWN_MS = 70;
-  const SWAP_UP_EARLY_RATIO = 0.58;
-  const SWAP_DOWN_EARLY_RATIO = 0.42;
+  const SWAP_UP_OVERLAP_RATIO = 0.55;
+  const SWAP_DOWN_OVERLAP_RATIO = 0.45;
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 2 },
@@ -131,11 +131,13 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
     const activeId = String(active.id);
     const translatedRect = active.rect.current.translated;
+    const currentTopY = translatedRect?.top ?? null;
+    const currentBottomY = translatedRect?.bottom ?? null;
     const currentCenterY = translatedRect
       ? translatedRect.top + translatedRect.height / 2
       : null;
 
-    if (currentCenterY == null) return;
+    if (currentCenterY == null || currentTopY == null || currentBottomY == null) return;
 
     const previousCenterY = lastCenterYRef.current;
     lastCenterYRef.current = currentCenterY;
@@ -152,8 +154,8 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
         const upperRow = rowElementRefs.current[upperId];
         if (!upperRow) return prevPlayers;
         const upperRect = upperRow.getBoundingClientRect();
-        const upperTriggerY = upperRect.top + upperRect.height * SWAP_UP_EARLY_RATIO;
-        if (currentCenterY <= upperTriggerY) {
+        const upperTriggerY = upperRect.top + upperRect.height * SWAP_UP_OVERLAP_RATIO;
+        if (currentTopY <= upperTriggerY) {
           lastSwapAtRef.current = now;
           return arrayMove(prevPlayers, activeIndex, activeIndex - 1);
         }
@@ -164,8 +166,8 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
         const lowerRow = rowElementRefs.current[lowerId];
         if (!lowerRow) return prevPlayers;
         const lowerRect = lowerRow.getBoundingClientRect();
-        const lowerTriggerY = lowerRect.top + lowerRect.height * SWAP_DOWN_EARLY_RATIO;
-        if (currentCenterY >= lowerTriggerY) {
+        const lowerTriggerY = lowerRect.top + lowerRect.height * SWAP_DOWN_OVERLAP_RATIO;
+        if (currentBottomY >= lowerTriggerY) {
           lastSwapAtRef.current = now;
           return arrayMove(prevPlayers, activeIndex, activeIndex + 1);
         }
