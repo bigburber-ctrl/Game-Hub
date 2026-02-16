@@ -102,7 +102,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     const selected = activeItems[selectedIndex];
     const segmentSize = 360 / activeItems.length;
     const selectedCenterAngle = selectedIndex * segmentSize + segmentSize / 2;
-    const pointerAngle = 270;
+    const pointerAngle = 0;
     const offsetToPointer = ((pointerAngle - selectedCenterAngle) % 360 + 360) % 360;
     const extraTurns = 4 + Math.floor(Math.random() * 2);
     const nextRotation = rotationDeg + extraTurns * 360 + offsetToPointer;
@@ -145,8 +145,10 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
 
   const radialLabelWidth = useMemo(() => {
     const count = Math.max(activeItems.length, 1);
-    const computed = Math.floor(320 / count);
-    return Math.max(56, Math.min(150, computed));
+    const labelRadius = 82;
+    const arcLength = (2 * Math.PI * labelRadius) / count;
+    const computed = Math.floor(arcLength - 12);
+    return Math.max(54, Math.min(140, computed));
   }, [activeItems.length]);
 
   return (
@@ -237,7 +239,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
           >
             {activeItems.map((item, index) => {
               const segmentSize = 360 / activeItems.length;
-              const angle = index * segmentSize + segmentSize / 2;
+              const angle = index * segmentSize + segmentSize / 2 - 90;
               return (
                 <div
                   key={item.id}
