@@ -265,7 +265,7 @@ function PlayerRowPreview({ player, width }: PlayerRowPreviewProps) {
   return (
     <div
       className="w-full flex items-center gap-3 bg-slate-700 p-2 pl-4 rounded-xl border border-slate-500 shadow-2xl"
-      style={{ width: `${Math.max(260, width)}px` }}
+      style={{ width: `${Math.max(320, width)}px` }}
     >
       <span className="text-slate-300 font-mono text-sm w-4">•</span>
       <span className="p-1 text-slate-200">
