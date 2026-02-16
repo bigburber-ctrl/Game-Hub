@@ -1,13 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Game Hub logo">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#7c3aed" />
-      <stop offset="100%" stop-color="#4f46e5" />
-    </linearGradient>
-  </defs>
-  <rect width="128" height="128" rx="28" fill="url(#bg)" />
-  <circle cx="64" cy="64" r="34" fill="#0f172a" opacity="0.9" />
-  <path d="M44 64h14M51 57v14" stroke="#e2e8f0" stroke-width="6" stroke-linecap="round" />
-  <circle cx="78" cy="58" r="4.5" fill="#e2e8f0" />
-  <circle cx="86" cy="66" r="4.5" fill="#e2e8f0" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Game Hub logo">
+  <rect width="512" height="512" rx="92" fill="#2a125a" />
+  <g fill="#b873ff">
+    <path d="M154 177h204c23 0 42 19 42 42v76c0 19-15 34-34 34h-31c-9 0-17 4-24 11l-24 24c-18 18-46 18-64 0l-24-24c-7-7-15-11-24-11h-31c-19 0-34-15-34-34v-76c0-23 19-42 42-42Zm14 42c-9 0-16 7-16 16v60c0 6 5 11 11 11h31c20 0 39 8 53 22l24 24c8 8 20 8 28 0l24-24c14-14 33-22 53-22h31c6 0 11-5 11-11v-60c0-9-7-16-16-16H168Z" />
+    <rect x="182" y="232" width="24" height="72" rx="12" />
+    <rect x="158" y="256" width="72" height="24" rx="12" />
+    <circle cx="303" cy="266" r="14" />
+    <circle cx="342" cy="242" r="14" />
+  </g>
 </svg>
