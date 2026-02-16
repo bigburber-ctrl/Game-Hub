@@ -11,6 +11,7 @@ import {
   useSensor,
   useSensors,
   type DragCancelEvent,
+  type DragOverEvent,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -121,6 +122,17 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     });
   };
 
+  const handleDragOver = ({ active, over }: DragOverEvent) => {
+    if (!over || active.id === over.id) return;
+
+    setPlayers((prevPlayers) => {
+      const oldIndex = prevPlayers.findIndex((player) => player.id === active.id);
+      const newIndex = prevPlayers.findIndex((player) => player.id === over.id);
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return prevPlayers;
+      return arrayMove(prevPlayers, oldIndex, newIndex);
+    });
+  };
+
   const handleDragCancel = (_event: DragCancelEvent) => {
     clearDragStates(0);
   };
@@ -182,6 +194,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}
             onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
