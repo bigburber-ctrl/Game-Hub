@@ -39,6 +39,8 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const lastCenterYRef = useRef<number | null>(null);
   const lastSwapAtRef = useRef<number>(0);
   const SWAP_COOLDOWN_MS = 70;
+  const SWAP_UP_EARLY_RATIO = 0.58;
+  const SWAP_DOWN_EARLY_RATIO = 0.42;
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 2 },
@@ -150,8 +152,8 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
         const upperRow = rowElementRefs.current[upperId];
         if (!upperRow) return prevPlayers;
         const upperRect = upperRow.getBoundingClientRect();
-        const upperMiddleY = upperRect.top + upperRect.height / 2;
-        if (currentCenterY <= upperMiddleY) {
+        const upperTriggerY = upperRect.top + upperRect.height * SWAP_UP_EARLY_RATIO;
+        if (currentCenterY <= upperTriggerY) {
           lastSwapAtRef.current = now;
           return arrayMove(prevPlayers, activeIndex, activeIndex - 1);
         }
@@ -162,8 +164,8 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
         const lowerRow = rowElementRefs.current[lowerId];
         if (!lowerRow) return prevPlayers;
         const lowerRect = lowerRow.getBoundingClientRect();
-        const lowerMiddleY = lowerRect.top + lowerRect.height / 2;
-        if (currentCenterY >= lowerMiddleY) {
+        const lowerTriggerY = lowerRect.top + lowerRect.height * SWAP_DOWN_EARLY_RATIO;
+        if (currentCenterY >= lowerTriggerY) {
           lastSwapAtRef.current = now;
           return arrayMove(prevPlayers, activeIndex, activeIndex + 1);
         }
