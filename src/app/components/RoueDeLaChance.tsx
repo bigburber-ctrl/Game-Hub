@@ -238,12 +238,21 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
           {isSpinning ? "Ça tourne..." : "Lancer la roue"}
         </button>
 
-        {pendingChoice && (
-          <div className="w-full bg-slate-800/80 border border-slate-700 rounded-2xl p-5 space-y-4">
+      </div>
+
+      {pendingChoice && (
+        <div
+          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-[2px] flex items-center justify-center p-4"
+          onClick={() => setPendingChoiceId(null)}
+        >
+          <div
+            className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl p-6 space-y-5 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
             <p className="text-center text-slate-300 font-black uppercase tracking-widest text-xs">
               Résultat:
             </p>
-            <p className="text-center text-white font-black text-3xl sm:text-4xl leading-tight">
+            <p className="text-center text-white font-black text-4xl sm:text-5xl leading-tight break-words">
               {pendingChoice.label}
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -267,8 +276,8 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
               Retirer barre l’élément (il n’est pas effacé).
             </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </motion.div>
   );
 }
