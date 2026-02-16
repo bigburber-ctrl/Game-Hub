@@ -143,6 +143,12 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     return `conic-gradient(${stops.join(", ")})`;
   }, [activeItems]);
 
+  const radialLabelWidth = useMemo(() => {
+    const count = Math.max(activeItems.length, 1);
+    const computed = Math.floor(320 / count);
+    return Math.max(56, Math.min(150, computed));
+  }, [activeItems.length]);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -240,7 +246,10 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                     transform: `translate(-50%, -50%) rotate(${angle}deg)`,
                   }}
                 >
-                  <span className="block w-[92px] pl-1 text-left text-[10px] sm:text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] whitespace-nowrap overflow-hidden text-ellipsis leading-tight">
+                  <span
+                    className="block -translate-x-full pr-1 text-right text-[10px] sm:text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] whitespace-nowrap overflow-hidden text-ellipsis leading-tight"
+                    style={{ width: `${radialLabelWidth}px` }}
+                  >
                     {item.label}
                   </span>
                 </div>
