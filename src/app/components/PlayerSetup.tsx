@@ -106,6 +106,9 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const activePlayer = activePlayerId
     ? players.find((player) => player.id === activePlayerId) ?? null
     : null;
+  const activePlayerIndex = activePlayerId
+    ? players.findIndex((player) => player.id === activePlayerId)
+    : -1;
 
   return (
     <motion.div
@@ -176,7 +179,11 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
             <DragOverlay>
               {activePlayer ? (
-                <PlayerRowPreview player={activePlayer} width={activeOverlayWidth} />
+                <PlayerRowPreview
+                  player={activePlayer}
+                  index={activePlayerIndex}
+                  width={activeOverlayWidth}
+                />
               ) : null}
             </DragOverlay>
           </DndContext>
@@ -231,7 +238,7 @@ function PlayerRow({
       animate={{ opacity: 1, y: 0 }}
       className={`group w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border transition-all shadow-sm ${
         isOver ? "border-purple-500" : "border-slate-700 hover:border-slate-600"
-      } ${isHidden ? "opacity-0" : "opacity-100"}`}
+      } ${isHidden ? "invisible" : "visible"}`}
       data-player-row-id={player.id}
     >
       <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
@@ -275,24 +282,25 @@ function PlayerRow({
 
 interface PlayerRowPreviewProps {
   player: Player;
+  index: number;
   width: number;
 }
 
-function PlayerRowPreview({ player, width }: PlayerRowPreviewProps) {
+function PlayerRowPreview({ player, index, width }: PlayerRowPreviewProps) {
   return (
     <div
-      className="flex items-center gap-3 bg-slate-700 p-2 pl-4 rounded-xl border border-slate-500 shadow-2xl"
+      className="w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 shadow-2xl"
       style={{ width: `${width}px`, minWidth: `${width}px` }}
     >
-      <span className="text-slate-300 font-mono text-sm w-4">•</span>
-      <span className="p-1 text-slate-200">
+      <span className="text-slate-500 font-mono text-sm w-4">{Math.max(1, index + 1)}</span>
+      <span className="p-1 text-slate-500">
         <GripVertical size={16} />
       </span>
       <span className="flex-1 text-white font-medium truncate">{player.name}</span>
-      <span className="p-2 text-slate-300">
+      <span className="p-2 text-slate-500">
         <Pencil size={16} />
       </span>
-      <span className="p-2 text-slate-300">
+      <span className="p-2 text-slate-500">
         <Trash2 size={18} />
       </span>
     </div>
