@@ -5,7 +5,7 @@ import {
   DragOverlay,
   PointerSensor,
   TouchSensor,
-  closestCenter,
+  pointerWithin,
   useDraggable,
   useDroppable,
   useSensor,
@@ -129,7 +129,12 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
       const oldIndex = prevPlayers.findIndex((player) => player.id === active.id);
       const newIndex = prevPlayers.findIndex((player) => player.id === over.id);
       if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return prevPlayers;
-      return arrayMove(prevPlayers, oldIndex, newIndex);
+
+      // Move only one slot at a time to avoid jumpy multi-position swaps
+      const stepTargetIndex =
+        newIndex > oldIndex ? oldIndex + 1 : oldIndex - 1;
+
+      return arrayMove(prevPlayers, oldIndex, stepTargetIndex);
     });
   };
 
@@ -191,7 +196,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
         ) : (
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={pointerWithin}
             modifiers={[restrictToVerticalAxis]}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
