@@ -30,6 +30,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const [newName, setNewName] = useState("");
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
   const [activeOverlayWidth, setActiveOverlayWidth] = useState<number>(320);
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -64,7 +65,22 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   };
 
   const handleDragStart = ({ active }: DragStartEvent) => {
-    setActivePlayerId(String(active.id));
+    const activeId = String(active.id);
+    setActivePlayerId(activeId);
+
+    const activeRow = document.querySelector<HTMLElement>(`[data-player-row-id="${activeId}"]`);
+    const rowWidth = activeRow?.getBoundingClientRect().width;
+    if (typeof rowWidth === "number" && rowWidth > 0) {
+      setActiveOverlayWidth(rowWidth);
+      return;
+    }
+
+    const listWidth = listContainerRef.current?.getBoundingClientRect().width;
+    if (typeof listWidth === "number" && listWidth > 0) {
+      setActiveOverlayWidth(listWidth);
+      return;
+    }
+
     const initialWidth = active.rect.current.initial?.width;
     if (typeof initialWidth === "number" && initialWidth > 0) {
       setActiveOverlayWidth(initialWidth);
@@ -144,7 +160,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
-            <div className="flex flex-col gap-3 w-full">
+            <div ref={listContainerRef} className="flex flex-col gap-3 w-full">
               {players.map((player, index) => (
                 <PlayerRow
                   key={player.id}
@@ -216,6 +232,7 @@ function PlayerRow({
       className={`group w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border transition-all shadow-sm ${
         isOver ? "border-purple-500" : "border-slate-700 hover:border-slate-600"
       } ${isHidden ? "opacity-0" : "opacity-100"}`}
+      data-player-row-id={player.id}
     >
       <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
       <button
@@ -264,8 +281,8 @@ interface PlayerRowPreviewProps {
 function PlayerRowPreview({ player, width }: PlayerRowPreviewProps) {
   return (
     <div
-      className="w-full flex items-center gap-3 bg-slate-700 p-2 pl-4 rounded-xl border border-slate-500 shadow-2xl"
-      style={{ width: `${Math.max(320, width)}px` }}
+      className="flex items-center gap-3 bg-slate-700 p-2 pl-4 rounded-xl border border-slate-500 shadow-2xl"
+      style={{ width: `${width}px`, minWidth: `${width}px` }}
     >
       <span className="text-slate-300 font-mono text-sm w-4">•</span>
       <span className="p-1 text-slate-200">
