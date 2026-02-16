@@ -5,7 +5,7 @@ import {
   DragOverlay,
   PointerSensor,
   TouchSensor,
-  closestCenter,
+  pointerWithin,
   useDraggable,
   useDroppable,
   useSensor,
@@ -35,7 +35,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const resetDragTimeoutRef = useRef<number | null>(null);
-  const lastSwapSignatureRef = useRef<string | null>(null);
+  const lastSwapAtRef = useRef<number>(0);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -89,7 +89,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const handleDragStart = ({ active }: DragStartEvent) => {
     const activeId = String(active.id);
-    lastSwapSignatureRef.current = null;
+    lastSwapAtRef.current = 0;
     setActivePlayerId(activeId);
     setHiddenPlayerId(activeId);
 
@@ -113,7 +113,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    lastSwapSignatureRef.current = null;
+    lastSwapAtRef.current = 0;
     clearDragStates(120);
     if (!over || active.id === over.id) return;
 
@@ -127,7 +127,11 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const handleDragOver = ({ active, over }: DragOverEvent) => {
     if (!over || active.id === over.id) {
-      lastSwapSignatureRef.current = null;
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastSwapAtRef.current < 70) {
       return;
     }
 
@@ -136,38 +140,17 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
       const newIndex = prevPlayers.findIndex((player) => player.id === over.id);
       if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return prevPlayers;
 
-      const translatedRect = active.rect.current.translated;
-      const overRect = over.rect;
-      if (!translatedRect || !overRect) return prevPlayers;
-
-      const activeCenterY = translatedRect.top + translatedRect.height / 2;
-      const overCenterY = overRect.top + overRect.height / 2;
-      const threshold = overRect.height * 0.12;
-      const movingDown = newIndex > oldIndex;
-
-      const crossedMidpoint = movingDown
-        ? activeCenterY > overCenterY + threshold
-        : activeCenterY < overCenterY - threshold;
-
-      if (!crossedMidpoint) return prevPlayers;
-
       // Move only one slot at a time to avoid jumpy multi-position swaps
       const stepTargetIndex =
         newIndex > oldIndex ? oldIndex + 1 : oldIndex - 1;
-
-      const swapSignature = `${String(active.id)}:${stepTargetIndex}`;
-      if (lastSwapSignatureRef.current === swapSignature) {
-        return prevPlayers;
-      }
-
-      lastSwapSignatureRef.current = swapSignature;
+      lastSwapAtRef.current = now;
 
       return arrayMove(prevPlayers, oldIndex, stepTargetIndex);
     });
   };
 
   const handleDragCancel = (_event: DragCancelEvent) => {
-    lastSwapSignatureRef.current = null;
+    lastSwapAtRef.current = 0;
     clearDragStates(0);
   };
 
@@ -225,7 +208,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
         ) : (
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={pointerWithin}
             modifiers={[restrictToVerticalAxis]}
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
