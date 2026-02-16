@@ -124,8 +124,17 @@
     @apply border-border outline-ring/50;
   }
 
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    margin: 0;
+    background: #0f172a;
+  }
+
   body {
     @apply bg-background text-foreground;
+    min-height: 100dvh;
   }
 
   /**

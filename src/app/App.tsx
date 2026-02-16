@@ -251,11 +251,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-100 font-sans selection:bg-purple-500/30 overflow-x-hidden">
+    <div className="min-h-dvh bg-[#0f172a] text-slate-100 font-sans selection:bg-purple-500/30 overflow-x-hidden">
       <Toaster position="top-center" expand={false} richColors />
       
       <div
-        className={`mx-auto min-h-screen flex flex-col p-4 relative ${
+        className={`mx-auto min-h-dvh flex flex-col p-4 relative ${
           gameState === "mission-review" ? "max-w-2xl" : "max-w-md"
         }`}
       >
