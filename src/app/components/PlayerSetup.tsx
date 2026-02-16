@@ -11,7 +11,7 @@ import {
   useSensor,
   useSensors,
   type DragCancelEvent,
-  type DragMoveEvent,
+  type DragOverEvent,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -36,6 +36,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const rowElementRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const resetDragTimeoutRef = useRef<number | null>(null);
+  const lastOverIdRef = useRef<string | null>(null);
   const swapLockRef = useRef(false);
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -92,6 +93,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     const activeId = String(active.id);
     setActivePlayerId(activeId);
     setHiddenPlayerId(activeId);
+    lastOverIdRef.current = null;
 
     const activeRow = document.querySelector<HTMLElement>(`[data-player-row-id="${activeId}"]`);
     const rowWidth = activeRow?.getBoundingClientRect().width;
@@ -114,19 +116,16 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     clearDragStates(120);
+    lastOverIdRef.current = null;
     if (!over || active.id === over.id) return;
   };
 
-  const handleDragMove = ({ active, delta }: DragMoveEvent) => {
-    if (swapLockRef.current) return;
+  const handleDragOver = ({ active, over }: DragOverEvent) => {
+    if (!over || active.id === over.id || swapLockRef.current) return;
 
-    const activeId = String(active.id);
-    const activeRow = rowElementRefs.current[activeId];
-    if (!activeRow) return;
-
-    const activeRect = activeRow.getBoundingClientRect();
-    const projectedTop = activeRect.top + delta.y;
-    const projectedBottom = activeRect.bottom + delta.y;
+    const overId = String(over.id);
+    if (lastOverIdRef.current === overId) return;
+    lastOverIdRef.current = overId;
 
     swapLockRef.current = true;
     window.requestAnimationFrame(() => {
@@ -134,45 +133,22 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     });
 
     setPlayers((prevPlayers) => {
-      const activeIndex = prevPlayers.findIndex((player) => player.id === activeId);
+      const activeIndex = prevPlayers.findIndex((player) => player.id === active.id);
       if (activeIndex < 0) return prevPlayers;
 
-      if (delta.y < 0 && activeIndex > 0) {
-        const upperId = prevPlayers[activeIndex - 1].id;
-        const upperRow = rowElementRefs.current[upperId];
-        if (upperRow) {
-          const upperRect = upperRow.getBoundingClientRect();
-          const upperMiddleTop = upperRect.top + upperRect.height * 0.45;
-          const upperMiddleBottom = upperRect.top + upperRect.height * 0.55;
-          const touchesUpperMiddle =
-            projectedBottom >= upperMiddleTop && projectedTop <= upperMiddleBottom;
-          if (touchesUpperMiddle) {
-            return arrayMove(prevPlayers, activeIndex, activeIndex - 1);
-          }
-        }
-      }
+      const overIndex = prevPlayers.findIndex((player) => player.id === over.id);
+      if (overIndex < 0 || overIndex === activeIndex) return prevPlayers;
 
-      if (delta.y > 0 && activeIndex < prevPlayers.length - 1) {
-        const lowerId = prevPlayers[activeIndex + 1].id;
-        const lowerRow = rowElementRefs.current[lowerId];
-        if (lowerRow) {
-          const lowerRect = lowerRow.getBoundingClientRect();
-          const lowerMiddleTop = lowerRect.top + lowerRect.height * 0.45;
-          const lowerMiddleBottom = lowerRect.top + lowerRect.height * 0.55;
-          const touchesLowerMiddle =
-            projectedBottom >= lowerMiddleTop && projectedTop <= lowerMiddleBottom;
-          if (touchesLowerMiddle) {
-            return arrayMove(prevPlayers, activeIndex, activeIndex + 1);
-          }
-        }
-      }
+      // Swap uniquement avec un voisin direct pour éviter les sauts/cascades.
+      if (Math.abs(overIndex - activeIndex) !== 1) return prevPlayers;
 
-      return prevPlayers;
+      return arrayMove(prevPlayers, activeIndex, overIndex);
     });
   };
 
   const handleDragCancel = (_event: DragCancelEvent) => {
     clearDragStates(0);
+    lastOverIdRef.current = null;
   };
 
   const activePlayer = activePlayerId
@@ -232,7 +208,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}
             onDragStart={handleDragStart}
-            onDragMove={handleDragMove}
+            onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
