@@ -46,6 +46,7 @@ const GAME_METADATA: Record<GameType, { minPlayers: number }> = {
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>("home");
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [activeGame, setActiveGame] = useState<ConfigurableGameType | null>(null);
   const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
   const [lastGameConfigs, setLastGameConfigs] = useState<LastGameConfigs>(() => {
@@ -284,22 +285,35 @@ export default function App() {
 
               <div className="flex flex-col gap-2">
                 <button
-                  onClick={() => {
-                    if (players.length < 3) {
-                      toast.error("Il faut au moins 3 joueurs !");
-                      return;
-                    }
-                    setGameState("custom-impostor");
-                  }}
-                  className={`w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all ${
-                    players.length < 3 
-                      ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
-                      : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95"
-                  }`}
-                  disabled={players.length < 3}
+                  onClick={() => setShowMoreOptions((prev) => !prev)}
+                  className="w-full py-3 px-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-300 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all hover:scale-[1.01] active:scale-95 shadow-lg"
                 >
-                  🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+                  <span className="text-purple-400">➕</span>
+                  Plus
                 </button>
+
+                {showMoreOptions && (
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => {
+                        if (players.length < 3) {
+                          toast.error("Il faut au moins 3 joueurs !");
+                          return;
+                        }
+                        setGameState("custom-impostor");
+                      }}
+                      className={`w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all ${
+                        players.length < 3
+                          ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale"
+                          : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95"
+                      }`}
+                      disabled={players.length < 3}
+                    >
+                      🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+                    </button>
+                  </div>
+                )}
+
                 <button
                   onClick={() => setGameState("setup")}
                   className="w-full py-6 px-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-300 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all hover:scale-[1.01] active:scale-95 shadow-lg"
