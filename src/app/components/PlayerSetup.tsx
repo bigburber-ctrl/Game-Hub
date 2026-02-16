@@ -1,5 +1,21 @@
 import React, { useRef, useState } from "react";
-import { motion, Reorder, useDragControls } from "framer-motion";
+import { motion } from "framer-motion";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragCancelEvent,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { Player } from "@/app/App";
 import { Plus, Trash2, User, ChevronLeft, Pencil, GripVertical } from "lucide-react";
 import { toast } from "sonner";
@@ -12,7 +28,17 @@ interface PlayerSetupProps {
 
 export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
   const [newName, setNewName] = useState("");
+  const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
+  const [activeOverlayWidth, setActiveOverlayWidth] = useState<number>(320);
   const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 120, tolerance: 8 },
+    })
+  );
 
   const addPlayer = () => {
     if (!newName.trim()) return;
@@ -37,22 +63,33 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
     setPlayers(players.map((p) => (p.id === id ? { ...p, name } : p)));
   };
 
-  const reorderPlayersByIds = (orderedIds: string[]) => {
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setActivePlayerId(String(active.id));
+    const initialWidth = active.rect.current.initial?.width;
+    if (typeof initialWidth === "number" && initialWidth > 0) {
+      setActiveOverlayWidth(initialWidth);
+    }
+  };
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setActivePlayerId(null);
+    if (!over || active.id === over.id) return;
+
     setPlayers((prevPlayers) => {
-      const uniqueOrderedIds = Array.from(new Set(orderedIds));
-      const playersById = new Map(prevPlayers.map((player) => [player.id, player]));
-
-      const reordered = uniqueOrderedIds
-        .map((id) => playersById.get(id))
-        .filter((player): player is Player => Boolean(player));
-
-      const missing = prevPlayers.filter(
-        (player) => !uniqueOrderedIds.includes(player.id)
-      );
-
-      return [...reordered, ...missing];
+      const oldIndex = prevPlayers.findIndex((player) => player.id === active.id);
+      const newIndex = prevPlayers.findIndex((player) => player.id === over.id);
+      if (oldIndex < 0 || newIndex < 0) return prevPlayers;
+      return arrayMove(prevPlayers, oldIndex, newIndex);
     });
   };
+
+  const handleDragCancel = (_event: DragCancelEvent) => {
+    setActivePlayerId(null);
+  };
+
+  const activePlayer = activePlayerId
+    ? players.find((player) => player.id === activePlayerId) ?? null
+    : null;
 
   return (
     <motion.div
@@ -99,24 +136,34 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
             <p>Ajoutez au moins 1 joueurs pour commencer</p>
           </div>
         ) : (
-          <Reorder.Group
-            axis="y"
-            values={players.map((player) => player.id)}
-            onReorder={reorderPlayersByIds}
-            layoutScroll
-            className="flex flex-col gap-3 w-full"
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            modifiers={[restrictToVerticalAxis]}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
           >
-            {players.map((player, index) => (
-              <PlayerRow
-                key={player.id}
-                player={player}
-                index={index}
-                nameInputRefs={nameInputRefs}
-                removePlayer={removePlayer}
-                updatePlayerName={updatePlayerName}
-              />
-            ))}
-          </Reorder.Group>
+            <div className="flex flex-col gap-3 w-full">
+              {players.map((player, index) => (
+                <PlayerRow
+                  key={player.id}
+                  player={player}
+                  index={index}
+                  isHidden={activePlayerId === player.id}
+                  nameInputRefs={nameInputRefs}
+                  removePlayer={removePlayer}
+                  updatePlayerName={updatePlayerName}
+                />
+              ))}
+            </div>
+
+            <DragOverlay>
+              {activePlayer ? (
+                <PlayerRowPreview player={activePlayer} width={activeOverlayWidth} />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         )}
       </div>
 
@@ -139,6 +186,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 interface PlayerRowProps {
   player: Player;
   index: number;
+  isHidden: boolean;
   nameInputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
   removePlayer: (id: string) => void;
   updatePlayerName: (id: string, name: string) => void;
@@ -147,34 +195,36 @@ interface PlayerRowProps {
 function PlayerRow({
   player,
   index,
+  isHidden,
   nameInputRefs,
   removePlayer,
   updatePlayerName,
 }: PlayerRowProps) {
-  const dragControls = useDragControls();
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: player.id });
+  const { attributes, listeners, setNodeRef: setDragRef } = useDraggable({ id: player.id });
+
+  const setRowRefs = (element: HTMLDivElement | null) => {
+    setDropRef(element);
+    setDragRef(element);
+  };
 
   return (
-    <Reorder.Item
-      value={player.id}
-      drag="y"
-      dragListener={false}
-      dragControls={dragControls}
-      dragMomentum={false}
-      dragElastic={0}
-      layout="position"
-      whileDrag={{ zIndex: 10 }}
-      transition={{ type: "spring", stiffness: 700, damping: 45, mass: 0.4 }}
+    <motion.div
+      ref={setRowRefs}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm"
+      className={`group w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border transition-all shadow-sm ${
+        isOver ? "border-purple-500" : "border-slate-700 hover:border-slate-600"
+      } ${isHidden ? "opacity-0" : "opacity-100"}`}
     >
       <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
       <button
         type="button"
         onPointerDown={(event) => {
           event.preventDefault();
-          dragControls.start(event, { snapToCursor: true });
         }}
+        {...attributes}
+        {...listeners}
         className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none"
         aria-label={`Déplacer ${player.name}`}
       >
@@ -202,6 +252,32 @@ function PlayerRow({
       >
         <Trash2 size={18} />
       </button>
-    </Reorder.Item>
+    </motion.div>
+  );
+}
+
+interface PlayerRowPreviewProps {
+  player: Player;
+  width: number;
+}
+
+function PlayerRowPreview({ player, width }: PlayerRowPreviewProps) {
+  return (
+    <div
+      className="w-full flex items-center gap-3 bg-slate-700 p-2 pl-4 rounded-xl border border-slate-500 shadow-2xl"
+      style={{ width: `${Math.max(260, width)}px` }}
+    >
+      <span className="text-slate-300 font-mono text-sm w-4">•</span>
+      <span className="p-1 text-slate-200">
+        <GripVertical size={16} />
+      </span>
+      <span className="flex-1 text-white font-medium truncate">{player.name}</span>
+      <span className="p-2 text-slate-300">
+        <Pencil size={16} />
+      </span>
+      <span className="p-2 text-slate-300">
+        <Trash2 size={18} />
+      </span>
+    </div>
   );
 }
