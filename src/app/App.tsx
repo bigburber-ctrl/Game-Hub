@@ -240,8 +240,8 @@ export default function App() {
                 </h1>
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
                 {/* Overlay bouton Plus et menu, toujours visible à gauche */}
-              </motion.div>
-            </div>
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
         {/* Overlay global pour le bouton Plus et son menu, toujours en haut à gauche, hors du flux principal */}
@@ -322,8 +322,7 @@ export default function App() {
                   }`}
                 >
                   <div className="relative z-10 flex items-start justify-between">
-                    </div>
-                  </motion.div>
+                  </div>
                 )}
               </AnimatePresence>
                       </p>
