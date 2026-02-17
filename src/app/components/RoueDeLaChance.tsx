@@ -72,7 +72,6 @@ function readInitialItems(): WheelItem[] {
     return DEFAULT_ITEMS;
   }
 }
-
 export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   const [items, setItems] = useState<WheelItem[]>(() => readInitialItems());
   const [newLabel, setNewLabel] = useState("");
