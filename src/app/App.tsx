@@ -12,7 +12,7 @@ import { RAW_DINER_TRI_POOL } from "@/app/components/DinerMissionsTriPool";
 
 import { GameSettings, GameConfig } from "@/app/components/GameSettings";
 import { toast, Toaster } from "sonner";
-import { Gamepad2, Users, Utensils } from "lucide-react";
+import { Gamepad2, Users, Utensils, Plus } from "lucide-react";
 
 type LastGameConfigs = Partial<Record<ConfigurableGameType, GameConfig>>;
 const LAST_GAME_CONFIGS_STORAGE_KEY = "gamehub_last_game_configs";
@@ -47,7 +47,11 @@ const GAME_METADATA: Record<GameType, { minPlayers: number }> = {
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>("home");
+<<<<<<< HEAD
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+=======
+  const [showOptions, setShowOptions] = useState(false);
+>>>>>>> c20b99d (refactor: mise à jour du hub, retour version précédente)
   const [activeGame, setActiveGame] = useState<ConfigurableGameType | null>(null);
   const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
   const [lastGameConfigs, setLastGameConfigs] = useState<LastGameConfigs>(() => {
@@ -270,7 +274,8 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
               className="flex-1 flex flex-col gap-8 pt-12"
             >
-              <div className="text-center space-y-2">
+
+              <div className="text-center space-y-2 relative">
                 <motion.div
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
@@ -278,12 +283,23 @@ export default function App() {
                 >
                   <Gamepad2 size={48} />
                 </motion.div>
-                <h1 className="text-4xl font-black tracking-tight text-white uppercase italic">
-                  Game <span className="text-purple-500">Hub</span>
+                <h1 className="text-4xl font-black tracking-tight text-white uppercase italic flex items-center justify-center">
+                  <span>Game <span className="text-purple-500">Hub</span></span>
                 </h1>
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
+                {/* Bouton Plus flottant en haut à droite du hub */}
+                <button
+                  onClick={() => setShowOptions((v) => !v)}
+                  className="fixed z-30 top-6 right-6 w-11 h-11 flex items-center justify-center rounded-lg bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
+                  aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
+                  aria-expanded={showOptions}
+                  style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
+                >
+                  <Plus size={28} />
+                </button>
               </div>
 
+<<<<<<< HEAD
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => setShowMoreOptions((prev) => !prev)}
@@ -322,6 +338,33 @@ export default function App() {
                   </div>
                 )}
 
+=======
+              {/* Section options toggle */}
+              {showOptions && (
+                <div className="flex flex-col gap-2 mt-4 mb-2 animate-fade-in">
+                  <button
+                    onClick={() => {
+                      if (players.length < 3) {
+                        toast.error("Il faut au moins 3 joueurs !");
+                        return;
+                      }
+                      setGameState("custom-impostor");
+                    }}
+                    className={`w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all ${
+                      players.length < 3 
+                        ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
+                        : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95"
+                    }`}
+                    disabled={players.length < 3}
+                  >
+                    🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+                  </button>
+                  {/* D'autres options pourront être ajoutées ici plus tard */}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2 mt-2">
+>>>>>>> c20b99d (refactor: mise à jour du hub, retour version précédente)
                 <button
                   onClick={() => setGameState("setup")}
                   className="w-full py-6 px-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-300 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all hover:scale-[1.01] active:scale-95 shadow-lg"
