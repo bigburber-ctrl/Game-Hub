@@ -313,36 +313,37 @@ export default function App() {
                     >
                       <button
                         onClick={() => setShowOptions(false)}
-                        className="absolute top-3 right-3 p-2 rounded-full bg-slate-800/70 hover:bg-slate-700 text-slate-400 hover:text-white transition"
-                        aria-label="Fermer"
+                        className="absolute top-3 left-3 p-2 rounded-full bg-slate-800/70 hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
+                        aria-label="Retour"
                       >
-                        <span className="text-xl">×</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg>
                       </button>
-                      <h2 className="text-xl font-black text-white uppercase tracking-tight italic mb-2 text-center">Que veux-tu faire ?</h2>
-                      <button
-                        onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
-                        className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
-                      >
-                        🎡 Roue de la chance
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (players.length < 3) {
-                            toast.error("Il faut au moins 3 joueurs !");
-                            return;
-                          }
-                          setShowOptions(false);
-                          setGameState("custom-impostor");
-                        }}
-                        className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
-                          players.length < 3 
-                            ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
-                            : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
-                        }`}
-                        disabled={players.length < 3}
-                      >
-                        🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
-                      </button>
+                      <div className="flex flex-col gap-3 w-full mt-2">
+                        <button
+                          onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
+                          className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                        >
+                          🎡 Roue de la chance
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (players.length < 3) {
+                              toast.error("Il faut au moins 3 joueurs !");
+                              return;
+                            }
+                            setShowOptions(false);
+                            setGameState("custom-impostor");
+                          }}
+                          className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
+                            players.length < 3 
+                              ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
+                              : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
+                          }`}
+                          disabled={players.length < 3}
+                        >
+                          🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+                        </button>
+                      </div>
                     </motion.div>
                   </motion.div>
                 )}
