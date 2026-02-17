@@ -110,14 +110,6 @@ export default function App() {
 
   const startGame = (config: GameConfig) => {
     setGameConfig(config);
-            onClick={() => setShowOptions((v) => !v)}
-            className="w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
-            aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
-            aria-expanded={showOptions}
-            style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
-          >
-            <span className="text-lg">➕</span>
-          </button>
           {showOptions && (
             <div className="flex flex-col gap-2 mt-2 animate-fade-in w-56">
               <button
