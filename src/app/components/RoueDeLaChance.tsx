@@ -17,7 +17,7 @@ const STORAGE_KEY = "gamehub_fortune_wheel_items";
 const DEFAULT_ITEMS: WheelItem[] = [
   { id: "1", label: "Choix 1", crossed: false },
   { id: "2", label: "Choix 2", crossed: false },
-  { id: "3", label: "Choix 3", crossed: false },
+  { id: "3", label: "Choix 3", crossed: false }
 ];
 
 const WHEEL_SIZE = 256;
