@@ -283,57 +283,20 @@ export default function App() {
                   <span>Game <span className="text-purple-500">Hub</span></span>
                 </h1>
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
-                {/* Bouton Plus flottant en haut à droite du hub */}
+                {/* Bouton Plus flottant carré en haut à droite */}
                 <button
                   onClick={() => setShowOptions((v) => !v)}
-                  className="fixed z-30 top-6 right-6 w-11 h-11 flex items-center justify-center rounded-lg bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
+                  className="fixed z-30 top-6 right-6 w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
                   aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
                   aria-expanded={showOptions}
                   style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
                 >
-                  <Plus size={28} />
+                  <span className="text-lg">➕</span>
                 </button>
               </div>
 
 <<<<<<< HEAD
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => setShowMoreOptions((prev) => !prev)}
-                  className="w-full py-3 px-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-300 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all hover:scale-[1.01] active:scale-95 shadow-lg"
-                >
-                  <span className="text-purple-400">➕</span>
-                  Plus
-                </button>
-
-                {showMoreOptions && (
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => setGameState("fortune-wheel")}
-                      className="w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all bg-slate-800/50 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95"
-                    >
-                      🎡 Roue de la chance
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (players.length < 3) {
-                          toast.error("Il faut au moins 3 joueurs !");
-                          return;
-                        }
-                        setGameState("custom-impostor");
-                      }}
-                      className={`w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all ${
-                        players.length < 3
-                          ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale"
-                          : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95"
-                      }`}
-                      disabled={players.length < 3}
-                    >
-                      🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
-                    </button>
-                  </div>
-                )}
-
+              {/* ...existing code... */}
 =======
               {/* Section options toggle */}
               {showOptions && (
