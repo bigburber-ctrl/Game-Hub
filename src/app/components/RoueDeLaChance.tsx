@@ -20,6 +20,28 @@ const DEFAULT_ITEMS: WheelItem[] = [
   { id: "3", label: "Choix 3", crossed: false },
 ];
 
+const WHEEL_SIZE = 256;
+const WHEEL_CENTER = WHEEL_SIZE / 2;
+const WHEEL_RADIUS = 124;
+
+const normalizeDeg = (value: number) => ((value % 360) + 360) % 360;
+
+const polar = (cx: number, cy: number, r: number, angleDeg: number) => {
+  const rad = (Math.PI / 180) * angleDeg;
+  return {
+    x: cx + r * Math.cos(rad),
+    y: cy + r * Math.sin(rad),
+  };
+};
+
+const wedgePath = (startDeg: number, endDeg: number) => {
+  const start = polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg);
+  const end = polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, endDeg);
+  const largeArcFlag = endDeg - startDeg > 180 ? 1 : 0;
+
+  return `M ${WHEEL_CENTER} ${WHEEL_CENTER} L ${start.x} ${start.y} A ${WHEEL_RADIUS} ${WHEEL_RADIUS} 0 ${largeArcFlag} 1 ${end.x} ${end.y} Z`;
+};
+
 function readInitialItems(): WheelItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -98,22 +120,22 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
       return;
     }
 
+    const selectedIndex = Math.floor(Math.random() * activeItems.length);
+    const selected = activeItems[selectedIndex];
+    const segmentSize = 360 / activeItems.length;
+    const currentNormalized = normalizeDeg(rotationDeg);
+    const targetNormalized = normalizeDeg(-(selectedIndex + 0.5) * segmentSize);
+    const deltaToTarget = normalizeDeg(targetNormalized - currentNormalized);
     const extraTurns = 4 + Math.floor(Math.random() * 2);
-    const randomOffset = Math.random() * 360;
-    const nextRotation = rotationDeg + extraTurns * 360 + randomOffset;
+    const nextRotation = rotationDeg + extraTurns * 360 + deltaToTarget;
 
     setPendingChoiceId(null);
     setIsSpinning(true);
     setRotationDeg(nextRotation);
 
     window.setTimeout(() => {
-      const segmentSize = 360 / activeItems.length;
-      const normalizedRotation = ((nextRotation % 360) + 360) % 360;
-      const localAngleAtTop = ((360 - normalizedRotation) % 360 + 360) % 360;
-      const resultIndex = Math.floor(localAngleAtTop / segmentSize) % activeItems.length;
-      const result = activeItems[resultIndex];
       setIsSpinning(false);
-      setPendingChoiceId(result?.id ?? null);
+      setPendingChoiceId(selected.id);
     }, 1800);
   };
 
@@ -127,28 +149,11 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     "#16a34a",
   ];
 
-  const wheelBackground = useMemo(() => {
-    if (activeItems.length === 0) {
-      return "#1e293b";
-    }
-
-    const segment = 360 / activeItems.length;
-    const stops = activeItems.map((_, index) => {
-      const start = index * segment;
-      const end = start + segment;
-      const color = segmentColors[index % segmentColors.length];
-      return `${color} ${start}deg ${end}deg`;
-    });
-
-    return `conic-gradient(${stops.join(", ")})`;
-  }, [activeItems]);
-
-  const radialLabelWidth = useMemo(() => {
-    const count = Math.max(activeItems.length, 1);
-    const labelRadius = 82;
-    const arcLength = (2 * Math.PI * labelRadius) / count;
-    const computed = Math.floor(arcLength - 12);
-    return Math.max(54, Math.min(140, computed));
+  const maxLabelChars = useMemo(() => {
+    if (activeItems.length <= 4) return 20;
+    if (activeItems.length <= 6) return 16;
+    if (activeItems.length <= 8) return 13;
+    return 10;
   }, [activeItems.length]);
 
   return (
@@ -230,33 +235,81 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
 
       <div className="mt-5 flex flex-col items-center gap-4">
         <div className="relative">
-          <div className="absolute left-1/2 top-[2px] -translate-x-1/2 z-[20] w-0 h-0 border-l-[10px] border-r-[10px] border-b-0 border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
+          <div className="absolute left-1/2 -top-[8px] -translate-x-1/2 z-[20] w-0 h-0 border-l-[10px] border-r-[10px] border-b-0 border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
           <motion.div
             animate={{ rotate: rotationDeg }}
             transition={{ duration: 1.8, ease: [0.12, 0.8, 0.2, 1] }}
-            className="relative z-10 w-64 h-64 rounded-full border-4 border-slate-700 shadow-xl"
-            style={{ background: wheelBackground }}
+            className="relative z-10 w-64 h-64 rounded-full shadow-xl"
           >
-            {activeItems.map((item, index) => {
-              const segmentSize = 360 / activeItems.length;
-              const angle = (index + 1) * segmentSize - 90;
-              return (
-                <div
-                  key={item.id}
-                  className="absolute left-1/2 top-1/2 pointer-events-none"
-                  style={{
-                    transform: `translate(-50%, -50%) rotate(${angle}deg)`,
-                  }}
-                >
-                  <span
-                    className="block pr-[2px] text-right text-[10px] sm:text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] whitespace-nowrap overflow-hidden text-ellipsis leading-tight"
-                    style={{ width: `${radialLabelWidth}px`, transform: "translate(-100%, -50%)" }}
-                  >
-                    {item.label}
-                  </span>
-                </div>
-              );
-            })}
+            <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
+              {activeItems.length === 0 ? (
+                <circle
+                  cx={WHEEL_CENTER}
+                  cy={WHEEL_CENTER}
+                  r={WHEEL_RADIUS}
+                  fill="#1e293b"
+                />
+              ) : (
+                activeItems.map((item, index) => {
+                  const segmentSize = 360 / activeItems.length;
+                  const startDeg = -90 + index * segmentSize;
+                  const endDeg = startDeg + segmentSize;
+                  const middleDeg = startDeg + segmentSize / 2;
+                  const color = segmentColors[index % segmentColors.length];
+                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 78, middleDeg);
+                  const rawLabel = item.label.trim();
+                  const displayLabel =
+                    rawLabel.length > maxLabelChars
+                      ? `${rawLabel.slice(0, Math.max(3, maxLabelChars - 1))}…`
+                      : rawLabel;
+
+                  return (
+                    <g key={item.id}>
+                      <path d={wedgePath(startDeg, endDeg)} fill={color} />
+                      <line
+                        x1={WHEEL_CENTER}
+                        y1={WHEEL_CENTER}
+                        x2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).x}
+                        y2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).y}
+                        stroke="rgba(15, 23, 42, 0.45)"
+                        strokeWidth={1.5}
+                      />
+                      <g transform={`rotate(${middleDeg} ${labelPos.x} ${labelPos.y})`}>
+                        <text
+                          x={labelPos.x}
+                          y={labelPos.y}
+                          fill="white"
+                          fontSize="10"
+                          fontWeight="800"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
+                        >
+                          {displayLabel}
+                        </text>
+                      </g>
+                    </g>
+                  );
+                })
+              )}
+
+              <circle
+                cx={WHEEL_CENTER}
+                cy={WHEEL_CENTER}
+                r={WHEEL_RADIUS}
+                fill="none"
+                stroke="#334155"
+                strokeWidth={4}
+              />
+              <circle
+                cx={WHEEL_CENTER}
+                cy={WHEEL_CENTER}
+                r={10}
+                fill="#0f172a"
+                stroke="#64748b"
+                strokeWidth={3}
+              />
+            </svg>
           </motion.div>
         </div>
 
