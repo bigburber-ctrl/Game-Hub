@@ -110,7 +110,6 @@ export default function App() {
 
   const startGame = (config: GameConfig) => {
     setGameConfig(config);
-      </div>
 
     const pool = getFallbackMissionsPool();
     if (missionDeckRef.current.length === 0) {
