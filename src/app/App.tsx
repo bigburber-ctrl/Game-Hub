@@ -240,7 +240,7 @@ export default function App() {
                 </h1>
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
                 {/* Overlay bouton Plus et menu, toujours visible à gauche */}
-              </div>
+              </motion.div>
             </div>
           )}
         </AnimatePresence>
