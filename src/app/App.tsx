@@ -13,7 +13,6 @@ import { RAW_DINER_TRI_POOL } from "@/app/components/DinerMissionsTriPool";
 import { GameSettings, GameConfig } from "@/app/components/GameSettings";
 import { toast, Toaster } from "sonner";
 import { Gamepad2, Users, Utensils, Plus } from "lucide-react";
-import { PlusModal } from "@/app/components/PlusModal";
 
 type LastGameConfigs = Partial<Record<ConfigurableGameType, GameConfig>>;
 const LAST_GAME_CONFIGS_STORAGE_KEY = "gamehub_last_game_configs";
@@ -50,8 +49,6 @@ const GAME_METADATA: Record<GameType, { minPlayers: number }> = {
 export default function App() {
   const [gameState, setGameState] = useState<GameState>("home");
   const [showOptions, setShowOptions] = useState(false);
-  const [showPlusModal, setShowPlusModal] = useState(false);
-  const [plusChoices, setPlusChoices] = useState<string[]>(["🎡 Roue de la chance", "🕵️ Jeu d'imposteur"]);
   const [activeGame, setActiveGame] = useState<ConfigurableGameType | null>(null);
   const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
   const [lastGameConfigs, setLastGameConfigs] = useState<LastGameConfigs>(() => {
@@ -289,56 +286,67 @@ export default function App() {
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
                 {/* Bouton Plus flottant carré en haut à droite */}
                 <button
-                  onClick={() => setShowPlusModal(true)}
+                  onClick={() => setShowOptions(true)}
                   className="fixed z-30 top-6 right-6 w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
-                  aria-label={showPlusModal ? 'Fermer le menu Plus' : 'Ouvrir le menu Plus'}
-                  aria-expanded={showPlusModal}
+                  aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
+                  aria-expanded={showOptions}
                   style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
                 >
                   <span className="text-lg">➕</span>
                 </button>
-                            <PlusModal
-                              open={showPlusModal}
-                              onClose={() => setShowPlusModal(false)}
-                              choices={plusChoices}
-                              onSelect={(choice) => {
-                                setShowPlusModal(false);
-                                if (choice.includes("fortune")) setGameState("fortune-wheel");
-                                else if (choice.toLowerCase().includes("imposteur")) setGameState("custom-impostor");
-                                // Ajoute ici d'autres redirections si tu ajoutes plus de choix
-                              }}
-                              onAddChoice={(newChoice) => setPlusChoices((prev) => [...prev, newChoice])}
-                            />
               </div>
 
-              {/* Section options toggle */}
-              {showOptions && (
-                <div className="flex flex-col gap-2 mt-4 mb-2 animate-fade-in">
-                  <button
-                    onClick={() => setGameState("fortune-wheel")}
-                    className="w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all bg-slate-800/50 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95"
+              {/* Overlay options Plus */}
+              <AnimatePresence>
+                {showOptions && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm"
                   >
-                    🎡 Roue de la chance
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (players.length < 3) {
-                        toast.error("Il faut au moins 3 joueurs !");
-                        return;
-                      }
-                      setGameState("custom-impostor");
-                    }}
-                    className={`w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all ${
-                      players.length < 3 
-                        ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
-                        : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95"
-                    }`}
-                    disabled={players.length < 3}
-                  >
-                    🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
-                  </button>
-                </div>
-              )}
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.95, opacity: 0 }}
+                      className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center"
+                    >
+                      <button
+                        onClick={() => setShowOptions(false)}
+                        className="absolute top-3 right-3 p-2 rounded-full bg-slate-800/70 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+                        aria-label="Fermer"
+                      >
+                        <span className="text-xl">×</span>
+                      </button>
+                      <h2 className="text-xl font-black text-white uppercase tracking-tight italic mb-2 text-center">Que veux-tu faire ?</h2>
+                      <button
+                        onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
+                        className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                      >
+                        🎡 Roue de la chance
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (players.length < 3) {
+                            toast.error("Il faut au moins 3 joueurs !");
+                            return;
+                          }
+                          setShowOptions(false);
+                          setGameState("custom-impostor");
+                        }}
+                        className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
+                          players.length < 3 
+                            ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
+                            : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
+                        }`}
+                        disabled={players.length < 3}
+                      >
+                        🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+                      </button>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className="flex flex-col gap-2 mt-2">
                 <button
