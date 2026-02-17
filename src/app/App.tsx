@@ -17,6 +17,7 @@ import { Gamepad2, Users, Utensils, Plus } from "lucide-react";
 type LastGameConfigs = Partial<Record<ConfigurableGameType, GameConfig>>;
 const LAST_GAME_CONFIGS_STORAGE_KEY = "gamehub_last_game_configs";
 
+// trigger vercel redeploy
 export type Player = {
   id: string;
   name: string;
