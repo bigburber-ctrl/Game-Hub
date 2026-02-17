@@ -323,11 +323,6 @@ export default function App() {
                 >
                   <div className="relative z-10 flex items-start justify-between">
                   </div>
-                )}
-              </AnimatePresence>
-                      </p>
-                    </div>
-                  </div>
                 </button>
 
                 <button
