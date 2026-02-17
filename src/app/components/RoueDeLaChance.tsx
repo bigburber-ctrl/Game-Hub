@@ -459,8 +459,8 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
           {/* Ombre fixe */}
           <div className="absolute inset-0 z-0 pointer-events-none rounded-full shadow-xl" />
           {/* Roue rotative cliquable */}
-          <motion.div
-            className="relative z-10 w-64 h-64 rounded-full cursor-pointer transition"
+          <div
+            className="relative z-10 w-64 h-64 rounded-full cursor-pointer"
             style={{ transform: `rotate(${rotationDeg}deg)` }}
             onClick={() => {
               if (!isSpinning && activeItems.length > 0) spinWheel();
