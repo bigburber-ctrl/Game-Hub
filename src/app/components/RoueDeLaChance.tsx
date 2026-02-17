@@ -320,74 +320,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
             style={{ transform: `rotate(${rotationDeg}deg)` }}
           >
             <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
-              {activeItems.length === 0 ? (
-                <circle
-                  cx={WHEEL_CENTER}
-                  cy={WHEEL_CENTER}
-                  r={WHEEL_RADIUS}
-                  fill="#1e293b"
-                />
-              ) : (
-                activeItems.map((item, index) => {
-                  const segmentSize = 360 / activeItems.length;
-                  const startDeg = -90 + index * segmentSize;
-                  const endDeg = startDeg + segmentSize;
-                  const middleDeg = startDeg + segmentSize / 2;
-                  const color = segmentColors[index % segmentColors.length];
-                  const rawLabel = item.label.trim();
-                  const displayLabel =
-                    rawLabel.length > maxLabelChars ? `${rawLabel.slice(0, Math.max(3, maxLabelChars - 1))}…` : rawLabel;
-                  const clipId = `wheel-segment-clip-${index}-${item.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-                  const labelStart = polar(WHEEL_CENTER, WHEEL_CENTER, 64, middleDeg);
-                  const labelEnd = polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS - 18, middleDeg);
-                  return (
-                    <g key={item.id}>
-                      <defs>
-                        <clipPath id={clipId}>
-                          <path d={ringSegmentPath(startDeg, endDeg, 64, WHEEL_RADIUS - 6)} />
-                        </clipPath>
-                      </defs>
-                      <path d={wedgePath(startDeg, endDeg)} fill={color} />
-                      <line
-                        x1={WHEEL_CENTER}
-                        y1={WHEEL_CENTER}
-                        x2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).x}
-                        y2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).y}
-                        stroke="rgba(15, 23, 42, 0.45)"
-                        strokeWidth={1.5}
-                      />
-                      <g clipPath={`url(#${clipId})`}>
-                        <g transform={`rotate(${middleDeg} ${labelStart.x} ${labelStart.y})`}>
-                          <text
-                            x={labelStart.x}
-                            y={labelStart.y}
-                            fill="white"
-                            fontSize={labelFontSize}
-                            fontWeight="800"
-                            textAnchor="start"
-                            dominantBaseline="middle"
-                            style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
-                          >
-                            <textPath
-                              href={`#arc-path-${index}`}
-                              startOffset="0%"
-                              method="align"
-                            >
-                              {displayLabel}
-                            </textPath>
-                          </text>
-                          {/* Arc invisible pour textPath */}
-                          <path
-                            id={`arc-path-${index}`}
-                            d={`M ${labelStart.x} ${labelStart.y} L ${labelEnd.x} ${labelEnd.y}`}
-                            fill="none"
-                          />
-                        </g>
-                      </g>
-                    </g>
-                  );
-                })
-              )
+              <circle cx={WHEEL_CENTER} cy={WHEEL_CENTER} r={WHEEL_RADIUS} fill="#1e293b" />
             </svg>
           </motion.div>
 
