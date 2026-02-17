@@ -42,6 +42,22 @@ const wedgePath = (startDeg: number, endDeg: number) => {
   return `M ${WHEEL_CENTER} ${WHEEL_CENTER} L ${start.x} ${start.y} A ${WHEEL_RADIUS} ${WHEEL_RADIUS} 0 ${largeArcFlag} 1 ${end.x} ${end.y} Z`;
 };
 
+const ringSegmentPath = (startDeg: number, endDeg: number, innerR: number, outerR: number) => {
+  const outerStart = polar(WHEEL_CENTER, WHEEL_CENTER, outerR, startDeg);
+  const outerEnd = polar(WHEEL_CENTER, WHEEL_CENTER, outerR, endDeg);
+  const innerStart = polar(WHEEL_CENTER, WHEEL_CENTER, innerR, startDeg);
+  const innerEnd = polar(WHEEL_CENTER, WHEEL_CENTER, innerR, endDeg);
+  const largeArcFlag = endDeg - startDeg > 180 ? 1 : 0;
+
+  return [
+    `M ${outerStart.x} ${outerStart.y}`,
+    `A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${outerEnd.x} ${outerEnd.y}`,
+    `L ${innerEnd.x} ${innerEnd.y}`,
+    `A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y}`,
+    "Z",
+  ].join(" ");
+};
+
 function readInitialItems(): WheelItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -261,10 +277,10 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   ];
 
   const maxLabelChars = useMemo(() => {
-    if (activeItems.length <= 4) return 14;
-    if (activeItems.length <= 6) return 12;
-    if (activeItems.length <= 8) return 9;
-    return 7;
+    if (activeItems.length <= 4) return 16;
+    if (activeItems.length <= 6) return 13;
+    if (activeItems.length <= 8) return 10;
+    return 8;
   }, [activeItems.length]);
 
   const labelFontSize = useMemo(() => {
@@ -353,7 +369,6 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
 
       <div className="mt-5 flex flex-col items-center gap-4">
         <div className="relative">
-          <div className="absolute left-1/2 top-[2px] -translate-x-1/2 z-[20] w-0 h-0 border-l-[10px] border-r-[10px] border-b-0 border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
           <motion.div
             className="relative z-10 w-64 h-64 rounded-full shadow-xl"
             style={{ transform: `rotate(${rotationDeg}deg)` }}
@@ -385,7 +400,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                     <g key={item.id}>
                       <defs>
                         <clipPath id={clipId}>
-                          <path d={wedgePath(startDeg, endDeg)} />
+                          <path d={ringSegmentPath(startDeg, endDeg, 64, WHEEL_RADIUS - 6)} />
                         </clipPath>
                       </defs>
                       <path d={wedgePath(startDeg, endDeg)} fill={color} />
@@ -417,7 +432,20 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   );
                 })
               )}
+            </svg>
+          </motion.div>
 
+          <div className="absolute inset-0 z-[15] pointer-events-none">
+            <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
+              <polygon
+                points={`${WHEEL_CENTER - 10},12 ${WHEEL_CENTER + 10},12 ${WHEEL_CENTER},26`}
+                fill="white"
+              />
+            </svg>
+          </div>
+
+          <div className="absolute inset-0 z-[20] pointer-events-none">
+            <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
               <circle
                 cx={WHEEL_CENTER}
                 cy={WHEEL_CENTER}
@@ -435,7 +463,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                 strokeWidth={3}
               />
             </svg>
-          </motion.div>
+          </div>
         </div>
 
         <button
