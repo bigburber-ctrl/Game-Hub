@@ -1,3 +1,10 @@
+// Ajout des constantes manquantes pour la roue de la chance
+const STORAGE_KEY = "gamehub_fortune_wheel_items";
+const DEFAULT_ITEMS: WheelItem[] = [
+  { id: "1", label: "Choix 1", crossed: false },
+  { id: "2", label: "Choix 2", crossed: false },
+  { id: "3", label: "Choix 3", crossed: false },
+];
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, Plus, Trash2, RotateCcw, CircleOff } from "lucide-react";
