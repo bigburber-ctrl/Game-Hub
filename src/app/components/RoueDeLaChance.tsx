@@ -52,13 +52,6 @@ type WheelItem = {
                       </g>
                     </g>
                   );
-    `M ${outerStart.x} ${outerStart.y}`,
-    `A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${outerEnd.x} ${outerEnd.y}`,
-              <polygon
-                points={`${WHEEL_CENTER - 10},10 ${WHEEL_CENTER + 10},10 ${WHEEL_CENTER},28`}
-                fill="white"
-              />
-};
 
 function readInitialItems(): WheelItem[] {
   try {
