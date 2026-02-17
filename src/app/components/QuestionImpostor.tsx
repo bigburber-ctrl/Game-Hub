@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Player } from "@/app/App";
 import { ChevronLeft, Send, RotateCcw, HelpCircle, Users, Eye } from "lucide-react";
@@ -7,61 +7,63 @@ interface QuestionImpostorProps {
   players: Player[];
   config: {
     questionMode: "standard" | "numbers";
+    impostorCount?: number;
   };
+  enablePhoneVote: boolean;
   onBack: () => void;
 }
 
 const NUMBER_QUESTIONS = [
-{ question: "Quel est le meilleur âge pour prendre sa retraite ?", range: "Entre 45 et 75" },
-{ question: "À partir de quel âge est-on vraiment adulte ?", range: "Entre 16 et 35" },
-{ question: "Quel âge est trop vieux pour aller en boîte de nuit ?", range: "Entre 30 et 65" },
-{ question: "À quel âge idéal devrait-on quitter chez ses parents ?", range: "Entre 16 et 30" },
-{ question: "Quel est l’âge parfait pour avoir son premier enfant ?", range: "Entre 20 et 40" },
-{ question: "À quel âge commence-t-on à devenir 'plate' ?", range: "Entre 25 et 55" },
-{ question: "Quel est l’âge idéal pour arrêter l’école définitivement ?", range: "Entre 16 et 30" },
-{ question: "À partir de quel âge devient-on trop vieux pour jouer aux jeux vidéo ?", range: "Entre 35 et 80" },
-{ question: "Quel âge est trop jeune pour avoir une relation sérieuse ?", range: "Entre 12 et 22" },
-{ question: "À quel âge devrait-on arrêter de fêter son anniversaire ?", range: "Entre 50 et 95" },
-{ question: "Combien d’amis proches est le nombre parfait ?", range: "Entre 2 et 12" },
-{ question: "Combien de relations amoureuses sérieuses devrait-on vivre dans une vie ?", range: "Entre 1 et 8" },
-{ question: "Combien de fois devrait-on déménager dans une vie ?", range: "Entre 1 et 10" },
-{ question: "Combien d’heures par jour est acceptable de passer sur son téléphone ?", range: "Entre 2 et 10" },
-{ question: "Combien de voyages importants devrait-on faire dans une vie ?", range: "Entre 3 et 25" },
-{ question: "Combien d’emplois différents devrait-on avoir dans une vie ?", range: "Entre 2 et 12" },
-{ question: "Combien d’années devrait durer une relation idéale ?", range: "Entre 5 et 40" },
-{ question: "Combien d’heures par semaine devrait-on travailler ?", range: "Entre 20 et 60" },
-{ question: "Combien de fois est-il acceptable de changer complètement de carrière ?", range: "Entre 0 et 6" },
-{ question: "Combien d’heures par jour devrait-on dormir idéalement ?", range: "Entre 6 et 10" },
-{ question: "Combien d’enfants représente une famille parfaite ?", range: "Entre 0 et 6" },
-{ question: "Combien de jours de vacances devrait-on avoir par année ?", range: "Entre 10 et 60" },
-{ question: "Combien de fois par semaine devrait-on sortir voir des amis ?", range: "Entre 1 et 6" },
-{ question: "Combien de temps devrait durer un premier rendez-vous ?", range: "Entre 30 et 180" },
-{ question: "Combien de fois par mois est-il acceptable de manger du fast-food ?", range: "Entre 0 et 12" },
-{ question: "Combien de loisirs différents devrait-on avoir pour être équilibré ?", range: "Entre 1 et 8" },
-{ question: "Combien de fois devrait-on changer de style vestimentaire dans sa vie ?", range: "Entre 1 et 12" },
-{ question: "Combien de langues devrait-on parler pour être considéré cultivé ?", range: "Entre 1 et 5" },
-{ question: "Combien de temps devrait durer un deuil normal ?", range: "Entre 1 et 8" },
-{ question: "Combien d’heures par semaine devrait-on consacrer à ses passions ?", range: "Entre 2 et 25" },
-{ question: "Combien de fois par année devrait-on voir sa famille élargie ?", range: "Entre 1 et 12" },
-{ question: "Combien d’années devrait durer un téléphone avant de le changer ?", range: "Entre 2 et 8" },
-{ question: "Combien de repas par semaine devrait-on cuisiner soi-même ?", range: "Entre 3 et 18" },
-{ question: "Combien d’heures par semaine est acceptable de regarder des séries ?", range: "Entre 2 et 25" },
-{ question: "Combien de fois devrait-on essayer un nouveau hobby dans sa vie ?", range: "Entre 2 et 20" },
-{ question: "Combien d’années devrait durer une amitié forte ?", range: "Entre 5 et 60" },
-{ question: "Combien de fois devrait-on faire du sport par semaine ?", range: "Entre 1 et 7" },
-{ question: "Combien d’heures devrait durer une soirée idéale ?", range: "Entre 2 et 10" },
-{ question: "Combien de fois par mois est-il acceptable de commander en ligne ?", range: "Entre 0 et 20" },
-{ question: "Combien de fois devrait-on changer de coupe de cheveux dans sa vie ?", range: "Entre 5 et 60" },
-{ question: "Combien d’heures par semaine devrait-on passer seul ?", range: "Entre 5 et 60" },
-{ question: "Combien de fois devrait-on prendre des risques importants dans sa vie ?", range: "Entre 1 et 12" },
-{ question: "Combien de projets personnels devrait-on terminer dans une vie ?", range: "Entre 3 et 40" },
-{ question: "Combien de fois est-il acceptable d’annuler des plans à la dernière minute par mois ?", range: "Entre 0 et 8" },
-{ question: "Combien de fois devrait-on changer de ville dans sa vie ?", range: "Entre 0 et 8" },
-{ question: "Combien d’heures devrait durer une conversation profonde ?", range: "Entre 1 et 6" },
-{ question: "Combien de fois par semaine devrait-on appeler ses proches ?", range: "Entre 1 et 10" },
-{ question: "Combien de passions peut-on gérer sérieusement en même temps ?", range: "Entre 1 et 6" },
-{ question: "Combien de fois devrait-on réinventer sa vie complètement ?", range: "Entre 0 et 6" },
-{ question: "Combien de souvenirs importants devrait-on créer par année ?", range: "Entre 3 et 40" },
+{ question: "Quel est le meilleur âge pour prendre sa retraite ?", range: "Entre 38 et 85" },
+{ question: "À partir de quel âge est-on vraiment adulte ?", range: "Entre 10 et 50" },
+{ question: "Quel âge est trop vieux pour aller en boîte de nuit ?", range: "Entre 18 et 80" },
+{ question: "À quel âge idéal devrait-on quitter chez ses parents ?", range: "Entre 8 et 45" },
+{ question: "Quel est l’âge parfait pour avoir son premier enfant ?", range: "Entre 15 et 55" },
+{ question: "À quel âge commence-t-on à devenir 'plate' ?", range: "Entre 15 et 70" },
+{ question: "Quel est l’âge idéal pour arrêter l’école définitivement ?", range: "Entre 8 et 50" },
+{ question: "À partir de quel âge devient-on trop vieux pour jouer aux jeux vidéo ?", range: "Entre 10 et 100" },
+{ question: "Quel âge est trop jeune pour avoir une relation sérieuse ?", range: "Entre 5 et 30" },
+{ question: "À quel âge devrait-on arrêter de fêter son anniversaire ?", range: "Entre 20 et 120" },
+{ question: "Combien d’amis proches est le nombre parfait ?", range: "Entre 0 et 25" },
+{ question: "Combien de relations amoureuses sérieuses devrait-on vivre dans une vie ?", range: "Entre 0 et 20" },
+{ question: "Combien de fois devrait-on déménager dans une vie ?", range: "Entre 0 et 30" },
+{ question: "Combien d’heures par jour est acceptable de passer sur son téléphone ?", range: "Entre 0 et 24" },
+{ question: "Combien de voyages importants devrait-on faire dans une vie ?", range: "Entre 0 et 100" },
+{ question: "Combien d’emplois différents devrait-on avoir dans une vie ?", range: "Entre 0 et 40" },
+{ question: "Combien d’années devrait durer une relation idéale ?", range: "Entre 0 et 100" },
+{ question: "Combien d’heures par semaine devrait-on travailler ?", range: "Entre 8 et 70" },
+{ question: "Combien de fois est-il acceptable de changer complètement de carrière ?", range: "Entre 0 et 20" },
+{ question: "Combien d’heures par jour devrait-on dormir idéalement ?", range: "Entre 2 et 16" },
+{ question: "Combien d’enfants représente une famille parfaite ?", range: "Entre 0 et 12" },
+{ question: "Combien de jours de vacances devrait-on avoir par année ?", range: "Entre 0 et 120" },
+{ question: "Combien de fois par semaine devrait-on sortir voir des amis ?", range: "Entre 0 et 14" },
+{ question: "Combien de temps devrait durer un premier rendez-vous ?", range: "Entre 8 et 400" },
+{ question: "Combien de fois par mois est-il acceptable de manger du fast-food ?", range: "Entre 0 et 30" },
+{ question: "Combien de loisirs différents devrait-on avoir pour être équilibré ?", range: "Entre 0 et 20" },
+{ question: "Combien de fois devrait-on changer de style vestimentaire dans sa vie ?", range: "Entre 0 et 30" },
+{ question: "Combien de langues devrait-on parler pour être considéré cultivé ?", range: "Entre 0 et 12" },
+{ question: "Combien de temps devrait durer un deuil normal ?", range: "Entre 0 et 24" },
+{ question: "Combien d’heures par semaine devrait-on consacrer à ses passions ?", range: "Entre 0 et 60" },
+{ question: "Combien de fois par année devrait-on voir sa famille élargie ?", range: "Entre 0 et 30" },
+{ question: "Combien d’années devrait durer un téléphone avant de le changer ?", range: "Entre 0 et 20" },
+{ question: "Combien de repas par semaine devrait-on cuisiner soi-même ?", range: "Entre 0 et 30" },
+{ question: "Combien d’heures par semaine est acceptable de regarder des séries ?", range: "Entre 0 et 60" },
+{ question: "Combien de fois devrait-on essayer un nouveau hobby dans sa vie ?", range: "Entre 0 et 40" },
+{ question: "Combien d’années devrait durer une amitié forte ?", range: "Entre 0 et 100" },
+{ question: "Combien de fois devrait-on faire du sport par semaine ?", range: "Entre 0 et 14" },
+{ question: "Combien d’heures devrait durer une soirée idéale ?", range: "Entre 0 et 24" },
+{ question: "Combien de fois par mois est-il acceptable de commander en ligne ?", range: "Entre 0 et 40" },
+{ question: "Combien de fois devrait-on changer de coupe de cheveux dans sa vie ?", range: "Entre 0 et 100" },
+{ question: "Combien d’heures par semaine devrait-on passer seul ?", range: "Entre 0 et 100" },
+{ question: "Combien de fois devrait-on prendre des risques importants dans sa vie ?", range: "Entre 0 et 30" },
+{ question: "Combien de projets personnels devrait-on terminer dans une vie ?", range: "Entre 0 et 100" },
+{ question: "Combien de fois est-il acceptable d’annuler des plans à la dernière minute par mois ?", range: "Entre 0 et 20" },
+{ question: "Combien de fois devrait-on changer de ville dans sa vie ?", range: "Entre 0 et 20" },
+{ question: "Combien d’heures devrait durer une conversation profonde ?", range: "Entre 0 et 24" },
+{ question: "Combien de fois par semaine devrait-on appeler ses proches ?", range: "Entre 0 et 30" },
+{ question: "Combien de passions peut-on gérer sérieusement en même temps ?", range: "Entre 0 et 20" },
+{ question: "Combien de fois devrait-on réinventer sa vie complètement ?", range: "Entre 0 et 20" },
+{ question: "Combien de souvenirs importants devrait-on créer par année ?", range: "Entre 0 et 100" },
 ];
 
 const QUESTION_PAIRS = [
@@ -152,18 +154,73 @@ const QUESTION_PAIRS = [
 ];
 
 
-type Step = "answering" | "discussion" | "results";
+type Step = "answering" | "discussion" | "vote" | "results";
 
-export function QuestionImpostor({ players, config, onBack }: QuestionImpostorProps) {
+export function QuestionImpostor({ players, config, enablePhoneVote, onBack }: QuestionImpostorProps) {
   const [step, setStep] = useState<Step>("answering");
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
-  const [impostorId, setImpostorId] = useState("");
+  const [impostorIds, setImpostorIds] = useState<string[]>([]);
   const [questions, setQuestions] = useState<Record<string, string>>({});
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [mainQuestion, setMainQuestion] = useState("");
   const [impostorQuestion, setImpostorQuestion] = useState("");
   const [showQuestion, setShowQuestion] = useState(false);
+  const [votesByPlayer, setVotesByPlayer] = useState<Record<string, string[]>>({});
+  const [currentVoterIdx, setCurrentVoterIdx] = useState(0);
+  const [selectedVoteIds, setSelectedVoteIds] = useState<string[]>([]);
+
+  const requiredSelections = Math.min(Math.max(1, config.impostorCount ?? 1), players.length);
+  const currentVoter = players[currentVoterIdx];
+
+  const voteResults = useMemo(() => {
+    const counts = Object.values(votesByPlayer).flat().reduce<Record<string, number>>((acc, votedId) => {
+      acc[votedId] = (acc[votedId] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(counts)
+      .map(([id, votes]) => ({ id, votes, name: players.find((player) => player.id === id)?.name ?? "Inconnu" }))
+      .sort((a, b) => {
+        const voteDiff = b.votes - a.votes;
+        if (voteDiff !== 0) return voteDiff;
+        const aIsImpostor = impostorIds.includes(a.id) ? 1 : 0;
+        const bIsImpostor = impostorIds.includes(b.id) ? 1 : 0;
+        return bIsImpostor - aIsImpostor;
+      });
+  }, [votesByPlayer, players, impostorIds]);
+
+  const voteCountById = useMemo(() => {
+    return voteResults.reduce<Record<string, number>>((acc, entry) => {
+      acc[entry.id] = entry.votes;
+      return acc;
+    }, {});
+  }, [voteResults]);
+
+  const playerOrderById = useMemo(
+    () => players.reduce<Record<string, number>>((acc, player, index) => {
+      acc[player.id] = index;
+      return acc;
+    }, {}),
+    [players]
+  );
+
+  const playersByVoteDesc = useMemo(
+    () => [...players].sort((a, b) => {
+      const voteDiff = (voteCountById[b.id] ?? 0) - (voteCountById[a.id] ?? 0);
+      if (voteDiff !== 0) return voteDiff;
+      const aIsImpostor = impostorIds.includes(a.id) ? 1 : 0;
+      const bIsImpostor = impostorIds.includes(b.id) ? 1 : 0;
+      if (aIsImpostor !== bIsImpostor) return bIsImpostor - aIsImpostor;
+      return (playerOrderById[a.id] ?? 0) - (playerOrderById[b.id] ?? 0);
+    }),
+    [players, voteCountById, playerOrderById, impostorIds]
+  );
+
+  const voteGridColsClass = useMemo(() => {
+    if (players.length <= 7) return "grid-cols-1";
+    return "grid-cols-2";
+  }, [players.length]);
 
   const setupGame = () => {
     if (!players || players.length === 0) return;
@@ -185,13 +242,15 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
     setMainQuestion(qMain);
     setImpostorQuestion(qImp);
 
-    const impIdx = Math.floor(Math.random() * players.length);
-    const impId = players[impIdx].id;
-    setImpostorId(impId);
+    const impostorsTargetCount = Math.min(Math.max(1, config.impostorCount ?? 1), players.length);
+    const shuffled = [...players].sort(() => Math.random() - 0.5);
+    const chosenImpostorIds = shuffled.slice(0, impostorsTargetCount).map((player) => player.id);
+    const impostorIdsSet = new Set(chosenImpostorIds);
+    setImpostorIds(chosenImpostorIds);
 
     const qMap: Record<string, string> = {};
     players.forEach(p => {
-      qMap[p.id] = p.id === impId ? qImp : qMain;
+      qMap[p.id] = impostorIdsSet.has(p.id) ? qImp : qMain;
     });
     setQuestions(qMap);
   };
@@ -199,7 +258,7 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
   // Initialisation
   useEffect(() => {
     setupGame();
-  }, [players, config.questionMode]);
+  }, [players, config.questionMode, config.impostorCount]);
 
   const submitAnswer = () => {
     if (!currentAnswer.trim()) return;
@@ -221,6 +280,9 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
     setAnswers({});
     setCurrentAnswer("");
     setShowQuestion(false);
+    setVotesByPlayer({});
+    setCurrentVoterIdx(0);
+    setSelectedVoteIds([]);
     setupGame();
   };
 
@@ -229,7 +291,10 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
       <header className="flex items-center justify-between mb-8">
         <button onClick={onBack} className="p-2 text-slate-400"><ChevronLeft /></button>
         <div className="text-center">
-          <h2 className="text-xs font-black text-amber-500 uppercase italic tracking-widest">La Question Différente</h2>
+          <h2 className="text-xs font-black text-amber-500 uppercase italic tracking-widest">❓ La Question Différente</h2>
+          <p className="text-sm font-black text-slate-300 uppercase italic tracking-tighter">
+            {requiredSelections} {requiredSelections > 1 ? "Imposteurs" : "Imposteur"} parmi vous
+          </p>
         </div>
         <div className="w-10"></div>
       </header>
@@ -255,7 +320,7 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
               ) : (
                 <div className="space-y-4 animate-in zoom-in duration-300">
                   <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">
-                    {config.questionMode === "numbers" && players[currentPlayerIdx].id === impostorId
+                    {config.questionMode === "numbers" && impostorIds.includes(players[currentPlayerIdx].id)
                       ? "Indice de Fourchette :"
                       : "Ta Question Secrète :"}
                   </p>
@@ -308,8 +373,108 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
               ))}
             </div>
 
-            <button onClick={() => setStep("results")} className="mt-auto w-full py-5 bg-amber-500 text-black font-black uppercase italic rounded-2xl shadow-xl">
+            <button
+              onClick={() => {
+                if (enablePhoneVote) {
+                  setVotesByPlayer({});
+                  setCurrentVoterIdx(0);
+                  setSelectedVoteIds([]);
+                  setStep("vote");
+                  return;
+                }
+                setStep("results");
+              }}
+              className="mt-auto w-full py-5 bg-amber-500 text-black font-black uppercase italic rounded-2xl shadow-xl"
+            >
               Révéler les rôles
+            </button>
+          </motion.div>
+        )}
+
+        {step === "vote" && (
+          <motion.div key="vote" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col gap-4 pt-2">
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Vote</h3>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Question des innocents :</p>
+              <div className="bg-slate-800 p-4 rounded-2xl border-2 border-amber-500/30 text-white font-bold italic text-center">
+                "{mainQuestion}"
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
+                C'est au tour de voter : {currentVoter?.name}
+              </p>
+              <p className="text-[10px] font-black text-amber-300 uppercase tracking-widest text-center">
+                Sélectionne {requiredSelections} personne{requiredSelections > 1 ? "s" : ""}
+              </p>
+              <div className={`grid ${voteGridColsClass} gap-1.5`}>
+                {players.map((player) => (
+                  <button
+                    key={player.id}
+                    onClick={() => {
+                      setSelectedVoteIds((current) => {
+                        if (current.includes(player.id)) {
+                          return current.filter((id) => id !== player.id);
+                        }
+                        if (requiredSelections === 1) {
+                          return [player.id];
+                        }
+                        if (current.length >= requiredSelections) {
+                          return current;
+                        }
+                        return [...current, player.id];
+                      });
+                    }}
+                    className={`w-full p-4 rounded-2xl border text-left transition-all ${
+                      selectedVoteIds.includes(player.id)
+                        ? "bg-amber-500/10 border-amber-500/50 text-white"
+                        : "bg-slate-800 border-slate-700 text-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase text-slate-500">{player.name}</p>
+                        <p className="text-sm font-bold text-white italic break-words">"{answers[player.id]}"</p>
+                      </div>
+                      <span className={`text-[10px] font-black px-2 py-1 rounded uppercase italic shrink-0 ${selectedVoteIds.includes(player.id) ? "bg-amber-500 text-black" : "bg-slate-900 text-slate-400"}`}>
+                        {selectedVoteIds.includes(player.id) ? "Sélect." : "Voter"}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setSelectedVoteIds([]);
+                setVotesByPlayer({});
+                setStep("results");
+              }}
+              className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-lg border border-slate-700 hover:border-slate-600 transition"
+            >
+              Skipper le vote
+            </button>
+
+            <button
+              onClick={() => {
+                if (!currentVoter || selectedVoteIds.length !== requiredSelections) return;
+                setVotesByPlayer((prev) => ({ ...prev, [currentVoter.id]: selectedVoteIds }));
+                setSelectedVoteIds([]);
+                if (currentVoterIdx < players.length - 1) {
+                  setCurrentVoterIdx((current) => current + 1);
+                } else {
+                  setStep("results");
+                }
+              }}
+              disabled={selectedVoteIds.length !== requiredSelections}
+              className="mt-auto w-full py-3.5 bg-amber-500 text-black font-black uppercase italic rounded-2xl disabled:opacity-50"
+            >
+              Valider le vote
             </button>
           </motion.div>
         )}
@@ -321,32 +486,45 @@ export function QuestionImpostor({ players, config, onBack }: QuestionImpostorPr
               <HelpCircle size={48} className="mx-auto text-amber-500" />
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Questions :</p>
-            <div className="space-y-1">
-              <p className="text-[13px] font-black text-emerald-500 uppercase tracking-widest text-center">Innocents :</p>
-              <div className="bg-emerald-500/10 p-4 rounded-2xl border-2 border-emerald-500/30 text-white font-bold italic text-center">
-                "{mainQuestion}"
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[13px] font-black text-red-500 uppercase tracking-widest text-center">Imposteur :</p>
-              <div className="bg-red-500/10 p-4 rounded-2xl border-2 border-red-500/30 text-white font-bold italic text-center">
-                "{impostorQuestion}"
-              </div>
-            </div>
+                <div className="space-y-1">
+                  <p className="text-[13px] font-black text-emerald-500 uppercase tracking-widest text-center">Innocents :</p>
+                  <div className="bg-emerald-500/10 p-4 rounded-2xl border-2 border-emerald-500/30 text-white font-bold italic text-center">
+                    "{mainQuestion}"
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[13px] font-black text-red-500 uppercase tracking-widest text-center">
+                    {impostorIds.length > 1 ? "Imposteurs :" : "Imposteur :"}
+                  </p>
+                  <div className="bg-red-500/10 p-4 rounded-2xl border-2 border-red-500/30 text-white font-bold italic text-center">
+                    "{impostorQuestion}"
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className="space-y-4">
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Rôles et réponses :</p>
               <div className="space-y-2">
-                {players.map(p => (
-                  <div key={p.id} className={`p-4 rounded-2xl flex items-center justify-between ${p.id === impostorId ? 'bg-red-500/10 border-2 border-red-500/50' : 'bg-slate-800'}`}>
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-slate-500">{p.name}</p>
-                      <p className="font-bold text-white italic">"{answers[p.id]}"</p>
+                {playersByVoteDesc.map((player) => (
+                  <div
+                    key={player.id}
+                    className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
+                      impostorIds.includes(player.id)
+                        ? "bg-red-500/10 border-red-500/50"
+                        : "bg-slate-800 border-slate-700"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black uppercase text-slate-500">
+                        {player.name} - {voteCountById[player.id] ?? 0} vote{(voteCountById[player.id] ?? 0) > 1 ? "s" : ""}
+                      </p>
+                      <p className="font-bold text-white italic break-words">"{answers[player.id]}"</p>
                     </div>
-                    {p.id === impostorId ? (
-                      <span className="text-[10px] font-black bg-red-500 text-white px-2 py-1 rounded uppercase italic shrink-0">L'Imposteur</span>
+                    {impostorIds.includes(player.id) ? (
+                      <span className="text-[10px] font-black bg-red-500 text-white px-2 py-1 rounded uppercase italic shrink-0">
+                        {impostorIds.length > 1 ? "Imposteur" : "L'Imposteur"}
+                      </span>
                     ) : (
                       <span className="text-[10px] font-black bg-emerald-500/20 text-emerald-500 px-2 py-1 rounded uppercase italic shrink-0">Innocent</span>
                     )}

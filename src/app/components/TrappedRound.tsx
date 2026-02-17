@@ -8,6 +8,7 @@ import { toast } from "sonner";
 interface TrappedRoundProps {
   players: Player[];
   config: GameConfig;
+  enablePhoneVote: boolean;
   onBack: () => void;
 }
 
@@ -170,9 +171,9 @@ const MISSIONS = [
 "Réagir de façon trop dramatique à chaque réponse"
 ];
 
-type Step = "reveal" | "round_start" | "voting_time" | "reveal_result";
+type Step = "reveal" | "round_start" | "voting_time" | "phone_vote" | "reveal_result";
 
-export function TrappedRound({ players, config, onBack }: TrappedRoundProps) {
+export function TrappedRound({ players, config, enablePhoneVote, onBack }: TrappedRoundProps) {
   const [step, setStep] = useState<Step>("reveal");
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
   const [impostorsIds, setImpostorsIds] = useState<string[]>([]);
@@ -183,6 +184,35 @@ export function TrappedRound({ players, config, onBack }: TrappedRoundProps) {
   const [countdown, setCountdown] = useState(0);
   const [round, setRound] = useState(1);
   const [startingPlayerId, setStartingPlayerId] = useState("");
+  const [votesByPlayer, setVotesByPlayer] = useState<Record<string, string[]>>({});
+  const [currentVoterIdx, setCurrentVoterIdx] = useState(0);
+  const [selectedVoteIds, setSelectedVoteIds] = useState<string[]>([]);
+
+  const requiredSelections = Math.min(Math.max(1, config.impostorCount), players.length);
+  const currentVoter = players[currentVoterIdx];
+
+  const voteGridColsClass = React.useMemo(() => {
+    if (players.length <= 7) return "grid-cols-1";
+    if (players.length <= 12) return "grid-cols-2";
+    return "grid-cols-3";
+  }, [players.length]);
+
+  const voteResults = React.useMemo(() => {
+    const counts = Object.values(votesByPlayer).flat().reduce<Record<string, number>>((acc, votedId) => {
+      acc[votedId] = (acc[votedId] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(counts)
+      .map(([id, votes]) => ({ id, votes, name: players.find((player) => player.id === id)?.name ?? "Inconnu" }))
+      .sort((a, b) => {
+        const voteDiff = b.votes - a.votes;
+        if (voteDiff !== 0) return voteDiff;
+        const aIsImpostor = impostorsIds.includes(a.id) ? 1 : 0;
+        const bIsImpostor = impostorsIds.includes(b.id) ? 1 : 0;
+        return bIsImpostor - aIsImpostor;
+      });
+  }, [votesByPlayer, players, impostorsIds]);
 
   useEffect(() => {
     if (showRole && countdown > 0) {
@@ -236,8 +266,16 @@ export function TrappedRound({ players, config, onBack }: TrappedRoundProps) {
     setStep("round_start");
   };
 
-  const startVote = () => setStep("voting_time");
-  const revealImpostors = () => setStep("reveal_result");
+  const startVote = () => {
+    if (enablePhoneVote) {
+      setVotesByPlayer({});
+      setCurrentVoterIdx(0);
+      setSelectedVoteIds([]);
+      setStep("phone_vote");
+      return;
+    }
+    setStep("voting_time");
+  };
 
   const resetGame = () => {
     setStep("reveal");
@@ -255,6 +293,9 @@ export function TrappedRound({ players, config, onBack }: TrappedRoundProps) {
     setConstraint(first);
     setUsedConstraints([first]);
     setStartingPlayerId(players[Math.floor(Math.random() * players.length)]?.id ?? players[0]?.id ?? "");
+    setVotesByPlayer({});
+    setCurrentVoterIdx(0);
+    setSelectedVoteIds([]);
   };
 
   return (
@@ -263,6 +304,9 @@ export function TrappedRound({ players, config, onBack }: TrappedRoundProps) {
         <button onClick={onBack} className="p-2 text-slate-400"><ChevronLeft /></button>
         <div className="text-center">
           <h2 className="text-xs font-bold text-purple-500 uppercase tracking-widest">🎭 Mission Comportementale</h2>
+          <p className="text-sm font-black text-slate-300 uppercase italic tracking-tighter">
+            {requiredSelections} {requiredSelections > 1 ? "Imposteurs" : "Imposteur"} parmi vous
+          </p>
           {step !== "reveal" && <p className="text-sm font-medium text-slate-300">Round {round}</p>}
         </div>
         <div className="w-10"></div>
@@ -362,8 +406,86 @@ export function TrappedRound({ players, config, onBack }: TrappedRoundProps) {
               </p>
             </div>
 
-            <button onClick={revealImpostors} className="mt-8 py-5 bg-purple-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all">
+            <button onClick={() => setStep("reveal_result")} className="mt-8 py-5 bg-purple-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all">
               Découvrir la vérité
+            </button>
+          </motion.div>
+        )}
+
+        {step === "phone_vote" && (
+          <motion.div key="phone-vote" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col gap-4 pt-2">
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Vote</h3>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
+                C'est au tour de voter : {currentVoter?.name}
+              </p>
+              <p className="text-[10px] font-black text-purple-300 uppercase tracking-widest text-center">
+                Sélectionne {requiredSelections} personne{requiredSelections > 1 ? "s" : ""}
+              </p>
+              <div className={`grid ${voteGridColsClass} gap-1.5 max-h-[34vh] overflow-y-auto pr-1`}>
+                {players.map((player) => (
+                  <button
+                    key={player.id}
+                    onClick={() => {
+                      setSelectedVoteIds((current) => {
+                        if (current.includes(player.id)) {
+                          return current.filter((id) => id !== player.id);
+                        }
+                        if (requiredSelections === 1) {
+                          return [player.id];
+                        }
+                        if (current.length >= requiredSelections) {
+                          return current;
+                        }
+                        return [...current, player.id];
+                      });
+                    }}
+                    className={`w-full p-4 rounded-2xl border text-left transition-all ${
+                      selectedVoteIds.includes(player.id)
+                        ? "bg-purple-500/10 border-purple-500/50 text-white"
+                        : "bg-slate-800 border-slate-700 text-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[10px] font-black uppercase text-slate-500">{player.name}</span>
+                      <span className={`text-[10px] font-black px-2 py-1 rounded uppercase italic shrink-0 ${selectedVoteIds.includes(player.id) ? "bg-purple-500 text-black" : "bg-slate-900 text-slate-400"}`}>
+                        {selectedVoteIds.includes(player.id) ? "Sélect." : "Voter"}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setSelectedVoteIds([]);
+                setVotesByPlayer({});
+                setStep("reveal_result");
+              }}
+              className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-lg border border-slate-700 hover:border-slate-600 transition"
+            >
+              Skipper le vote
+            </button>
+
+            <button
+              onClick={() => {
+                if (!currentVoter || selectedVoteIds.length !== requiredSelections) return;
+                setVotesByPlayer((prev) => ({ ...prev, [currentVoter.id]: selectedVoteIds }));
+                setSelectedVoteIds([]);
+                if (currentVoterIdx < players.length - 1) {
+                  setCurrentVoterIdx((current) => current + 1);
+                } else {
+                  setStep("reveal_result");
+                }
+              }}
+              disabled={selectedVoteIds.length !== requiredSelections}
+              className="mt-auto w-full py-3.5 bg-purple-600 text-white font-black uppercase italic rounded-2xl disabled:opacity-50"
+            >
+              Valider le vote
             </button>
           </motion.div>
         )}
@@ -373,6 +495,30 @@ export function TrappedRound({ players, config, onBack }: TrappedRoundProps) {
             <div className="space-y-6">
               <ShieldAlert size={80} className="mx-auto text-red-500 mb-4" />
               <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">Les Coupables !</h2>
+              {enablePhoneVote && voteResults.length > 0 && (
+                <div className="p-3 bg-slate-800/80 border border-slate-700 rounded-2xl max-w-[320px] mx-auto space-y-2">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Résultats des votes</p>
+                  <div className="space-y-1">
+                    {voteResults.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className={`p-4 rounded-2xl border flex items-center justify-between ${
+                          impostorsIds.includes(entry.id)
+                            ? "bg-red-500/10 border-red-500/50"
+                            : "bg-slate-800 border-slate-700"
+                        }`}
+                      >
+                        <span className={`text-xs font-black uppercase italic ${impostorsIds.includes(entry.id) ? "text-red-400" : "text-white"}`}>
+                          {entry.name}
+                        </span>
+                        <span className="text-[10px] font-black bg-slate-900 text-slate-300 px-2 py-1 rounded uppercase italic shrink-0">
+                          {entry.votes} vote{entry.votes > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="grid gap-3 max-w-[300px] mx-auto">
                 {impostorsIds.map(id => (
                   <div key={id} className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-left">

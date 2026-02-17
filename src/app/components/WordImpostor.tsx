@@ -8,6 +8,7 @@ import { toast } from "sonner";
 interface WordImpostorProps {
   players: Player[];
   config: GameConfig;
+  enablePhoneVote: boolean;
   onBack: () => void;
 }
 
@@ -926,9 +927,9 @@ const WORD_CATEGORIES: Record<string, { word: string; hint: string }[]> = {
 ]
 };
 
-type Step = "reveal" | "describe" | "vote_instructions" | "reveal_result";
+type Step = "reveal" | "describe" | "vote_instructions" | "phone_vote" | "reveal_result";
 
-export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
+export function WordImpostor({ players, config, enablePhoneVote, onBack }: WordImpostorProps) {
   const [step, setStep] = useState<Step>("reveal");
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
   const [impostorsIds, setImpostorsIds] = useState<string[]>([]);
@@ -937,6 +938,35 @@ export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
   const [startingPlayerId, setStartingPlayerId] = useState("");
   const [showWord, setShowWord] = useState(false);
   const [effectiveCategory, setEffectiveCategory] = useState<string>(() => resolveEffectiveCategory(config.category));
+  const [votesByPlayer, setVotesByPlayer] = useState<Record<string, string[]>>({});
+  const [currentVoterIdx, setCurrentVoterIdx] = useState(0);
+  const [selectedVoteIds, setSelectedVoteIds] = useState<string[]>([]);
+
+  const requiredSelections = Math.min(Math.max(1, config.impostorCount), players.length);
+  const currentVoter = players[currentVoterIdx];
+
+  const voteGridColsClass = React.useMemo(() => {
+    if (players.length <= 7) return "grid-cols-1";
+    if (players.length <= 12) return "grid-cols-2";
+    return "grid-cols-3";
+  }, [players.length]);
+
+  const voteResults = React.useMemo(() => {
+    const counts = Object.values(votesByPlayer).flat().reduce<Record<string, number>>((acc, votedId) => {
+      acc[votedId] = (acc[votedId] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.entries(counts)
+      .map(([id, votes]) => ({ id, votes, name: players.find((player) => player.id === id)?.name ?? "Inconnu" }))
+      .sort((a, b) => {
+        const voteDiff = b.votes - a.votes;
+        if (voteDiff !== 0) return voteDiff;
+        const aIsImpostor = impostorsIds.includes(a.id) ? 1 : 0;
+        const bIsImpostor = impostorsIds.includes(b.id) ? 1 : 0;
+        return bIsImpostor - aIsImpostor;
+      });
+  }, [votesByPlayer, players, impostorsIds]);
 
   useEffect(() => {
     if (!players || players.length === 0) return;
@@ -1010,6 +1040,9 @@ export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
     setWords(wordMap);
     setPlayerHints(hintMap);
     setStartingPlayerId(players[Math.floor(Math.random() * players.length)].id);
+    setVotesByPlayer({});
+    setCurrentVoterIdx(0);
+    setSelectedVoteIds([]);
   };
 
   return (
@@ -1084,33 +1117,27 @@ export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
 
               <div className="space-y-3 text-left">
                 <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                  <p className="text-[10px] uppercase font-bold text-emerald-500 tracking-widest mb-1">Le joueur qui commence :</p>
+                  <p className="text-[10px] uppercase font-bold text-emerald-500 tracking-widest mb-1">Premier qui parle :</p>
                   <p className="text-lg font-black text-white uppercase italic">
                     {players.find(p => p.id === startingPlayerId)?.name}
                   </p>
                 </div>
-
-                {config.category !== SPECIAL_RANDOM_CATEGORY && (
-                  <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700">
-                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Ordre de parole :</p>
-                    <div className="flex flex-wrap gap-2">
-                      {(() => {
-                        const startIndex = players.findIndex(p => p.id === startingPlayerId);
-                        const ordered = [...players.slice(startIndex), ...players.slice(0, startIndex)];
-                        return ordered.map((p, i) => (
-                          <div key={p.id} className="flex items-center gap-2">
-                            <span className="text-white font-bold text-sm uppercase italic">{p.name}</span>
-                            {i < ordered.length - 1 && <span className="text-slate-700 text-xs">→</span>}
-                          </div>
-                        ));
-                      })()}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
             
-            <button onClick={() => setStep("vote_instructions")} className="py-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all">
+            <button
+              onClick={() => {
+                if (enablePhoneVote) {
+                  setVotesByPlayer({});
+                  setCurrentVoterIdx(0);
+                  setSelectedVoteIds([]);
+                  setStep("phone_vote");
+                  return;
+                }
+                setStep("vote_instructions");
+              }}
+              className="py-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all"
+            >
               Passer au Vote
             </button>
           </motion.div>
@@ -1126,8 +1153,98 @@ export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
               </p>
             </div>
 
-            <button onClick={() => setStep("reveal_result")} className="mt-8 py-5 bg-emerald-600 text-white font-black uppercase italic rounded-2xl active:scale-95 transition-all shadow-xl shadow-emerald-900/40">
+            <button
+              onClick={() => {
+                if (enablePhoneVote) {
+                  setVotesByPlayer({});
+                  setCurrentVoterIdx(0);
+                  setSelectedVoteIds([]);
+                  setStep("phone_vote");
+                  return;
+                }
+                setStep("reveal_result");
+              }}
+              className="mt-8 py-5 bg-emerald-600 text-white font-black uppercase italic rounded-2xl active:scale-95 transition-all shadow-xl shadow-emerald-900/40"
+            >
               Découvrir les imposteurs
+            </button>
+          </motion.div>
+        )}
+
+        {step === "phone_vote" && (
+          <motion.div key="phone-vote" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col gap-4 pt-2">
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Vote</h3>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
+                C'est au tour de voter : {currentVoter?.name}
+              </p>
+              <p className="text-[10px] font-black text-emerald-300 uppercase tracking-widest text-center">
+                Sélectionne {requiredSelections} personne{requiredSelections > 1 ? "s" : ""}
+              </p>
+              <div className={`grid ${voteGridColsClass} gap-1.5 max-h-[34vh] overflow-y-auto pr-1`}>
+                {players.map((player) => (
+                  <button
+                    key={player.id}
+                    onClick={() => {
+                      setSelectedVoteIds((current) => {
+                        if (current.includes(player.id)) {
+                          return current.filter((id) => id !== player.id);
+                        }
+                        if (requiredSelections === 1) {
+                          return [player.id];
+                        }
+                        if (current.length >= requiredSelections) {
+                          return current;
+                        }
+                        return [...current, player.id];
+                      });
+                    }}
+                    className={`w-full p-4 rounded-2xl border text-left transition-all ${
+                      selectedVoteIds.includes(player.id)
+                        ? "bg-emerald-500/10 border-emerald-500/50 text-white"
+                        : "bg-slate-800 border-slate-700 text-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[10px] font-black uppercase text-slate-500">{player.name}</span>
+                      <span className={`text-[10px] font-black px-2 py-1 rounded uppercase italic shrink-0 ${selectedVoteIds.includes(player.id) ? "bg-emerald-500 text-black" : "bg-slate-900 text-slate-400"}`}>
+                        {selectedVoteIds.includes(player.id) ? "Sélect." : "Voter"}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setSelectedVoteIds([]);
+                setVotesByPlayer({});
+                setStep("reveal_result");
+              }}
+              className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white rounded-lg border border-slate-700 hover:border-slate-600 transition"
+            >
+              Skipper le vote
+            </button>
+
+            <button
+              onClick={() => {
+                if (!currentVoter || selectedVoteIds.length !== requiredSelections) return;
+                setVotesByPlayer((prev) => ({ ...prev, [currentVoter.id]: selectedVoteIds }));
+                setSelectedVoteIds([]);
+                if (currentVoterIdx < players.length - 1) {
+                  setCurrentVoterIdx((current) => current + 1);
+                } else {
+                  setStep("reveal_result");
+                }
+              }}
+              disabled={selectedVoteIds.length !== requiredSelections}
+              className="mt-auto w-full py-3.5 bg-emerald-600 text-white font-black uppercase italic rounded-2xl disabled:opacity-50"
+            >
+              Valider le vote
             </button>
           </motion.div>
         )}
@@ -1139,6 +1256,30 @@ export function WordImpostor({ players, config, onBack }: WordImpostorProps) {
               <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">La Vérité !</h2>
               
               <div className="bg-slate-800 rounded-3xl p-6 border-2 border-slate-700 space-y-6">
+                  {enablePhoneVote && voteResults.length > 0 && (
+                    <div className="space-y-2">
+                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Résultats des votes</p>
+                     <div className="space-y-1">
+                      {voteResults.map((entry) => (
+                        <div
+                          key={entry.id}
+                          className={`p-4 rounded-2xl border flex items-center justify-between ${
+                            impostorsIds.includes(entry.id)
+                              ? "bg-red-500/10 border-red-500/50"
+                              : "bg-slate-800 border-slate-700"
+                          }`}
+                        >
+                          <span className={`text-xs font-black uppercase italic ${impostorsIds.includes(entry.id) ? "text-red-400" : "text-white"}`}>
+                            {entry.name}
+                          </span>
+                          <span className="text-[10px] font-black bg-slate-900 text-slate-300 px-2 py-1 rounded uppercase italic shrink-0">
+                            {entry.votes} vote{entry.votes > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      ))}
+                     </div>
+                    </div>
+                  )}
                  <div>
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Mots du jeu</p>
                     <div className="flex justify-center items-center gap-4">

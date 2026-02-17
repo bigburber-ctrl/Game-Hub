@@ -11,12 +11,12 @@ export type GameConfig = {
   seekersCount?: number;
   randomSeekersCount?: boolean;
   usePresetRule?: boolean;
-  timeLimitMinutes?: 5 | 10 | 15 | "unlimited";
+  timeLimitMinutes?: 1 | 2 | 3 | 4 | 5 | 10 | 15 | "unlimited";
   buzzLimit?: 1 | 2 | 3 | 4 | 5 | "unlimited";
 };
 
 interface GameSettingsProps {
-  gameType: "trapped-round" | "word-impostor" | "question-impostor" | "trouve-regle";
+  gameType: "trapped-round" | "word-impostor" | "question-impostor" | "trouve-regle" | "sabotage-silencieux";
   playersCount: number;
   onBack: () => void;
   onStart: (config: GameConfig) => void;
@@ -27,8 +27,7 @@ const computeMaxImpostors = (playersCount: number) => {
   if (playersCount <= 4) return 1;
   if (playersCount <= 7) return 2;
   if (playersCount <= 10) return 3;
-  if (playersCount <= 15) return 4;
-  return Math.floor(playersCount / 4);
+  return 4;
 };
 
 // Liste de catégories pour le mode "word-impostor"
@@ -83,6 +82,14 @@ const GAME_COLORS = {
     buttonGradientFrom: "from-blue-600",
     buttonGradientTo: "to-blue-800",
     icon: "text-blue-400"
+  },
+  "sabotage-silencieux": {
+    titleText: "text-fuchsia-500",
+    subtitleText: "text-fuchsia-400",
+    sliderAccent: "accent-fuchsia-500",
+    buttonGradientFrom: "from-fuchsia-600",
+    buttonGradientTo: "to-pink-700",
+    icon: "text-fuchsia-400"
   }
 };
 
@@ -117,7 +124,13 @@ export function GameSettings({ gameType, playersCount, onBack, onStart, initialC
   const [showHints, setShowHints] = useState(initialConfig?.showHints ?? true);
   const [randomSeekersCount, setRandomSeekersCount] = useState(initialConfig?.randomSeekersCount ?? false);
   const [usePresetRule, setUsePresetRule] = useState(initialConfig?.usePresetRule ?? true);
-  const [timeLimitMinutes, setTimeLimitMinutes] = useState<5 | 10 | 15 | "unlimited">(() => {
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<1 | 2 | 3 | 4 | 5 | 10 | 15 | "unlimited">(() => {
+    if (gameType === "sabotage-silencieux") {
+      if (initialConfig?.timeLimitMinutes === 1) return 1;
+      if (initialConfig?.timeLimitMinutes === 2) return 2;
+      if (initialConfig?.timeLimitMinutes === 4) return 4;
+      return 3;
+    }
     if (initialConfig?.timeLimitMinutes === 5) return 5;
     if (initialConfig?.timeLimitMinutes === 15) return 15;
     if (initialConfig?.timeLimitMinutes === "unlimited") return "unlimited";
@@ -134,7 +147,7 @@ export function GameSettings({ gameType, playersCount, onBack, onStart, initialC
   const colors = GAME_COLORS[gameType];
 
   const handleStart = () => {
-    const normalizedImpostorCount = gameType === "question-impostor" ? 1 : impostorCount;
+    const normalizedImpostorCount = Math.min(Math.max(1, impostorCount), maxImpostors());
     const clampedSeekersCount = Math.min(Math.max(1, seekersCount), maxSeekersCount);
     onStart({
       impostorCount: normalizedImpostorCount,
@@ -192,12 +205,7 @@ export function GameSettings({ gameType, playersCount, onBack, onStart, initialC
     </h3>
   </div>
 
-  {/* ===== CAS QUESTION IMPOSTOR ===== */}
-  {gameType === "question-impostor" ? (
-    <div className="flex justify-center p-4 bg-slate-900 rounded-xl border border-slate-700">
-      <span className="text-xl font-black text-white">1 imposteur</span>
-    </div>
-  ) : maxImpostors() === 1 ? (
+  {maxImpostors() === 1 ? (
     /* ===== SI MAX = 1 ===== */
     <div className="flex justify-center p-4 bg-slate-900 rounded-xl border border-slate-700">
       <span className="text-xl font-black text-white">1 imposteur</span>
@@ -354,6 +362,35 @@ export function GameSettings({ gameType, playersCount, onBack, onStart, initialC
           </section>
         )}
 
+        {gameType === "sabotage-silencieux" && (
+          <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 space-y-4">
+            <div className={`flex items-center gap-3 ${colors.subtitleText} mb-2`}>
+              <RotateCcw size={20} className={colors.icon} />
+              <h3 className="font-bold uppercase text-xs tracking-widest">Temps maximum</h3>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+              {[1, 2, 3, 4].map((minutes) => (
+                <button
+                  key={minutes}
+                  onClick={() => setTimeLimitMinutes(minutes as 1 | 2 | 3 | 4)}
+                  className={`py-3 rounded-xl border-2 text-xs font-black uppercase tracking-widest transition-all ${
+                    timeLimitMinutes === minutes
+                      ? "bg-fuchsia-700/10 border-fuchsia-600 text-white"
+                      : "bg-slate-900 border-slate-700 text-slate-400 opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  {minutes} min
+                </button>
+              ))}
+            </div>
+
+            <p className="text-[10px] text-slate-500 italic text-center px-2 leading-relaxed">
+              Si la mission n’est pas validée avant la fin du timer, la manche est perdue.
+            </p>
+          </section>
+        )}
+
         {/* Question Mode (question-impostor) */}
         {gameType === "question-impostor" && (
           <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 space-y-4">
@@ -496,6 +533,7 @@ export function GameSettings({ gameType, playersCount, onBack, onStart, initialC
                   {gameType === "word-impostor" && "🕵️ Qui est l'imposteur ?"}
                   {gameType === "question-impostor" && "❓ LA QUESTION DIFFÉRENTE"}
                   {gameType === "trouve-regle" && "📏 Trouve la règle"}
+                  {gameType === "sabotage-silencieux" && "🕶️ Sabotage Silencieux"}
                 </h3>
                 <button onClick={() => setShowRules(false)} className="p-2 text-slate-500 hover:text-white">
                   <ChevronLeft size={20} className="rotate-180" />
@@ -648,6 +686,39 @@ export function GameSettings({ gameType, playersCount, onBack, onStart, initialC
                             <li>• Si un joueur ne respecte pas la règle, il est éliminé et ne joue plus.</li>
                             <li>• Les enquêteurs gagnent s’ils trouvent la règle ou si tous les joueurs sont éliminés.</li>
                             <li>• Ensuite, on recommence avec une nouvelle règle.</li>
+                          </ul>
+                        </section>
+                      </>
+                    )}
+
+                    {gameType === "sabotage-silencieux" && (
+                      <>
+                        <section className="space-y-2">
+                          <h4 className="text-fuchsia-400 font-bold uppercase tracking-widest text-[10px]">
+                            🎯 But du jeu
+                          </h4>
+                          <p className="text-slate-300">
+                            Réussir un défi collectif rapide pendant qu’un saboteur secret tente de faire échouer le groupe.
+                          </p>
+                        </section>
+                        <section className="space-y-2">
+                          <h4 className="text-fuchsia-400 font-bold uppercase tracking-widest text-[10px]">
+                            🧩 Comment ça marche
+                          </h4>
+                          <ul className="space-y-1 text-slate-300">
+                            <li>• Tous les joueurs reçoivent le même défi.</li>
+                            <li>• 1 à 4 saboteurs peuvent être choisis selon les paramètres.</li>
+                            <li>• Le sabotage doit rester discret pour éviter d’être identifié au vote final.</li>
+                          </ul>
+                        </section>
+                        <section className="space-y-2">
+                          <h4 className="text-fuchsia-400 font-bold uppercase tracking-widest text-[10px]">
+                            🔄 Déroulement
+                          </h4>
+                          <ul className="space-y-1 text-slate-300">
+                            <li>1. Distribution secrète des rôles.</li>
+                            <li>2. Le groupe tente le défi (1 à 2 min max).</li>
+                            <li>3. Révélation et vote du groupe.</li>
                           </ul>
                         </section>
                       </>

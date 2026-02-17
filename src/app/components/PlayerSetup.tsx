@@ -18,7 +18,7 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { Player } from "@/app/App";
-import { Plus, Trash2, User, ChevronLeft, Pencil, GripVertical } from "lucide-react";
+import { Plus, Trash2, User, ChevronLeft, Pencil, GripVertical, CircleOff, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 interface PlayerSetupProps {
@@ -78,6 +78,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
       id: Math.random().toString(36).substr(2, 9),
       name: newName.trim(),
       score: 0,
+      excluded: false,
     };
     setPlayers([...players, newPlayer]);
     setNewName("");
@@ -89,6 +90,10 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
 
   const updatePlayerName = (id: string, name: string) => {
     setPlayers(players.map((p) => (p.id === id ? { ...p, name } : p)));
+  };
+
+  const setExcluded = (id: string, excluded: boolean) => {
+    setPlayers(players.map((player) => (player.id === id ? { ...player, excluded } : player)));
   };
 
   const handleDragStart = ({ active }: DragStartEvent) => {
@@ -263,6 +268,7 @@ export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
                   nameInputRefs={nameInputRefs}
                   removePlayer={removePlayer}
                   updatePlayerName={updatePlayerName}
+                  setExcluded={setExcluded}
                 />
               ))}
             </div>
@@ -304,6 +310,7 @@ interface PlayerRowProps {
   nameInputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
   removePlayer: (id: string) => void;
   updatePlayerName: (id: string, name: string) => void;
+  setExcluded: (id: string, excluded: boolean) => void;
 }
 
 function PlayerRow({
@@ -314,6 +321,7 @@ function PlayerRow({
   nameInputRefs,
   removePlayer,
   updatePlayerName,
+  setExcluded,
 }: PlayerRowProps) {
   const { setNodeRef: setDropRef } = useDroppable({ id: player.id });
   const { attributes, listeners, setNodeRef: setDragRef } = useDraggable({ id: player.id });
@@ -345,6 +353,15 @@ function PlayerRow({
       >
         <GripVertical size={16} />
       </button>
+      <button
+        onClick={() => setExcluded(player.id, !player.excluded)}
+        className={`p-1 rounded-md shrink-0 transition-colors ${
+          player.excluded ? "text-emerald-400 hover:text-emerald-300" : "text-slate-500 hover:text-slate-300"
+        }`}
+        aria-label={player.excluded ? `Réactiver ${player.name}` : `Exclure temporairement ${player.name}`}
+      >
+        {player.excluded ? <RotateCcw size={16} /> : <CircleOff size={16} />}
+      </button>
       <input
         type="text"
         value={player.name}
@@ -352,7 +369,9 @@ function PlayerRow({
           nameInputRefs.current[player.id] = element;
         }}
         onChange={(e) => updatePlayerName(player.id, e.target.value)}
-        className="flex-1 min-w-0 bg-transparent border-none p-0 focus:ring-0 text-white font-medium"
+        className={`flex-1 min-w-0 bg-transparent border-none p-0 focus:ring-0 font-medium ${
+          player.excluded ? "text-slate-500 line-through" : "text-white"
+        }`}
       />
       <button
         onClick={() => nameInputRefs.current[player.id]?.focus()}
@@ -380,18 +399,31 @@ interface PlayerRowPreviewProps {
 function PlayerRowPreview({ player, index, width }: PlayerRowPreviewProps) {
   return (
     <div
-      className="w-full flex items-center gap-3 bg-slate-800 p-2 pl-4 rounded-xl border border-slate-700 shadow-2xl"
+      className="w-full flex items-center gap-2 sm:gap-3 bg-slate-800 p-2 pl-3 pr-2 sm:pl-4 rounded-xl border border-slate-700 shadow-2xl"
       style={{ width: `${width}px`, minWidth: `${width}px` }}
     >
-      <span className="text-slate-500 font-mono text-sm w-4">{Math.max(1, index + 1)}</span>
-      <span className="p-1 text-slate-500">
+      <span className="text-slate-500 font-mono text-sm w-4 shrink-0">{Math.max(1, index + 1)}</span>
+      <span className="p-1 text-slate-500 shrink-0">
         <GripVertical size={16} />
       </span>
-      <span className="flex-1 text-white font-medium truncate">{player.name}</span>
-      <span className="p-2 text-slate-500">
+      <span
+        className={`p-1 rounded-md shrink-0 ${
+          player.excluded ? "text-emerald-400" : "text-slate-500"
+        }`}
+      >
+        {player.excluded ? <RotateCcw size={16} /> : <CircleOff size={16} />}
+      </span>
+      <span
+        className={`flex-1 font-medium truncate ${
+          player.excluded ? "text-slate-500 line-through" : "text-white"
+        }`}
+      >
+        {player.name}
+      </span>
+      <span className="p-2 text-slate-500 shrink-0">
         <Pencil size={16} />
       </span>
-      <span className="p-2 text-slate-500">
+      <span className="p-2 text-slate-500 shrink-0">
         <Trash2 size={18} />
       </span>
     </div>
