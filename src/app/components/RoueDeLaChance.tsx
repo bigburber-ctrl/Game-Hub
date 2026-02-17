@@ -386,7 +386,9 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   const endDeg = startDeg + segmentSize;
                   const middleDeg = startDeg + segmentSize / 2;
                   const color = segmentColors[index % segmentColors.length];
-                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 104, middleDeg);
+                  // Le texte commence au centre et s'étend vers l'extérieur, le long du rayon
+                  const labelStartR = 68; // rayon de départ du texte (proche du centre)
+                  const labelEndR = 104; // rayon de fin du texte (proche de l'extérieur)
                   const rawLabel = item.label.trim();
                   const displayLabel =
                     rawLabel.length > maxLabelChars
@@ -398,7 +400,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                     <g key={item.id}>
                       <defs>
                         <clipPath id={clipId}>
-                          <path d={ringSegmentPath(startDeg, endDeg, 64, WHEEL_RADIUS - 6)} />
+                          <path d={ringSegmentPath(startDeg, endDeg, labelStartR - 6, WHEEL_RADIUS - 6)} />
                         </clipPath>
                       </defs>
                       <path d={wedgePath(startDeg, endDeg)} fill={color} />
@@ -411,10 +413,10 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                         strokeWidth={1.5}
                       />
                       <g clipPath={`url(#${clipId})`}>
-                        <g transform={`rotate(${middleDeg} ${labelPos.x} ${labelPos.y})`}>
+                        <g transform={`rotate(${middleDeg} ${WHEEL_CENTER} ${WHEEL_CENTER})`}>
                           <text
-                            x={labelPos.x}
-                            y={labelPos.y}
+                            x={WHEEL_CENTER + labelStartR}
+                            y={WHEEL_CENTER}
                             fill="white"
                             fontSize={labelFontSize}
                             fontWeight="800"
