@@ -65,8 +65,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   const [rotationDeg, setRotationDeg] = useState(0);
   const [pendingChoiceId, setPendingChoiceId] = useState<string | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const tickTimerRef = useRef<number | null>(null);
-  const landingTimeoutRef = useRef<number | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   const activeItems = useMemo(
     () => items.filter((item) => !item.crossed && item.label.trim().length > 0),
@@ -179,20 +178,16 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     oscB.stop(now + 0.24);
   };
 
-  const clearSpinAudioTimers = () => {
-    if (tickTimerRef.current !== null) {
-      window.clearTimeout(tickTimerRef.current);
-      tickTimerRef.current = null;
-    }
-    if (landingTimeoutRef.current !== null) {
-      window.clearTimeout(landingTimeoutRef.current);
-      landingTimeoutRef.current = null;
+  const clearSpinRuntime = () => {
+    if (animationFrameRef.current !== null) {
+      window.cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
   };
 
   useEffect(() => {
     return () => {
-      clearSpinAudioTimers();
+      clearSpinRuntime();
     };
   }, []);
 
@@ -204,7 +199,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     }
 
     await ensureAudioContext();
-    clearSpinAudioTimers();
+    clearSpinRuntime();
 
     const selectedIndex = Math.floor(Math.random() * activeItems.length);
     const selected = activeItems[selectedIndex];
@@ -213,35 +208,46 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     const targetNormalized = normalizeDeg(-(selectedIndex + 0.5) * segmentSize);
     const deltaToTarget = normalizeDeg(targetNormalized - currentNormalized);
     const extraTurns = 4 + Math.floor(Math.random() * 2);
-    const nextRotation = rotationDeg + extraTurns * 360 + deltaToTarget;
+    const startRotation = rotationDeg;
+    const totalRotationDelta = extraTurns * 360 + deltaToTarget;
+    const endRotation = startRotation + totalRotationDelta;
+    const spinDurationMs = 1800;
+    const startAt = performance.now();
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+    let lastDividerIndex = Math.floor(startRotation / segmentSize);
 
     setPendingChoiceId(null);
     setIsSpinning(true);
-    setRotationDeg(nextRotation);
 
-    const spinDurationMs = 1800;
-    const tickStartAt = performance.now();
-    const runTick = () => {
-      playTickSound();
-      const elapsed = performance.now() - tickStartAt;
+    const animateSpin = () => {
+      const elapsed = performance.now() - startAt;
       const progress = Math.min(1, elapsed / spinDurationMs);
-      if (progress >= 0.97) {
-        tickTimerRef.current = null;
+      const eased = easeOutCubic(progress);
+      const currentRotation = startRotation + totalRotationDelta * eased;
+      setRotationDeg(currentRotation);
+
+      const currentDividerIndex = Math.floor(currentRotation / segmentSize);
+      const crossed = currentDividerIndex - lastDividerIndex;
+      if (crossed > 0) {
+        for (let i = 0; i < crossed; i += 1) {
+          playTickSound();
+        }
+        lastDividerIndex = currentDividerIndex;
+      }
+
+      if (progress < 1) {
+        animationFrameRef.current = window.requestAnimationFrame(animateSpin);
         return;
       }
 
-      const nextTickMs = 20 + Math.pow(progress, 2.2) * 170;
-      tickTimerRef.current = window.setTimeout(runTick, nextTickMs);
-    };
-
-    runTick();
-
-    landingTimeoutRef.current = window.setTimeout(() => {
-      clearSpinAudioTimers();
+      setRotationDeg(endRotation);
       playLandingSound();
       setIsSpinning(false);
       setPendingChoiceId(selected.id);
-    }, spinDurationMs);
+      animationFrameRef.current = null;
+    };
+
+    animationFrameRef.current = window.requestAnimationFrame(animateSpin);
   };
 
   const segmentColors = [
@@ -342,9 +348,8 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
         <div className="relative">
           <div className="absolute left-1/2 -top-[8px] -translate-x-1/2 z-[20] w-0 h-0 border-l-[10px] border-r-[10px] border-b-0 border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
           <motion.div
-            animate={{ rotate: rotationDeg }}
-            transition={{ duration: 1.8, ease: [0.12, 0.8, 0.2, 1] }}
             className="relative z-10 w-64 h-64 rounded-full shadow-xl"
+            style={{ transform: `rotate(${rotationDeg}deg)` }}
           >
             <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
               {activeItems.length === 0 ? (
