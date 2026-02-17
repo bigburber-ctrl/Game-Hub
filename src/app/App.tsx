@@ -47,11 +47,7 @@ const GAME_METADATA: Record<GameType, { minPlayers: number }> = {
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>("home");
-<<<<<<< HEAD
-  const [showMoreOptions, setShowMoreOptions] = useState(false);
-=======
   const [showOptions, setShowOptions] = useState(false);
->>>>>>> c20b99d (refactor: mise à jour du hub, retour version précédente)
   const [activeGame, setActiveGame] = useState<ConfigurableGameType | null>(null);
   const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
   const [lastGameConfigs, setLastGameConfigs] = useState<LastGameConfigs>(() => {
