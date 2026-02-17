@@ -458,10 +458,16 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
         <div className="relative w-64 h-64">
           {/* Ombre fixe */}
           <div className="absolute inset-0 z-0 pointer-events-none rounded-full shadow-xl" />
-          {/* Roue rotative */}
+          {/* Roue rotative cliquable */}
           <motion.div
-            className="relative z-10 w-64 h-64 rounded-full"
+            className="relative z-10 w-64 h-64 rounded-full cursor-pointer active:scale-95 transition"
             style={{ transform: `rotate(${rotationDeg}deg)` }}
+            onClick={() => {
+              if (!isSpinning && activeItems.length > 0) spinWheel();
+            }}
+            tabIndex={0}
+            role="button"
+            aria-label="Lancer la roue"
           >
             <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
               {activeItems.length === 0 ? (
@@ -627,13 +633,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
           </div>
         </div>
 
-        <button
-          onClick={spinWheel}
-          disabled={isSpinning || activeItems.length === 0}
-          className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:scale-100"
-        >
-          {isSpinning ? "Ça tourne..." : "Lancer la roue"}
-        </button>
+
 
       </div>
 
