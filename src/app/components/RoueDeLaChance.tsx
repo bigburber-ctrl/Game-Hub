@@ -1,3 +1,43 @@
+// Helpers et constantes SVG pour la roue
+interface RoueDeLaChanceProps {
+  onBack: () => void;
+}
+
+const WHEEL_SIZE = 256;
+const WHEEL_CENTER = WHEEL_SIZE / 2;
+const WHEEL_RADIUS = 124;
+
+const normalizeDeg = (value: number) => ((value % 360) + 360) % 360;
+
+const polar = (cx: number, cy: number, r: number, angleDeg: number) => {
+  const rad = (Math.PI / 180) * angleDeg;
+  return {
+    x: cx + r * Math.cos(rad),
+    y: cy + r * Math.sin(rad),
+  };
+};
+
+const wedgePath = (startDeg: number, endDeg: number) => {
+  const start = polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg);
+  const end = polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, endDeg);
+  const largeArcFlag = endDeg - startDeg > 180 ? 1 : 0;
+  return `M ${WHEEL_CENTER} ${WHEEL_CENTER} L ${start.x} ${start.y} A ${WHEEL_RADIUS} ${WHEEL_RADIUS} 0 ${largeArcFlag} 1 ${end.x} ${end.y} Z`;
+};
+
+const ringSegmentPath = (startDeg: number, endDeg: number, innerR: number, outerR: number) => {
+  const outerStart = polar(WHEEL_CENTER, WHEEL_CENTER, outerR, startDeg);
+  const outerEnd = polar(WHEEL_CENTER, WHEEL_CENTER, outerR, endDeg);
+  const innerStart = polar(WHEEL_CENTER, WHEEL_CENTER, innerR, startDeg);
+  const innerEnd = polar(WHEEL_CENTER, WHEEL_CENTER, innerR, endDeg);
+  const largeArcFlag = endDeg - startDeg > 180 ? 1 : 0;
+  return [
+    `M ${outerStart.x} ${outerStart.y}`,
+    `A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${outerEnd.x} ${outerEnd.y}`,
+    `L ${innerEnd.x} ${innerEnd.y}`,
+    `A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y}`,
+    "Z",
+  ].join(" ");
+};
 // Ajout des constantes manquantes pour la roue de la chance
 const STORAGE_KEY = "gamehub_fortune_wheel_items";
 const DEFAULT_ITEMS: WheelItem[] = [
