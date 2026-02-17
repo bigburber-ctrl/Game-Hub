@@ -261,10 +261,17 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   ];
 
   const maxLabelChars = useMemo(() => {
-    if (activeItems.length <= 4) return 20;
-    if (activeItems.length <= 6) return 16;
-    if (activeItems.length <= 8) return 13;
-    return 10;
+    if (activeItems.length <= 4) return 34;
+    if (activeItems.length <= 6) return 30;
+    if (activeItems.length <= 8) return 24;
+    return 18;
+  }, [activeItems.length]);
+
+  const labelFontSize = useMemo(() => {
+    if (activeItems.length <= 4) return 11;
+    if (activeItems.length <= 6) return 10;
+    if (activeItems.length <= 8) return 9;
+    return 8;
   }, [activeItems.length]);
 
   return (
@@ -366,15 +373,21 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   const endDeg = startDeg + segmentSize;
                   const middleDeg = startDeg + segmentSize / 2;
                   const color = segmentColors[index % segmentColors.length];
-                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 78, middleDeg);
+                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 44, middleDeg);
                   const rawLabel = item.label.trim();
                   const displayLabel =
                     rawLabel.length > maxLabelChars
                       ? `${rawLabel.slice(0, Math.max(3, maxLabelChars - 1))}…`
                       : rawLabel;
+                  const clipId = `wheel-segment-clip-${index}-${item.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
                   return (
                     <g key={item.id}>
+                      <defs>
+                        <clipPath id={clipId}>
+                          <path d={wedgePath(startDeg, endDeg)} />
+                        </clipPath>
+                      </defs>
                       <path d={wedgePath(startDeg, endDeg)} fill={color} />
                       <line
                         x1={WHEEL_CENTER}
@@ -384,19 +397,21 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                         stroke="rgba(15, 23, 42, 0.45)"
                         strokeWidth={1.5}
                       />
-                      <g transform={`rotate(${middleDeg} ${labelPos.x} ${labelPos.y})`}>
-                        <text
-                          x={labelPos.x}
-                          y={labelPos.y}
-                          fill="white"
-                          fontSize="10"
-                          fontWeight="800"
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
-                        >
-                          {displayLabel}
-                        </text>
+                      <g clipPath={`url(#${clipId})`}>
+                        <g transform={`rotate(${middleDeg} ${labelPos.x} ${labelPos.y})`}>
+                          <text
+                            x={labelPos.x}
+                            y={labelPos.y}
+                            fill="white"
+                            fontSize={labelFontSize}
+                            fontWeight="800"
+                            textAnchor="start"
+                            dominantBaseline="middle"
+                            style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
+                          >
+                            {displayLabel}
+                          </text>
+                        </g>
                       </g>
                     </g>
                   );
