@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, Plus, Trash2, RotateCcw, CircleOff } from "lucide-react";
 import { toast } from "sonner";
@@ -64,6 +64,9 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotationDeg, setRotationDeg] = useState(0);
   const [pendingChoiceId, setPendingChoiceId] = useState<string | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const tickIntervalRef = useRef<number | null>(null);
+  const landingTimeoutRef = useRef<number | null>(null);
 
   const activeItems = useMemo(
     () => items.filter((item) => !item.crossed && item.label.trim().length > 0),
@@ -113,12 +116,95 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     persist(items.map((item) => (item.id === id ? { ...item, crossed } : item)));
   };
 
-  const spinWheel = () => {
+  const ensureAudioContext = async () => {
+    if (typeof window === "undefined") return null;
+    if (!audioContextRef.current) {
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return null;
+      audioContextRef.current = new Ctx();
+    }
+    if (audioContextRef.current.state === "suspended") {
+      await audioContextRef.current.resume();
+    }
+    return audioContextRef.current;
+  };
+
+  const playTickSound = () => {
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(1450, now);
+    oscillator.frequency.exponentialRampToValueAtTime(980, now + 0.03);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.035, now + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.04);
+  };
+
+  const playLandingSound = () => {
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+    const oscA = audioContext.createOscillator();
+    const oscB = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscA.type = "triangle";
+    oscB.type = "sine";
+    oscA.frequency.setValueAtTime(620, now);
+    oscB.frequency.setValueAtTime(930, now);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.07, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+    oscA.connect(gain);
+    oscB.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscA.start(now);
+    oscB.start(now + 0.015);
+    oscA.stop(now + 0.24);
+    oscB.stop(now + 0.24);
+  };
+
+  const clearSpinAudioTimers = () => {
+    if (tickIntervalRef.current !== null) {
+      window.clearInterval(tickIntervalRef.current);
+      tickIntervalRef.current = null;
+    }
+    if (landingTimeoutRef.current !== null) {
+      window.clearTimeout(landingTimeoutRef.current);
+      landingTimeoutRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearSpinAudioTimers();
+    };
+  }, []);
+
+  const spinWheel = async () => {
     if (isSpinning) return;
     if (activeItems.length === 0) {
       toast.error("Ajoute au moins 1 choix non barré");
       return;
     }
+
+    await ensureAudioContext();
+    clearSpinAudioTimers();
 
     const selectedIndex = Math.floor(Math.random() * activeItems.length);
     const selected = activeItems[selectedIndex];
@@ -133,7 +219,17 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     setIsSpinning(true);
     setRotationDeg(nextRotation);
 
+    const crossedSegments = Math.max(1, Math.floor(Math.abs(nextRotation - rotationDeg) / segmentSize));
+    const tickIntervalMs = Math.max(28, Math.floor(1800 / crossedSegments));
+    tickIntervalRef.current = window.setInterval(() => {
+      playTickSound();
+    }, tickIntervalMs);
+
+    playTickSound();
+
     window.setTimeout(() => {
+      clearSpinAudioTimers();
+      playLandingSound();
       setIsSpinning(false);
       setPendingChoiceId(selected.id);
     }, 1800);
