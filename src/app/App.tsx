@@ -285,45 +285,45 @@ export default function App() {
                 </h1>
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
                 {/* Bouton Plus flottant carré en haut à droite */}
-                <button
-                  onClick={() => setShowOptions((v) => !v)}
-                  className="fixed z-30 top-6 right-6 w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
-                  aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
-                  aria-expanded={showOptions}
-                  style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
-                >
-                  <span className="text-lg">➕</span>
-                </button>
-              </div>
-
-              {/* Section options toggle */}
-              {showOptions && (
-                <div className="flex flex-col gap-2 mt-4 mb-2 animate-fade-in">
+                <div className="fixed z-30 top-6 left-6 flex flex-col items-start">
                   <button
-                    onClick={() => setGameState("fortune-wheel")}
-                    className="w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all bg-slate-800/50 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95"
+                    onClick={() => setShowOptions((v) => !v)}
+                    className="w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
+                    aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
+                    aria-expanded={showOptions}
+                    style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
                   >
-                    🎡 Roue de la chance
+                    <span className="text-lg">➕</span>
                   </button>
-                  <button
-                    onClick={() => {
-                      if (players.length < 3) {
-                        toast.error("Il faut au moins 3 joueurs !");
-                        return;
-                      }
-                      setGameState("custom-impostor");
-                    }}
-                    className={`w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all ${
-                      players.length < 3 
-                        ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
-                        : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95"
-                    }`}
-                    disabled={players.length < 3}
-                  >
-                    🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
-                  </button>
+                  {showOptions && (
+                    <div className="flex flex-col gap-2 mt-2 animate-fade-in w-56">
+                      <button
+                        onClick={() => setGameState("fortune-wheel")}
+                        className="w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all bg-slate-800/50 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95"
+                      >
+                        🎡 Roue de la chance
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (players.length < 3) {
+                            toast.error("Il faut au moins 3 joueurs !");
+                            return;
+                          }
+                          setGameState("custom-impostor");
+                        }}
+                        className={`w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all ${
+                          players.length < 3 
+                            ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
+                            : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95"
+                        }`}
+                        disabled={players.length < 3}
+                      >
+                        🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
 
               <div className="flex flex-col gap-2 mt-2">
                 <button
