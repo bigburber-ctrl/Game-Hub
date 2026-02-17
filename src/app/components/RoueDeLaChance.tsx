@@ -1,3 +1,17 @@
+// Mesure la largeur réelle du texte SVG pour tronquer proprement
+function measureTextWidth(
+  text: string,
+  fontSize: number,
+  fontWeight: string = "800",
+  fontFamily: string = "Inter, Arial, sans-serif"
+): number {
+  const fn = measureTextWidth as typeof measureTextWidth & { _canvas?: HTMLCanvasElement };
+  const canvas: HTMLCanvasElement = fn._canvas || (fn._canvas = document.createElement("canvas"));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return 0;
+  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  return ctx.measureText(text).width;
+}
 // Helpers et constantes SVG pour la roue
 interface RoueDeLaChanceProps {
   onBack: () => void;
@@ -74,6 +88,7 @@ function readInitialItems(): WheelItem[] {
 
 export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   const [items, setItems] = useState<WheelItem[]>(() => readInitialItems());
+  const [showConfirm, setShowConfirm] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotationDeg, setRotationDeg] = useState(0);
@@ -81,8 +96,39 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
+  // Récupère les noms des joueurs depuis localStorage
+  function getPlayerNames(): string[] {
+    try {
+      const raw = localStorage.getItem("gamehub_players");
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr.map((p) => typeof p.name === "string" ? p.name : "").filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  function handleReplaceWithPlayers() {
+    const names = getPlayerNames();
+    if (!names.length) {
+      toast.error("Aucun joueur trouvé");
+      setShowConfirm(false);
+      return;
+    }
+    const newItems = names.map((name, i) => ({ id: `${Date.now().toString(36)}_${i}`, label: name, crossed: false }));
+    persist(newItems);
+    setShowConfirm(false);
+  }
+
+  // Pour le cas d'un seul choix, il faut afficher même si le label est vide ou unique
   const activeItems = useMemo(
-    () => items.filter((item) => !item.crossed && item.label.trim().length > 0),
+    () => {
+      const filtered = items.filter((item) => !item.crossed);
+      // Si aucun label non vide, on garde au moins le premier non barré
+      if (filtered.length === 1) return filtered;
+      return filtered.filter((item) => item.label.trim().length > 0);
+    },
     [items]
   );
 
@@ -305,7 +351,50 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
         <h1 className="text-2xl font-bold uppercase tracking-tight italic">
           Roue de la <span className="text-purple-500">Chance</span>
         </h1>
+        <button
+          className="ml-3 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold uppercase tracking-wide transition-all"
+          onClick={() => setShowConfirm(true)}
+        >
+          Mettre nom des joueurs
+        </button>
       </header>
+
+      {showConfirm && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-slate-900 rounded-2xl p-6 max-w-sm text-white shadow-2xl border-2 border-slate-700"
+          >
+            <h3 className="text-xl font-bold mb-4 text-center">Remplacer tous les choix par les noms des joueurs ?</h3>
+            <p className="text-orange-100 mb-6 text-center text-sm">Cette action est irréversible.</p>
+            <div className="flex gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleReplaceWithPlayers}
+                className="flex-1 py-3 bg-red-600 rounded-lg font-bold hover:bg-red-700 transition"
+              >
+                Oui
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 py-3 bg-slate-600 rounded-lg font-bold hover:bg-slate-500 transition"
+              >
+                Non
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
 
       <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 mb-5">
         <div className="flex gap-2">
@@ -366,9 +455,12 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
       </div>
 
       <div className="mt-5 flex flex-col items-center gap-4">
-        <div className="relative">
+        <div className="relative w-64 h-64">
+          {/* Ombre fixe */}
+          <div className="absolute inset-0 z-0 pointer-events-none rounded-full shadow-xl" />
+          {/* Roue rotative */}
           <motion.div
-            className="relative z-10 w-64 h-64 rounded-full shadow-xl"
+            className="relative z-10 w-64 h-64 rounded-full"
             style={{ transform: `rotate(${rotationDeg}deg)` }}
           >
             <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
@@ -379,6 +471,70 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   r={WHEEL_RADIUS}
                   fill="#1e293b"
                 />
+              ) : activeItems.length === 1 ? (
+                (() => {
+                  const item = activeItems[0];
+                  const color = '#7c3aed';
+                  const startDeg = -90;
+                  const endDeg = 270;
+                  const middleDeg = 90;
+                  const labelStartR = 17;
+                  const labelEndR = 104;
+                  let rawLabel = item.label.trim();
+                  if (!rawLabel) rawLabel = "Choix unique";
+                  let displayLabel = rawLabel;
+                  const maxTextWidth = labelEndR - labelStartR - 20;
+                  let measured = measureTextWidth(displayLabel, labelFontSize);
+                  if (measured > maxTextWidth) {
+                    let i = displayLabel.length;
+                    while (i > 0 && measureTextWidth(displayLabel.slice(0, i) + "…", labelFontSize) > maxTextWidth) {
+                      i--;
+                    }
+                    displayLabel = displayLabel.slice(0, i) + "…";
+                  }
+                  const clipId = `wheel-segment-clip-single`;
+                  return (
+                    <g key={item.id}>
+                      <defs>
+                        <clipPath id={clipId}>
+                          <path d={ringSegmentPath(startDeg, endDeg, labelStartR - 6, WHEEL_RADIUS - 6)} />
+                        </clipPath>
+                      </defs>
+                      {/* Fond violet forcé pour le cas unique */}
+                      <circle
+                        cx={WHEEL_CENTER}
+                        cy={WHEEL_CENTER}
+                        r={WHEEL_RADIUS}
+                        fill="#7c3aed"
+                      />
+                      {/* Segment plein cercle */}
+                      <path d={wedgePath(startDeg, endDeg)} fill={color} />
+                      {/* Ligne de séparation pour la cohérence visuelle */}
+                      <line
+                        x1={WHEEL_CENTER}
+                        y1={WHEEL_CENTER}
+                        x2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).x}
+                        y2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).y}
+                        stroke="rgba(15, 23, 42, 0.45)"
+                        strokeWidth={1.5}
+                      />
+                      <g transform={`rotate(${middleDeg} ${WHEEL_CENTER} ${WHEEL_CENTER})`}>
+                        <text
+                          x={WHEEL_CENTER + labelStartR}
+                          y={WHEEL_CENTER}
+                          fill="white"
+                          fontSize={labelFontSize}
+                          fontWeight="800"
+                          textAnchor="start"
+                          dominantBaseline="middle"
+                          style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
+                        >
+                          {displayLabel}
+                        </text>
+                      </g>
+                    </g>
+                  );
+                })()
               ) : (
                 activeItems.map((item, index) => {
                   const segmentSize = 360 / activeItems.length;
@@ -386,16 +542,20 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   const endDeg = startDeg + segmentSize;
                   const middleDeg = startDeg + segmentSize / 2;
                   const color = segmentColors[index % segmentColors.length];
-                  // Le texte commence au centre et s'étend vers l'extérieur, le long du rayon
-                  const labelStartR = 68; // rayon de départ du texte (proche du centre)
-                  const labelEndR = 104; // rayon de fin du texte (proche de l'extérieur)
+                  const labelStartR = 17;
+                  const labelEndR = 104;
                   const rawLabel = item.label.trim();
-                  const displayLabel =
-                    rawLabel.length > maxLabelChars
-                      ? `${rawLabel.slice(0, Math.max(3, maxLabelChars - 1))}…`
-                      : rawLabel;
+                  let displayLabel = rawLabel;
+                  let measured = measureTextWidth(displayLabel, labelFontSize);
+                  const maxTextWidth = labelEndR - labelStartR - 8;
+                  if (measured > maxTextWidth) {
+                    let i = displayLabel.length;
+                    while (i > 0 && measureTextWidth(displayLabel.slice(0, i) + "…", labelFontSize) > maxTextWidth) {
+                      i--;
+                    }
+                    displayLabel = displayLabel.slice(0, i) + "…";
+                  }
                   const clipId = `wheel-segment-clip-${index}-${item.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-
                   return (
                     <g key={item.id}>
                       <defs>
