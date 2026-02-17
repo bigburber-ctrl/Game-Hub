@@ -438,8 +438,9 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
           <div className="absolute inset-0 z-[15] pointer-events-none">
             <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
               <polygon
-                points={`${WHEEL_CENTER - 10},2 ${WHEEL_CENTER + 10},2 ${WHEEL_CENTER},16`}
+                points={`${WHEEL_CENTER - 14},32 ${WHEEL_CENTER + 14},32 ${WHEEL_CENTER},56`}
                 fill="white"
+                style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
               />
             </svg>
           </div>
