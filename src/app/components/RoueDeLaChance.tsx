@@ -8,53 +8,56 @@ type WheelItem = {
   label: string;
   crossed: boolean;
 };
+                  // Le texte commence au centre et s'étend vers l'extérieur, le long du rayon
+                  const labelStartR = 68; // rayon de départ du texte (proche du centre)
+                  const labelEndR = 104; // rayon de fin du texte (proche de l'extérieur)
+                  const rawLabel = item.label.trim();
+                  const displayLabel =
+                    rawLabel.length > maxLabelChars
+                      ? `${rawLabel.slice(0, Math.max(3, maxLabelChars - 1))}…`
+                      : rawLabel;
+                  const clipId = `wheel-segment-clip-${index}-${item.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
-interface RoueDeLaChanceProps {
-  onBack: () => void;
-}
-const STORAGE_KEY = "gamehub_fortune_wheel_items";
-const DEFAULT_ITEMS: WheelItem[] = [
-  { id: "1", label: "Choix 1", crossed: false },
-  { id: "2", label: "Choix 2", crossed: false },
-  { id: "3", label: "Choix 3", crossed: false }
-];
-
-const WHEEL_SIZE = 256;
-const WHEEL_CENTER = WHEEL_SIZE / 2;
-const WHEEL_RADIUS = 124;
-
-const normalizeDeg = (value: number) => ((value % 360) + 360) % 360;
-
-const polar = (cx: number, cy: number, r: number, angleDeg: number) => {
-  const rad = (Math.PI / 180) * angleDeg;
-  return {
-    x: cx + r * Math.cos(rad),
-    y: cy + r * Math.sin(rad),
-  };
-};
-
-const wedgePath = (startDeg: number, endDeg: number) => {
-  const start = polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg);
-  const end = polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, endDeg);
-  const largeArcFlag = endDeg - startDeg > 180 ? 1 : 0;
-
-  return `M ${WHEEL_CENTER} ${WHEEL_CENTER} L ${start.x} ${start.y} A ${WHEEL_RADIUS} ${WHEEL_RADIUS} 0 ${largeArcFlag} 1 ${end.x} ${end.y} Z`;
-};
-
-const ringSegmentPath = (startDeg: number, endDeg: number, innerR: number, outerR: number) => {
-  const outerStart = polar(WHEEL_CENTER, WHEEL_CENTER, outerR, startDeg);
-  const outerEnd = polar(WHEEL_CENTER, WHEEL_CENTER, outerR, endDeg);
-  const innerStart = polar(WHEEL_CENTER, WHEEL_CENTER, innerR, startDeg);
-  const innerEnd = polar(WHEEL_CENTER, WHEEL_CENTER, innerR, endDeg);
-  const largeArcFlag = endDeg - startDeg > 180 ? 1 : 0;
-
-  return [
+                  return (
+                    <g key={item.id}>
+                      <defs>
+                        <clipPath id={clipId}>
+                          <path d={ringSegmentPath(startDeg, endDeg, labelStartR - 6, WHEEL_RADIUS - 6)} />
+                        </clipPath>
+                      </defs>
+                      <path d={wedgePath(startDeg, endDeg)} fill={color} />
+                      <line
+                        x1={WHEEL_CENTER}
+                        y1={WHEEL_CENTER}
+                        x2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).x}
+                        y2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).y}
+                        stroke="rgba(15, 23, 42, 0.45)"
+                        strokeWidth={1.5}
+                      />
+                      <g clipPath={`url(#${clipId})`}>
+                        <g transform={`rotate(${middleDeg} ${WHEEL_CENTER} ${WHEEL_CENTER})`}>
+                          <text
+                            x={WHEEL_CENTER + labelStartR}
+                            y={WHEEL_CENTER}
+                            fill="white"
+                            fontSize={labelFontSize}
+                            fontWeight="800"
+                            textAnchor="start"
+                            dominantBaseline="middle"
+                            style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
+                          >
+                            {displayLabel}
+                          </text>
+                        </g>
+                      </g>
+                    </g>
+                  );
     `M ${outerStart.x} ${outerStart.y}`,
     `A ${outerR} ${outerR} 0 ${largeArcFlag} 1 ${outerEnd.x} ${outerEnd.y}`,
-    `L ${innerEnd.x} ${innerEnd.y}`,
-    `A ${innerR} ${innerR} 0 ${largeArcFlag} 0 ${innerStart.x} ${innerStart.y}`,
-    "Z",
-  ].join(" ");
+              <polygon
+                points={`${WHEEL_CENTER - 10},10 ${WHEEL_CENTER + 10},10 ${WHEEL_CENTER},28`}
+                fill="white"
+              />
 };
 
 function readInitialItems(): WheelItem[] {
@@ -72,6 +75,7 @@ function readInitialItems(): WheelItem[] {
     return DEFAULT_ITEMS;
   }
 }
+
 export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   const [items, setItems] = useState<WheelItem[]>(() => readInitialItems());
   const [newLabel, setNewLabel] = useState("");
@@ -120,27 +124,81 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
 
   const removeItem = (id: string) => {
     persist(items.filter((item) => item.id !== id));
-          <motion.div
-            className="relative z-10 w-64 h-64 rounded-full shadow-xl"
-            style={{ transform: `rotate(${rotationDeg}deg)` }}
-          >
-            <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
-              {activeItems.length === 0 ? (
-                <circle
-                  cx={WHEEL_CENTER}
-                  cy={WHEEL_CENTER}
-                  r={WHEEL_RADIUS}
-                  fill="#1e293b"
-                />
-              ) : (
-                activeItems.map((item, index) => (
-                  <g key={item.id}>
-                    {/* ...wheel segment rendering here... */}
-                  </g>
-                ))
-              )}
-            </svg>
-          </motion.div>
+    if (pendingChoiceId === id) {
+      setPendingChoiceId(null);
+    }
+  };
+
+  const setCrossed = (id: string, crossed: boolean) => {
+    persist(items.map((item) => (item.id === id ? { ...item, crossed } : item)));
+  };
+
+  const ensureAudioContext = async () => {
+    if (typeof window === "undefined") return null;
+    if (!audioContextRef.current) {
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return null;
+      audioContextRef.current = new Ctx();
+    }
+    if (audioContextRef.current.state === "suspended") {
+      await audioContextRef.current.resume();
+    }
+    return audioContextRef.current;
+  };
+
+  const playTickSound = () => {
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(1450, now);
+    oscillator.frequency.exponentialRampToValueAtTime(980, now + 0.03);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.035, now + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.04);
+  };
+
+  const playLandingSound = () => {
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+    const oscA = audioContext.createOscillator();
+    const oscB = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscA.type = "triangle";
+    oscB.type = "sine";
+    oscA.frequency.setValueAtTime(620, now);
+    oscB.frequency.setValueAtTime(930, now);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.07, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+    oscA.connect(gain);
+    oscB.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscA.start(now);
+    oscB.start(now + 0.015);
+    oscA.stop(now + 0.24);
+    oscB.stop(now + 0.24);
+  };
+
+  const clearSpinRuntime = () => {
+    if (animationFrameRef.current !== null) {
+      window.cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
   };
@@ -318,7 +376,64 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
             style={{ transform: `rotate(${rotationDeg}deg)` }}
           >
             <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
-              <circle cx={WHEEL_CENTER} cy={WHEEL_CENTER} r={WHEEL_RADIUS} fill="#1e293b" />
+              {activeItems.length === 0 ? (
+                <circle
+                  cx={WHEEL_CENTER}
+                  cy={WHEEL_CENTER}
+                  r={WHEEL_RADIUS}
+                  fill="#1e293b"
+                />
+              ) : (
+                activeItems.map((item, index) => {
+                  const segmentSize = 360 / activeItems.length;
+                  const startDeg = -90 + index * segmentSize;
+                  const endDeg = startDeg + segmentSize;
+                  const middleDeg = startDeg + segmentSize / 2;
+                  const color = segmentColors[index % segmentColors.length];
+                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 104, middleDeg);
+                  const rawLabel = item.label.trim();
+                  const displayLabel =
+                    rawLabel.length > maxLabelChars
+                      ? `${rawLabel.slice(0, Math.max(3, maxLabelChars - 1))}…`
+                      : rawLabel;
+                  const clipId = `wheel-segment-clip-${index}-${item.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+
+                  return (
+                    <g key={item.id}>
+                      <defs>
+                        <clipPath id={clipId}>
+                          <path d={ringSegmentPath(startDeg, endDeg, 64, WHEEL_RADIUS - 6)} />
+                        </clipPath>
+                      </defs>
+                      <path d={wedgePath(startDeg, endDeg)} fill={color} />
+                      <line
+                        x1={WHEEL_CENTER}
+                        y1={WHEEL_CENTER}
+                        x2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).x}
+                        y2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).y}
+                        stroke="rgba(15, 23, 42, 0.45)"
+                        strokeWidth={1.5}
+                      />
+                      <g clipPath={`url(#${clipId})`}>
+                        <g transform={`rotate(${middleDeg} ${labelPos.x} ${labelPos.y})`}>
+                          <text
+                            x={labelPos.x}
+                            y={labelPos.y}
+                            fill="white"
+                            fontSize={labelFontSize}
+                            fontWeight="800"
+                            textAnchor="start"
+                            dominantBaseline="middle"
+                            style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
+                          >
+                            {displayLabel}
+                          </text>
+                        </g>
+                      </g>
+                    </g>
+                  );
+                })
+              )}
             </svg>
           </motion.div>
 
