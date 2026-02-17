@@ -391,9 +391,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 104, middleDeg);
                   const rawLabel = item.label.trim();
                   const displayLabel =
-                    rawLabel.length > maxLabelChars
-                      ? `${rawLabel.slice(0, Math.max(3, maxLabelChars - 1))}…`
-                      : rawLabel;
+                    rawLabel.length > maxLabelChars ? `${rawLabel.slice(0, Math.max(3, maxLabelChars - 1))}…` : rawLabel;
                   const clipId = `wheel-segment-clip-${index}-${item.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
                   return (
@@ -413,20 +411,31 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                         strokeWidth={1.5}
                       />
                       <g clipPath={`url(#${clipId})`}>
-                        <g transform={`rotate(${middleDeg} ${labelPos.x} ${labelPos.y})`}>
-                          <text
-                            x={labelPos.x}
-                            y={labelPos.y}
-                            fill="white"
-                            fontSize={labelFontSize}
-                            fontWeight="800"
-                            textAnchor="start"
-                            dominantBaseline="middle"
-                            style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
-                          >
-                            {displayLabel}
-                          </text>
-                        </g>
+                          <g transform={`rotate(${middleDeg} ${labelStart.x} ${labelStart.y})`}>
+                            <text
+                              x={labelStart.x}
+                              y={labelStart.y}
+                              fill="white"
+                              fontSize={labelFontSize}
+                              fontWeight="800"
+                              textAnchor="start"
+                              dominantBaseline="middle"
+                              style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
+                            >
+                              <textPath
+                                href={`#arc-path-${index}`}
+                                startOffset="0%"
+                                method="align"
+                              >
+                                {displayLabel}
+                              </textPath>
+                            </text>
+                            {/* Arc invisible pour textPath */}
+                            <path
+                              id={`arc-path-${index}`}
+                              d={`M ${labelStart.x} ${labelStart.y} L ${labelEnd.x} ${labelEnd.y}`}
+                              fill="none"
+                            />
                       </g>
                     </g>
                   );
