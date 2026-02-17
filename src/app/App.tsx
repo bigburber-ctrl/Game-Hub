@@ -110,14 +110,6 @@ export default function App() {
 
   const startGame = (config: GameConfig) => {
     setGameConfig(config);
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      {/* Overlay global pour le bouton Plus et son menu, toujours en haut à gauche, hors du flux principal */}
-      <div className="fixed z-50 top-6 left-6 flex flex-col items-start pointer-events-none">
-        <div className="pointer-events-auto">
-          <button
             onClick={() => setShowOptions((v) => !v)}
             className="w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
             aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
