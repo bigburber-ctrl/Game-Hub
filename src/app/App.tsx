@@ -313,18 +313,15 @@ export default function App() {
                     >
                       <button
                         onClick={() => setShowOptions(false)}
-                        className="absolute top-3 left-3 p-2 rounded-full bg-slate-800/70 hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
+                        className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
                         aria-label="Retour"
                       >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg>
                       </button>
-                      <div className="flex flex-col gap-3 w-full mt-2">
-                        <button
-                          onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
-                          className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
-                        >
-                          🎡 Roue de la chance
-                        </button>
+                      <div className="flex flex-col w-full mt-6 gap-3">
+                        <div className="w-full text-center mb-2">
+                          <span className="text-lg font-black text-white uppercase tracking-tight italic">Plus</span>
+                        </div>
                         <button
                           onClick={() => {
                             if (players.length < 3) {
@@ -342,6 +339,18 @@ export default function App() {
                           disabled={players.length < 3}
                         >
                           🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+                        </button>
+                        <button
+                          onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
+                          className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                        >
+                          🎡 Roue de la chance
+                        </button>
+                        <button
+                          onClick={() => { setShowOptions(false); setGameState("setup"); }}
+                          className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                        >
+                          👥 Créateur d'équipe
                         </button>
                       </div>
                     </motion.div>
