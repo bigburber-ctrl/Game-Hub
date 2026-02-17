@@ -599,7 +599,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                 })
               )}
             </svg>
-          </motion.div>
+          </div>
 
           <div className="absolute inset-0 z-[15] pointer-events-none">
             <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
