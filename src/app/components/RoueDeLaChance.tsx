@@ -12,7 +12,6 @@ type WheelItem = {
 interface RoueDeLaChanceProps {
   onBack: () => void;
 }
-
 const STORAGE_KEY = "gamehub_fortune_wheel_items";
 const DEFAULT_ITEMS: WheelItem[] = [
   { id: "1", label: "Choix 1", crossed: false },
