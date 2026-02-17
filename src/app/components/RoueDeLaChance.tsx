@@ -102,7 +102,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     const selected = activeItems[selectedIndex];
     const segmentSize = 360 / activeItems.length;
     const selectedCenterAngle = selectedIndex * segmentSize + segmentSize / 2;
-    const pointerAngle = 180;
+    const pointerAngle = 0;
     const currentRotationNormalized = ((rotationDeg % 360) + 360) % 360;
     const offsetToPointer =
       ((pointerAngle - selectedCenterAngle - currentRotationNormalized) % 360 + 360) % 360;
@@ -241,7 +241,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
           >
             {activeItems.map((item, index) => {
               const segmentSize = 360 / activeItems.length;
-              const angle = (index + 1) * segmentSize - 90;
+              const angle = index * segmentSize - 90;
               return (
                 <div
                   key={item.id}
