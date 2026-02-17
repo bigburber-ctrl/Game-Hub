@@ -13,6 +13,7 @@ import { RAW_DINER_TRI_POOL } from "@/app/components/DinerMissionsTriPool";
 import { GameSettings, GameConfig } from "@/app/components/GameSettings";
 import { toast, Toaster } from "sonner";
 import { Gamepad2, Users, Utensils, Plus } from "lucide-react";
+import { PlusModal } from "@/app/components/PlusModal";
 
 type LastGameConfigs = Partial<Record<ConfigurableGameType, GameConfig>>;
 const LAST_GAME_CONFIGS_STORAGE_KEY = "gamehub_last_game_configs";
@@ -49,6 +50,8 @@ const GAME_METADATA: Record<GameType, { minPlayers: number }> = {
 export default function App() {
   const [gameState, setGameState] = useState<GameState>("home");
   const [showOptions, setShowOptions] = useState(false);
+  const [showPlusModal, setShowPlusModal] = useState(false);
+  const [plusChoices, setPlusChoices] = useState<string[]>(["🎡 Roue de la chance", "🕵️ Jeu d'imposteur"]);
   const [activeGame, setActiveGame] = useState<ConfigurableGameType | null>(null);
   const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
   const [lastGameConfigs, setLastGameConfigs] = useState<LastGameConfigs>(() => {
@@ -286,22 +289,31 @@ export default function App() {
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
                 {/* Bouton Plus flottant carré en haut à droite */}
                 <button
-                  onClick={() => setShowOptions((v) => !v)}
+                  onClick={() => setShowPlusModal(true)}
                   className="fixed z-30 top-6 right-6 w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
-                  aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
-                  aria-expanded={showOptions}
+                  aria-label={showPlusModal ? 'Fermer le menu Plus' : 'Ouvrir le menu Plus'}
+                  aria-expanded={showPlusModal}
                   style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
                 >
                   <span className="text-lg">➕</span>
                 </button>
+                            <PlusModal
+                              open={showPlusModal}
+                              onClose={() => setShowPlusModal(false)}
+                              choices={plusChoices}
+                              onSelect={(choice) => {
+                                setShowPlusModal(false);
+                                if (choice.includes("fortune")) setGameState("fortune-wheel");
+                                else if (choice.toLowerCase().includes("imposteur")) setGameState("custom-impostor");
+                                // Ajoute ici d'autres redirections si tu ajoutes plus de choix
+                              }}
+                              onAddChoice={(newChoice) => setPlusChoices((prev) => [...prev, newChoice])}
+                            />
               </div>
 
               {/* Section options toggle */}
               {showOptions && (
-                <div
-                  className="absolute z-40 right-6 mt-2 w-64 flex flex-col gap-2 bg-slate-900/95 border border-purple-500/30 rounded-xl shadow-2xl animate-fade-in p-3"
-                  style={{ top: '3.5rem' }}
-                >
+                <div className="flex flex-col gap-2 mt-4 mb-2 animate-fade-in">
                   <button
                     onClick={() => setGameState("fortune-wheel")}
                     className="w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all bg-slate-800/50 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95"
