@@ -296,9 +296,6 @@ export default function App() {
                 </button>
               </div>
 
-<<<<<<< HEAD
-              {/* ...existing code... */}
-=======
               {/* Section options toggle */}
               {showOptions && (
                 <div className="flex flex-col gap-2 mt-4 mb-2 animate-fade-in">
@@ -324,7 +321,6 @@ export default function App() {
               )}
 
               <div className="flex flex-col gap-2 mt-2">
->>>>>>> c20b99d (refactor: mise à jour du hub, retour version précédente)
                 <button
                   onClick={() => setGameState("setup")}
                   className="w-full py-6 px-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-300 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all hover:scale-[1.01] active:scale-95 shadow-lg"
