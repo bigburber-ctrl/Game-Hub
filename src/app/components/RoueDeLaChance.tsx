@@ -442,7 +442,8 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                       </g>
                     </g>
                 })
-              )}
+                )
+              }
             </svg>
           </motion.div>
 
