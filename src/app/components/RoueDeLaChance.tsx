@@ -8,50 +8,6 @@ type WheelItem = {
   label: string;
   crossed: boolean;
 };
-                  // Le texte commence au centre et s'étend vers l'extérieur, le long du rayon
-                  const labelStartR = 68; // rayon de départ du texte (proche du centre)
-                  const labelEndR = 104; // rayon de fin du texte (proche de l'extérieur)
-                  const rawLabel = item.label.trim();
-                  const displayLabel =
-                    rawLabel.length > maxLabelChars
-                      ? `${rawLabel.slice(0, Math.max(3, maxLabelChars - 1))}…`
-                      : rawLabel;
-                  const clipId = `wheel-segment-clip-${index}-${item.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-
-                  return (
-                    <g key={item.id}>
-                      <defs>
-                        <clipPath id={clipId}>
-                          <path d={ringSegmentPath(startDeg, endDeg, labelStartR - 6, WHEEL_RADIUS - 6)} />
-                        </clipPath>
-                      </defs>
-                      <path d={wedgePath(startDeg, endDeg)} fill={color} />
-                      <line
-                        x1={WHEEL_CENTER}
-                        y1={WHEEL_CENTER}
-                        x2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).x}
-                        y2={polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS, startDeg).y}
-                        stroke="rgba(15, 23, 42, 0.45)"
-                        strokeWidth={1.5}
-                      />
-                      <g clipPath={`url(#${clipId})`}>
-                        <g transform={`rotate(${middleDeg} ${WHEEL_CENTER} ${WHEEL_CENTER})`}>
-                          <text
-                            x={WHEEL_CENTER + labelStartR}
-                            y={WHEEL_CENTER}
-                            fill="white"
-                            fontSize={labelFontSize}
-                            fontWeight="800"
-                            textAnchor="start"
-                            dominantBaseline="middle"
-                            style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
-                          >
-                            {displayLabel}
-                          </text>
-                        </g>
-                      </g>
-                    </g>
-                  );
 
 function readInitialItems(): WheelItem[] {
   try {
