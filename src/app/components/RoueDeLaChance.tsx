@@ -392,10 +392,8 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   const displayLabel =
                     rawLabel.length > maxLabelChars ? `${rawLabel.slice(0, Math.max(3, maxLabelChars - 1))}…` : rawLabel;
                   const clipId = `wheel-segment-clip-${index}-${item.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-                  // Position du texte : part du centre (rayon intérieur)
                   const labelStart = polar(WHEEL_CENTER, WHEEL_CENTER, 64, middleDeg);
                   const labelEnd = polar(WHEEL_CENTER, WHEEL_CENTER, WHEEL_RADIUS - 18, middleDeg);
-
                   return (
                     <g key={item.id}>
                       <defs>
@@ -441,8 +439,9 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                         </g>
                       </g>
                     </g>
-                  })
-                )
+                  );
+                })
+              )
             </svg>
           </motion.div>
 
