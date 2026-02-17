@@ -300,6 +300,12 @@ export default function App() {
               {showOptions && (
                 <div className="flex flex-col gap-2 mt-4 mb-2 animate-fade-in">
                   <button
+                    onClick={() => setGameState("fortune-wheel")}
+                    className="w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all bg-slate-800/50 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95"
+                  >
+                    🎡 Roue de la chance
+                  </button>
+                  <button
                     onClick={() => {
                       if (players.length < 3) {
                         toast.error("Il faut au moins 3 joueurs !");
@@ -316,7 +322,6 @@ export default function App() {
                   >
                     🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
                   </button>
-                  {/* D'autres options pourront être ajoutées ici plus tard */}
                 </div>
               )}
 
