@@ -388,7 +388,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   const endDeg = startDeg + segmentSize;
                   const middleDeg = startDeg + segmentSize / 2;
                   const color = segmentColors[index % segmentColors.length];
-                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 112, middleDeg);
+                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 104, middleDeg);
                   const rawLabel = item.label.trim();
                   const displayLabel =
                     rawLabel.length > maxLabelChars
@@ -420,7 +420,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                             fill="white"
                             fontSize={labelFontSize}
                             fontWeight="800"
-                            textAnchor="end"
+                            textAnchor="start"
                             dominantBaseline="middle"
                             style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
                           >
@@ -438,7 +438,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
           <div className="absolute inset-0 z-[15] pointer-events-none">
             <svg viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} className="w-full h-full">
               <polygon
-                points={`${WHEEL_CENTER - 10},12 ${WHEEL_CENTER + 10},12 ${WHEEL_CENTER},26`}
+                points={`${WHEEL_CENTER - 10},2 ${WHEEL_CENTER + 10},2 ${WHEEL_CENTER},16`}
                 fill="white"
               />
             </svg>
