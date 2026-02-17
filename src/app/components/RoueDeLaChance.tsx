@@ -261,10 +261,10 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   ];
 
   const maxLabelChars = useMemo(() => {
-    if (activeItems.length <= 4) return 18;
-    if (activeItems.length <= 6) return 14;
-    if (activeItems.length <= 8) return 10;
-    return 8;
+    if (activeItems.length <= 4) return 14;
+    if (activeItems.length <= 6) return 12;
+    if (activeItems.length <= 8) return 9;
+    return 7;
   }, [activeItems.length]);
 
   const labelFontSize = useMemo(() => {
@@ -373,7 +373,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   const endDeg = startDeg + segmentSize;
                   const middleDeg = startDeg + segmentSize / 2;
                   const color = segmentColors[index % segmentColors.length];
-                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 98, middleDeg);
+                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 112, middleDeg);
                   const rawLabel = item.label.trim();
                   const displayLabel =
                     rawLabel.length > maxLabelChars
