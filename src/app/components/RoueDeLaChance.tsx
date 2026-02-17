@@ -65,7 +65,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   const [rotationDeg, setRotationDeg] = useState(0);
   const [pendingChoiceId, setPendingChoiceId] = useState<string | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const tickIntervalRef = useRef<number | null>(null);
+  const tickTimerRef = useRef<number | null>(null);
   const landingTimeoutRef = useRef<number | null>(null);
 
   const activeItems = useMemo(
@@ -180,9 +180,9 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   };
 
   const clearSpinAudioTimers = () => {
-    if (tickIntervalRef.current !== null) {
-      window.clearInterval(tickIntervalRef.current);
-      tickIntervalRef.current = null;
+    if (tickTimerRef.current !== null) {
+      window.clearTimeout(tickTimerRef.current);
+      tickTimerRef.current = null;
     }
     if (landingTimeoutRef.current !== null) {
       window.clearTimeout(landingTimeoutRef.current);
@@ -219,20 +219,29 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     setIsSpinning(true);
     setRotationDeg(nextRotation);
 
-    const crossedSegments = Math.max(1, Math.floor(Math.abs(nextRotation - rotationDeg) / segmentSize));
-    const tickIntervalMs = Math.max(28, Math.floor(1800 / crossedSegments));
-    tickIntervalRef.current = window.setInterval(() => {
+    const spinDurationMs = 1800;
+    const tickStartAt = performance.now();
+    const runTick = () => {
       playTickSound();
-    }, tickIntervalMs);
+      const elapsed = performance.now() - tickStartAt;
+      const progress = Math.min(1, elapsed / spinDurationMs);
+      if (progress >= 0.97) {
+        tickTimerRef.current = null;
+        return;
+      }
 
-    playTickSound();
+      const nextTickMs = 20 + Math.pow(progress, 2.2) * 170;
+      tickTimerRef.current = window.setTimeout(runTick, nextTickMs);
+    };
 
-    window.setTimeout(() => {
+    runTick();
+
+    landingTimeoutRef.current = window.setTimeout(() => {
       clearSpinAudioTimers();
       playLandingSound();
       setIsSpinning(false);
       setPendingChoiceId(selected.id);
-    }, 1800);
+    }, spinDurationMs);
   };
 
   const segmentColors = [
