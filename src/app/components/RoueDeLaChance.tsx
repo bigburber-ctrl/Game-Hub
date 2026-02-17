@@ -98,24 +98,22 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
       return;
     }
 
-    const selectedIndex = Math.floor(Math.random() * activeItems.length);
-    const selected = activeItems[selectedIndex];
-    const segmentSize = 360 / activeItems.length;
-    const selectedCenterAngle = selectedIndex * segmentSize + segmentSize / 2;
-    const pointerAngle = 0;
-    const currentRotationNormalized = ((rotationDeg % 360) + 360) % 360;
-    const offsetToPointer =
-      ((pointerAngle - selectedCenterAngle - currentRotationNormalized) % 360 + 360) % 360;
     const extraTurns = 4 + Math.floor(Math.random() * 2);
-    const nextRotation = rotationDeg + extraTurns * 360 + offsetToPointer;
+    const randomOffset = Math.random() * 360;
+    const nextRotation = rotationDeg + extraTurns * 360 + randomOffset;
 
     setPendingChoiceId(null);
     setIsSpinning(true);
     setRotationDeg(nextRotation);
 
     window.setTimeout(() => {
+      const segmentSize = 360 / activeItems.length;
+      const normalizedRotation = ((nextRotation % 360) + 360) % 360;
+      const localAngleAtTop = ((360 - normalizedRotation) % 360 + 360) % 360;
+      const resultIndex = Math.floor(localAngleAtTop / segmentSize) % activeItems.length;
+      const result = activeItems[resultIndex];
       setIsSpinning(false);
-      setPendingChoiceId(selected.id);
+      setPendingChoiceId(result?.id ?? null);
     }, 1800);
   };
 
@@ -241,7 +239,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
           >
             {activeItems.map((item, index) => {
               const segmentSize = 360 / activeItems.length;
-              const angle = index * segmentSize - 90;
+              const angle = (index + 1) * segmentSize - 90;
               return (
                 <div
                   key={item.id}
