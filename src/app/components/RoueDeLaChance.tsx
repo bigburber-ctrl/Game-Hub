@@ -102,7 +102,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     const selected = activeItems[selectedIndex];
     const segmentSize = 360 / activeItems.length;
     const selectedCenterAngle = selectedIndex * segmentSize + segmentSize / 2;
-    const pointerAngle = 0;
+    const pointerAngle = 270;
     const currentRotationNormalized = ((rotationDeg % 360) + 360) % 360;
     const offsetToPointer =
       ((pointerAngle - selectedCenterAngle - currentRotationNormalized) % 360 + 360) % 360;
@@ -232,7 +232,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
 
       <div className="mt-5 flex flex-col items-center gap-4">
         <div className="relative">
-          <div className="absolute left-1/2 -top-[8px] -translate-x-1/2 z-[5] w-0 h-0 border-l-[10px] border-r-[10px] border-b-0 border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
+          <div className="absolute left-1/2 top-[2px] -translate-x-1/2 z-[20] w-0 h-0 border-l-[10px] border-r-[10px] border-b-0 border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
           <motion.div
             animate={{ rotate: rotationDeg }}
             transition={{ duration: 1.8, ease: [0.12, 0.8, 0.2, 1] }}
@@ -241,7 +241,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
           >
             {activeItems.map((item, index) => {
               const segmentSize = 360 / activeItems.length;
-              const angle = index * segmentSize + segmentSize / 2 - 90;
+              const angle = index * segmentSize - 90 + 2;
               return (
                 <div
                   key={item.id}
