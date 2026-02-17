@@ -110,34 +110,6 @@ export default function App() {
 
   const startGame = (config: GameConfig) => {
     setGameConfig(config);
-          {showOptions && (
-            <div className="flex flex-col gap-2 mt-2 animate-fade-in w-56">
-              <button
-                onClick={() => setGameState("fortune-wheel")}
-                className="w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all bg-slate-800/50 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95"
-              >
-                🎡 Roue de la chance
-              </button>
-              <button
-                onClick={() => {
-                  if (players.length < 3) {
-                    toast.error("Il faut au moins 3 joueurs !");
-                    return;
-                  }
-                  setGameState("custom-impostor");
-                }}
-                className={`w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all ${
-                  players.length < 3 
-                    ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
-                    : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95"
-                }`}
-                disabled={players.length < 3}
-              >
-                🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
-              </button>
-            </div>
-          )}
-        </div>
       </div>
 
     const pool = getFallbackMissionsPool();
