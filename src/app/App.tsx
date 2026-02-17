@@ -110,51 +110,51 @@ export default function App() {
 
   const startGame = (config: GameConfig) => {
     setGameConfig(config);
-    if (activeGame) {
-      setLastGameConfigs((prev) => ({ ...prev, [activeGame]: config }));
-    }
-    setGameState("playing");
-  };
-
-  const resetToHome = () => {
-    setGameState("home");
-    setActiveGame(null);
-    setGameConfig(null);
-  };
-
-  const normalizeMission = (value: string) => value.replace(/\s+/g, " ").trim();
-
-  const persistCurrentDraftToHistory = (nextDraft: string) => {
-    if (missionHistoryIndex < 0) return;
-    const item = missionHistoryRef.current[missionHistoryIndex];
-    if (!item) return;
-    item.draft = nextDraft;
-  };
-
-  const getFallbackMissionsPool = () => {
-    if (fallbackPoolRef.current) return fallbackPoolRef.current;
-    const pool = RAW_DINER_TRI_POOL
-      .map((mission) => mission.replace(/,\s*$/, "."))
-      .map(normalizeMission)
-      .filter(Boolean);
-    fallbackPoolRef.current = pool;
-    return pool;
-  };
-
-  const resetMissionDeck = () => {
-    const pool = getFallbackMissionsPool();
-    missionDeckRef.current = [...pool];
-    setMissionReviewTotal(pool.length);
-    setMissionReviewCurrent(0);
-    missionHistoryRef.current = [];
-    setMissionHistoryIndex(-1);
-    setMissionGenerated("");
-    setMissionDraft("");
-  };
-
-  const drawNextMissionFromPool = () => {
-    // Toujours sauvegarder la version modifiée avant de changer de mission
-    persistCurrentDraftToHistory(missionDraft);
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      {/* Overlay global pour le bouton Plus et son menu, toujours en haut à gauche, hors du flux principal */}
+      <div className="fixed z-50 top-6 left-6 flex flex-col items-start pointer-events-none">
+        <div className="pointer-events-auto">
+          <button
+            onClick={() => setShowOptions((v) => !v)}
+            className="w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
+            aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
+            aria-expanded={showOptions}
+            style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
+          >
+            <span className="text-lg">➕</span>
+          </button>
+          {showOptions && (
+            <div className="flex flex-col gap-2 mt-2 animate-fade-in w-56">
+              <button
+                onClick={() => setGameState("fortune-wheel")}
+                className="w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all bg-slate-800/50 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95"
+              >
+                🎡 Roue de la chance
+              </button>
+              <button
+                onClick={() => {
+                  if (players.length < 3) {
+                    toast.error("Il faut au moins 3 joueurs !");
+                    return;
+                  }
+                  setGameState("custom-impostor");
+                }}
+                className={`w-full py-4 border font-black text-[10px] uppercase tracking-[0.3em] rounded-xl transition-all ${
+                  players.length < 3 
+                    ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
+                    : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95"
+                }`}
+                disabled={players.length < 3}
+              >
+                🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
     const pool = getFallbackMissionsPool();
     if (missionDeckRef.current.length === 0) {
@@ -286,7 +286,7 @@ export default function App() {
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
                 {/* Overlay bouton Plus et menu, toujours visible à gauche */}
               </div>
-            </motion.div>
+            </div>
           )}
         </AnimatePresence>
         {/* Overlay global pour le bouton Plus et son menu, toujours en haut à gauche, hors du flux principal */}
@@ -367,10 +367,10 @@ export default function App() {
                   }`}
                 >
                   <div className="relative z-10 flex items-start justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">🎭 Mission Comportementale</h2>
-                      <p className="text-purple-100/70 text-sm leading-tight max-w-[800px]">
-                        Les imposteurs doivent accomplir des missions comportementales secrètes pendant que les innocents essaient de les identifier.
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
                       </p>
                     </div>
                   </div>
