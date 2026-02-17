@@ -102,7 +102,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     const selected = activeItems[selectedIndex];
     const segmentSize = 360 / activeItems.length;
     const selectedCenterAngle = selectedIndex * segmentSize + segmentSize / 2;
-    const pointerAngle = 0;
+    const pointerAngle = 180;
     const currentRotationNormalized = ((rotationDeg % 360) + 360) % 360;
     const offsetToPointer =
       ((pointerAngle - selectedCenterAngle - currentRotationNormalized) % 360 + 360) % 360;
@@ -241,7 +241,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
           >
             {activeItems.map((item, index) => {
               const segmentSize = 360 / activeItems.length;
-              const angle = index * segmentSize - 90;
+              const angle = (index + 1) * segmentSize - 90;
               return (
                 <div
                   key={item.id}
@@ -251,7 +251,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   }}
                 >
                   <span
-                    className="block pr-1 text-right text-[10px] sm:text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] whitespace-nowrap overflow-hidden text-ellipsis leading-tight"
+                    className="block pr-[2px] text-right text-[10px] sm:text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)] whitespace-nowrap overflow-hidden text-ellipsis leading-tight"
                     style={{ width: `${radialLabelWidth}px`, transform: "translate(-100%, -50%)" }}
                   >
                     {item.label}
