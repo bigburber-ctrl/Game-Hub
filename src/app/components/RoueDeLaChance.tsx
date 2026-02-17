@@ -261,10 +261,10 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   ];
 
   const maxLabelChars = useMemo(() => {
-    if (activeItems.length <= 4) return 24;
-    if (activeItems.length <= 6) return 20;
-    if (activeItems.length <= 8) return 16;
-    return 12;
+    if (activeItems.length <= 4) return 18;
+    if (activeItems.length <= 6) return 14;
+    if (activeItems.length <= 8) return 10;
+    return 8;
   }, [activeItems.length]);
 
   const labelFontSize = useMemo(() => {
@@ -353,7 +353,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
 
       <div className="mt-5 flex flex-col items-center gap-4">
         <div className="relative">
-          <div className="absolute left-1/2 -top-[4px] -translate-x-1/2 z-[20] w-0 h-0 border-l-[10px] border-r-[10px] border-b-0 border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
+          <div className="absolute left-1/2 top-[2px] -translate-x-1/2 z-[20] w-0 h-0 border-l-[10px] border-r-[10px] border-b-0 border-t-[14px] border-l-transparent border-r-transparent border-t-white" />
           <motion.div
             className="relative z-10 w-64 h-64 rounded-full shadow-xl"
             style={{ transform: `rotate(${rotationDeg}deg)` }}
@@ -373,7 +373,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   const endDeg = startDeg + segmentSize;
                   const middleDeg = startDeg + segmentSize / 2;
                   const color = segmentColors[index % segmentColors.length];
-                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 52, middleDeg);
+                  const labelPos = polar(WHEEL_CENTER, WHEEL_CENTER, 98, middleDeg);
                   const rawLabel = item.label.trim();
                   const displayLabel =
                     rawLabel.length > maxLabelChars
@@ -405,7 +405,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                             fill="white"
                             fontSize={labelFontSize}
                             fontWeight="800"
-                            textAnchor="start"
+                            textAnchor="end"
                             dominantBaseline="middle"
                             style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
                           >
