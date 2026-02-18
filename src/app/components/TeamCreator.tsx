@@ -190,15 +190,23 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
           Générer les équipes <Shuffle size={20} />
         </button>
         {teams.length > 0 && (
-          <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 mt-6 space-y-4">
+          <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 mt-6">
             <div className="flex items-center gap-3 text-blue-400 mb-2">
               <Users size={20} className="text-blue-400" />
               <h3 className="font-bold uppercase text-xs tracking-widest">Équipes générées</h3>
             </div>
-            <div className="space-y-4">
+            <div
+              className={
+                teams.length <= 4
+                  ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+                  : teams.length <= 6
+                  ? "grid grid-cols-2 md:grid-cols-3 gap-4"
+                  : "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
+              }
+            >
               {teams.map((team, idx) => (
-                <div key={idx} className="bg-slate-900 rounded-xl border border-slate-700 p-4">
-                  <h4 className="text-lg font-black text-blue-400 mb-2">{team.name}</h4>
+                <div key={idx} className="bg-slate-900 rounded-xl border border-slate-700 p-4 flex flex-col">
+                  <h4 className="text-lg font-black text-blue-400 mb-2 text-center">{team.name}</h4>
                   <ul className="text-white font-bold space-y-1">
                     {team.members.map((member, i) => (
                       <li key={i}>• {member}</li>
