@@ -105,13 +105,6 @@ export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
                 </div>
               )}
             </section>
-
-            <button
-              onClick={handleStart}
-              className="w-full mt-8 py-5 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
-            >
-              <Eye size={22} className="mr-2" /> C'est parti !
-            </button>
           </div>
 
           {/* Modal règles */}
@@ -135,6 +128,16 @@ export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
               </div>
             </div>
           )}
+
+          {/* Bouton C'est parti tout en bas */}
+          <button
+            onClick={handleStart}
+            className="w-full mt-8 py-5 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
+            style={{ position: "fixed", left: 0, right: 0, bottom: 0, maxWidth: '100vw', zIndex: 30, margin: '0 auto' }}
+          >
+            <span>C'est parti !</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
         </>
       )}
 
