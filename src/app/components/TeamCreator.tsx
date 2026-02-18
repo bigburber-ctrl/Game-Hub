@@ -9,6 +9,28 @@ interface TeamCreatorProps {
 
 export function TeamCreator({ players, onBack }: TeamCreatorProps) {
   const totalPlayers = players.length;
+
+  // Génère les options pour le menu équipes avec affichage plage
+  const teamOptions = Array.from({ length: totalPlayers }, (_, i) => i + 1).map(n => {
+    const min = Math.floor(totalPlayers / n);
+    const max = Math.ceil(totalPlayers / n);
+    return {
+      value: n,
+      label: min === max ? `${n} (${min})` : `${n} (${min}-${max})`
+    };
+  });
+
+  // Génère les options pour le menu joueurs/équipe avec affichage plage
+  const playerOptions = Array.from({ length: totalPlayers }, (_, i) => i + 1).map(n => {
+    const teams = Math.max(1, Math.floor(totalPlayers / n));
+    const min = Math.floor(totalPlayers / teams);
+    const max = Math.ceil(totalPlayers / teams);
+    return {
+      value: n,
+      label: min === max ? `${n} (${min})` : `${n} (${min}-${max})`
+    };
+  });
+  const totalPlayers = players.length;
   const [numTeams, setNumTeams] = useState(2);
   const [playersPerTeam, setPlayersPerTeam] = useState(Math.max(1, Math.floor(totalPlayers / 2)));
   const [teams, setTeams] = useState<{ name: string; members: string[] }[]>([]);
@@ -75,8 +97,8 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
                   setPlayersPerTeam(Math.max(1, Math.floor(totalPlayers / n)));
                 }}
               >
-                {Array.from({ length: totalPlayers }, (_, i) => i + 1).map(n => (
-                  <option key={n} value={n}>{n}</option>
+                {teamOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             </div>
@@ -91,8 +113,8 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
                   setNumTeams(Math.max(1, Math.floor(totalPlayers / n)));
                 }}
               >
-                {Array.from({ length: totalPlayers }, (_, i) => i + 1).map(n => (
-                  <option key={n} value={n}>{n}</option>
+                {playerOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             </div>
