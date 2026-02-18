@@ -1,17 +1,47 @@
-import { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Composant OverlayPortal pour le fond flou, synchronisé manuellement
-function OverlayPortal({ show, isClosing }: { show: boolean, isClosing: boolean }) {
-  if (!show && !isClosing) return null;
+// Composant OverlayPortal pour le fond flou, animé
+// Portal pour le fond flou (z-40)
+function BlurPortal({ show, onClick }: { show: boolean; onClick: () => void }) {
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 z-30 backdrop-blur-sm bg-black/60" style={{ pointerEvents: 'auto', transition: 'opacity 0.25s' }} />,
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          className="fixed inset-0 z-40 backdrop-blur-md bg-black/60"
+          style={{ pointerEvents: 'auto' }}
+          onClick={onClick}
+        />
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+}
+
+// Portal pour le menu Plus (z-50)
+function MenuPlusPortal({ show, children }: { show: boolean; children: React.ReactNode }) {
+  return ReactDOM.createPortal(
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
   );
 }
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { PlayerSetup } from "@/app/components/PlayerSetup";
 import { TrappedRound } from "@/app/components/TrappedRound";
 import { WordImpostor } from "@/app/components/WordImpostor";
@@ -309,74 +339,54 @@ export default function App() {
 
               {/* Overlay options Plus */}
               {/* Fond flou et sombre, toujours visible pendant la transition */}
-              {/* Le fond flou ne s'affiche que si le menu Plus est visible ou en fermeture */}
-              <OverlayPortal show={showOptions || isClosing} isClosing={isClosing} />
-              // ...existing code...
-              const [isClosing, setIsClosing] = useState(false);
-
-              <AnimatePresence>
-                {showOptions && (
-                  <motion.div
-                    key="plus-menu-content"
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.95, opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center"
-                    onAnimationStart={() => {
-                      if (!showOptions) setIsClosing(true);
-                    }}
-                    onAnimationComplete={() => {
-                      if (!showOptions) setIsClosing(false);
-                    }}
+              <BlurPortal show={showOptions} onClick={() => setShowOptions(false)} />
+              <MenuPlusPortal show={showOptions}>
+                <div className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center">
+                  <button
+                    onClick={() => setShowOptions(false)}
+                    className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
+                    aria-label="Retour"
                   >
-                    <div className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center z-50">
-                      <button
-                        onClick={() => setShowOptions(false)}
-                        className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
-                        aria-label="Retour"
-                      >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                      </button>
-                      <div className="flex flex-col w-full mt-6 gap-3">
-                        <div className="w-full text-center mb-2">
-                          <span className="text-lg font-black text-white uppercase tracking-tight italic">Plus</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (players.length < 3) {
-                              toast.error("Il faut au moins 3 joueurs !");
-                              return;
-                            }
-                            setShowOptions(false);
-                            setGameState("custom-impostor");
-                          }}
-                          className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
-                            players.length < 3 
-                              ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
-                              : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
-                          }`}
-                          disabled={players.length < 3}
-                        >
-                          🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
-                        </button>
-                        <button
-                          onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
-                          className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
-                        >
-                          🎡 Roue de la chance
-                        </button>
-                        <button
-                          onClick={() => { setShowOptions(false); setGameState("setup"); }}
-                          className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
-                        >
-                          👥 Créateur d'équipe
-                        </button>
-                      </div>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <div className="flex flex-col w-full mt-6 gap-3">
+                    <div className="w-full text-center mb-2">
+                      <span className="text-lg font-black text-white uppercase tracking-tight italic">Plus</span>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <button
+                      onClick={() => {
+                        if (players.length < 3) {
+                          toast.error("Il faut au moins 3 joueurs !");
+                          return;
+                        }
+                        setShowOptions(false);
+                        setGameState("custom-impostor");
+                      }}
+                      className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
+                        players.length < 3
+                          ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale"
+                          : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
+                      }`}
+                      disabled={players.length < 3}
+                    >
+                      🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+                    </button>
+                    <button
+                      onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
+                      className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                    >
+                      🎡 Roue de la chance
+                    </button>
+                    <button
+                      onClick={() => { setShowOptions(false); setGameState("setup"); }}
+                      className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                    >
+                      👥 Créateur d'équipe
+                    </button>
+                  </div>
+                </div>
+              </MenuPlusPortal>
+              {/* Bloc supprimé : menu Plus géré par MenuPlusPortal */}
 
               <div className="flex flex-col gap-2 mt-2">
                 <button
