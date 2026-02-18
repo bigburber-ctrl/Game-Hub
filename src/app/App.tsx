@@ -25,9 +25,16 @@ function BlurPortal({ show, onClick }: { show: boolean; onClick: () => void }) {
 // Portal pour le menu Plus (z-50)
 function MenuPlusPortal({ show, children }: { show: boolean; children: React.ReactNode }) {
   return ReactDOM.createPortal(
-    show ? (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <AnimatePresence>
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          key="menu-plus-wrapper"
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          initial={{ opacity: 1, pointerEvents: 'auto' }}
+          animate={{ opacity: 1, pointerEvents: 'auto' }}
+          exit={{ opacity: 1, pointerEvents: 'none' }}
+          transition={{ duration: 0.25 }}
+        >
           <motion.div
             key="menu-plus"
             initial={{ opacity: 0 }}
@@ -37,9 +44,9 @@ function MenuPlusPortal({ show, children }: { show: boolean; children: React.Rea
           >
             {children}
           </motion.div>
-        </AnimatePresence>
-      </div>
-    ) : null,
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
   );
 }
