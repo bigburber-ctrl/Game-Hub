@@ -1,10 +1,21 @@
 import ReactDOM from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Composant OverlayPortal pour le fond flou
+// Composant OverlayPortal pour le fond flou, animé
 function OverlayPortal({ show }: { show: boolean }) {
-  if (!show) return null;
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 z-30 backdrop-blur-sm bg-black/60" style={{ pointerEvents: 'auto' }} />,
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+          className="fixed inset-0 z-30 backdrop-blur-sm bg-black/60"
+          style={{ pointerEvents: 'auto' }}
+        />
+      )}
+    </AnimatePresence>,
     document.body
   );
 }
