@@ -353,11 +353,12 @@ export default function App() {
                     {/* Fond flou et sombre */}
                     <motion.div
                       key="blur"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
+                      initial={{ backgroundColor: "rgba(0,0,0,0)" }}
+                      animate={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                      exit={{ backgroundColor: "rgba(0,0,0,0)" }}
                       transition={{ duration: 0.28 }}
-                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm cursor-pointer"
+                      className="fixed inset-0 z-40 backdrop-blur-sm cursor-pointer"
+                      style={{ opacity: 1 }}
                       onClick={() => setShowOptions(false)}
                     />
                     {/* Menu Plus */}
