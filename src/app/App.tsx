@@ -284,17 +284,17 @@ export default function App() {
                   <span>Game <span className="text-purple-500">Hub</span></span>
                 </h1>
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
-                {/* Bouton Plus flottant carré en haut à droite */}
-                <button
-                  onClick={() => setShowOptions(true)}
-                  className="fixed z-30 top-6 right-6 w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
-                  aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
-                  aria-expanded={showOptions}
-                  style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
-                >
-                  <span className="text-lg">➕</span>
-                </button>
               </div>
+      {/* Bouton Plus flottant carré en haut à droite, toujours visible */}
+      <button
+        onClick={() => setShowOptions(true)}
+        className="fixed z-30 top-6 right-6 w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
+        aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
+        aria-expanded={showOptions}
+        style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
+      >
+        <span className="text-lg">➕</span>
+      </button>
 
               {/* Overlay options Plus */}
               <AnimatePresence>
