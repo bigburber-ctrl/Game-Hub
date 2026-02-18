@@ -24,29 +24,36 @@ function BlurPortal({ show, onClick }: { show: boolean; onClick: () => void }) {
 
 // Portal pour le menu Plus (z-50)
 function MenuPlusPortal({ show, children }: { show: boolean; children: React.ReactNode }) {
+  const [isExiting, setIsExiting] = React.useState(false);
+
+  React.useEffect(() => {
+    if (show) setIsExiting(false);
+  }, [show]);
+
   return ReactDOM.createPortal(
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          key="menu-plus-wrapper"
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          initial={{ opacity: 1, pointerEvents: 'auto' }}
-          animate={{ opacity: 1, pointerEvents: 'auto' }}
-          exit={{ opacity: 1, pointerEvents: 'none' }}
-          transition={{ duration: 0.25 }}
+    (show || isExiting) ? (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{ pointerEvents: isExiting ? 'none' : 'auto', background: 'transparent' }}
+      >
+        <AnimatePresence
+          onExitComplete={() => setIsExiting(false)}
         >
-          <motion.div
-            key="menu-plus"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            {children}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>,
+          {show && (
+            <motion.div
+              key="menu-plus"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onAnimationStart={() => setIsExiting(true)}
+            >
+              {children}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    ) : null,
     document.body
   );
 }
