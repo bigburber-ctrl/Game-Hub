@@ -471,6 +471,7 @@ export function GameSettings({ gameType, playersCount, onBack, onStart, initialC
           C'est parti ! <Play size={20} fill="currentColor" />
         </button>
       </div>
+      
 
       {/* ===== MODAL RULES ===== */}
       <AnimatePresence>
