@@ -60,51 +60,60 @@ export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
             </button>
           </header>
 
-          <div className="space-y-6 flex-1 overflow-y-auto pb-8 pr-1">
-            <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 space-y-4">
-              <div className="flex items-center gap-3 text-emerald-400 mb-2">
-                <Users size={20} className="text-emerald-400" />
-                <h3 className="font-bold uppercase text-xs tracking-widest">
-                  Nombre d'imposteurs
-                </h3>
-              </div>
-              {maxImpostors === 1 ? (
-                <div className="flex justify-center p-4 bg-slate-900 rounded-xl border border-slate-700">
-                  <span className="text-xl font-black text-white">1 imposteur</span>
+          <div className="flex flex-col flex-1">
+            <div className="space-y-6 flex-1">
+              <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 space-y-4">
+                <div className="flex items-center gap-3 text-emerald-400 mb-2">
+                  <Users size={20} className="text-emerald-400" />
+                  <h3 className="font-bold uppercase text-xs tracking-widest">
+                    Nombre d'imposteurs
+                  </h3>
                 </div>
-              ) : (
-                <div className="relative flex items-center gap-4 w-full">
-                  <div className="relative flex-1">
-                    <input
-                      type="range"
-                      min={1}
-                      max={maxImpostors}
-                      step={1}
-                      value={impostorCount}
-                      onChange={(e) => setImpostorCount(parseInt(e.target.value))}
-                      className="slider w-full accent-emerald-500"
-                    />
-                    {maxImpostors >= 2 && (
-                      <div className="absolute left-0 right-0 top-1/2 -translate-y-[16%] pointer-events-none px-0.25 z-10">
-                        <div className="flex justify-between w-full">
-                          {Array.from({ length: maxImpostors }, (_, i) => (
-                            <div
-                              key={i}
-                              className={`w-1.5 h-1.5 rounded-full transition ${
-                                impostorCount === i + 1
-                                  ? "bg-white scale-125 shadow-lg"
-                                  : "bg-white/40"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                {maxImpostors === 1 ? (
+                  <div className="flex justify-center p-4 bg-slate-900 rounded-xl border border-slate-700">
+                    <span className="text-xl font-black text-white">1 imposteur</span>
                   </div>
-                  <span className="text-2xl font-black text-white w-8 text-center">{impostorCount}</span>
-                </div>
-              )}
-            </section>
+                ) : (
+                  <div className="relative flex items-center gap-4 w-full">
+                    <div className="relative flex-1">
+                      <input
+                        type="range"
+                        min={1}
+                        max={maxImpostors}
+                        step={1}
+                        value={impostorCount}
+                        onChange={(e) => setImpostorCount(parseInt(e.target.value))}
+                        className="slider w-full accent-emerald-500"
+                      />
+                      {maxImpostors >= 2 && (
+                        <div className="absolute left-0 right-0 top-1/2 -translate-y-[16%] pointer-events-none px-0.25 z-10">
+                          <div className="flex justify-between w-full">
+                            {Array.from({ length: maxImpostors }, (_, i) => (
+                              <div
+                                key={i}
+                                className={`w-1.5 h-1.5 rounded-full transition ${
+                                  impostorCount === i + 1
+                                    ? "bg-white scale-125 shadow-lg"
+                                    : "bg-white/40"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-2xl font-black text-white w-8 text-center">{impostorCount}</span>
+                  </div>
+                )}
+              </section>
+            </div>
+            <button
+              onClick={handleStart}
+              className="w-full mt-10 py-5 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
+            >
+              <span>C'est parti !</span>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
           </div>
 
           {/* Modal règles */}
@@ -128,16 +137,6 @@ export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
               </div>
             </div>
           )}
-
-          {/* Bouton C'est parti tout en bas */}
-          <button
-            onClick={handleStart}
-            className="w-full mt-8 py-5 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
-            style={{ position: "fixed", left: 0, right: 0, bottom: 0, maxWidth: '100vw', zIndex: 30, margin: '0 auto' }}
-          >
-            <span>C'est parti !</span>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right"><polyline points="9 18 15 12 9 6"></polyline></svg>
-          </button>
         </>
       )}
 
