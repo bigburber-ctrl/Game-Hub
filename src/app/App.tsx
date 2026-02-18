@@ -260,9 +260,7 @@ export default function App() {
 
 
       <div
-        className={`mx-auto min-h-dvh flex flex-col p-4 relative ${
-          gameState === "mission-review" ? "max-w-2xl" : "max-w-md"
-        }`}
+        className="mx-auto min-h-dvh flex flex-col p-4 relative max-w-md"
       >
         <AnimatePresence mode="wait">
           {gameState === "home" && (
