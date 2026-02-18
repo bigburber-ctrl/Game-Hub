@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Player } from "@/app/App";
-import { ChevronLeft, Eye, Users, Info } from "lucide-react";
+import { ChevronLeft, Eye, Users, Info, Play } from "lucide-react";
 
 interface CustomImpostorProps {
   players: Player[];
@@ -109,10 +109,9 @@ export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
             </div>
             <button
               onClick={handleStart}
-              className="w-full mt-10 py-5 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-2"
+              className="w-full mt-10 py-5 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-3"
             >
-              <span>C'est parti !</span>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-right"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              C'est parti ! <Play size={20} fill="currentColor" />
             </button>
           </div>
 
