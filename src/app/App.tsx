@@ -281,19 +281,19 @@ export default function App() {
                 >
                   <Gamepad2 size={48} />
                 </motion.div>
-                <div className="relative flex items-center justify-center">
-                  <h1 className="text-4xl font-black tracking-tight text-white uppercase italic flex items-center">
-                    <span>Game <span className="text-purple-500">Hub</span></span>
-                  </h1>
+                <div className="relative flex items-center justify-center" style={{ minHeight: 56 }}>
                   <button
                     onClick={() => setShowOptions(true)}
-                    className="absolute top-0 right-0 w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
+                    className="absolute top-0 right-0 w-10 h-10 flex items-center justify-center rounded-md bg-slate-800/50 border border-slate-700/50 text-white font-bold shadow-lg hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400"
                     aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
                     aria-expanded={showOptions}
                     style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
                   >
                     <span className="text-lg">➕</span>
                   </button>
+                  <h1 className="text-4xl font-black tracking-tight text-white uppercase italic flex items-center">
+                    <span>Game <span className="text-purple-500">Hub</span></span>
+                  </h1>
                 </div>
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
               </div>
