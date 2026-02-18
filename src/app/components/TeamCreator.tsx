@@ -7,66 +7,61 @@ interface TeamCreatorProps {
   onBack: () => void;
 }
 
-  const [totalPlayers, setTotalPlayers] = useState(Math.max(3, players.length));
+export function TeamCreator({ players, onBack }: TeamCreatorProps) {
+  const [totalPlayers, setTotalPlayers] = useState(players.length);
   const [numTeams, setNumTeams] = useState(2);
-  const [playersPerTeam, setPlayersPerTeam] = useState(Math.max(2, Math.floor(totalPlayers / 2)));
+  const [playersPerTeam, setPlayersPerTeam] = useState(Math.max(1, Math.floor(players.length / 2)));
   const [teams, setTeams] = useState<{ name: string; members: string[] }[]>([]);
-  const [mode, setMode] = useState<'teams' | 'playersPerTeam'>('teams');
+  const [mode, setMode] = useState<"teams" | "players">("teams");
 
-  // Synchronisation dynamique
-  React.useEffect(() => {
-    if (mode === 'teams') {
-      // Recalcule joueurs par équipe
-      setPlayersPerTeam(Math.max(1, Math.floor(totalPlayers / numTeams)));
-    } else {
-      // Recalcule nombre d'équipes
-      setNumTeams(Math.max(1, Math.floor(totalPlayers / playersPerTeam)));
-    }
-  }, [totalPlayers, numTeams, playersPerTeam, mode]);
-
-  // Calcul équilibré
-  function getTeamSizes(): number[] {
-    const base = Math.floor(totalPlayers / numTeams);
-    const extra = totalPlayers % numTeams;
-    return Array.from({ length: numTeams }, (_, i) => base + (i < extra ? 1 : 0));
+  // Calcul dynamique
+  function getDistribution(tp: number, nt: number): number[] {
+    // Répartit tp joueurs en nt équipes le plus équitablement possible
+    const base = Math.floor(tp / nt);
+    const extra = tp % nt;
+    return Array.from({ length: nt }, (_, i) => base + (i < extra ? 1 : 0));
   }
 
+  // Quand totalPlayers change, recalcule les sliders
+  React.useEffect(() => {
+    if (mode === "teams") {
+      setPlayersPerTeam(Math.max(1, Math.floor(totalPlayers / numTeams)));
+    } else {
+      setNumTeams(Math.max(1, Math.floor(totalPlayers / playersPerTeam)));
+    }
+  }, [totalPlayers]);
+
+  // Quand numTeams change, recalcule joueurs/équipe
+  React.useEffect(() => {
+    if (mode === "teams") {
+      setPlayersPerTeam(Math.max(1, Math.floor(totalPlayers / numTeams)));
+    }
+  }, [numTeams]);
+
+  // Quand joueurs/équipe change, recalcule nombre d'équipes
+  React.useEffect(() => {
+    if (mode === "players") {
+      setNumTeams(Math.max(1, Math.floor(totalPlayers / playersPerTeam)));
+    }
+  }, [playersPerTeam]);
+
+  // Génération des équipes
   function generateTeams() {
-    // Génère des noms fictifs si pas assez de joueurs
-    const playerNames = players.length >= totalPlayers
-      ? players.slice(0, totalPlayers).map(p => p.name)
-      : [
-          ...players.map(p => p.name),
-          ...Array.from({ length: totalPlayers - players.length }, (_, i) => `Joueur ${players.length + i + 1}`)
-        ];
-    const shuffled = [...playerNames].sort(() => Math.random() - 0.5);
-    const sizes = getTeamSizes();
-    const result: { name: string; members: string[] }[] = [];
+    const shuffled = [...players].sort(() => Math.random() - 0.5);
+    const dist = getDistribution(totalPlayers, numTeams);
     let idx = 0;
+    const result: { name: string; members: string[] }[] = [];
     for (let t = 0; t < numTeams; t++) {
       const members = [];
-      for (let p = 0; p < sizes[t]; p++, idx++) {
-        members.push(shuffled[idx]);
+      for (let p = 0; p < dist[t] && idx < shuffled.length; p++, idx++) {
+        members.push(shuffled[idx]?.name ?? `Joueur ${idx + 1}`);
       }
       result.push({ name: `Équipe ${t + 1}`, members });
     }
     setTeams(result);
   }
 
-  // Format lisible
-  function getReadableFormat() {
-    const sizes = getTeamSizes();
-    if (sizes.every(s => s === sizes[0])) {
-      return `${numTeams} équipes : ${sizes[0]} joueurs par équipe`;
-    }
-    // Affichage plage min-max
-    const min = Math.min(...sizes);
-    const max = Math.max(...sizes);
-    if (min !== max) {
-      return `${numTeams} équipes : ${min}–${max} joueurs par équipe`;
-    }
-    return `${numTeams} équipes : ${sizes.join(' – ')} joueurs`;
-  }
+  //
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex flex-col flex-1">
@@ -100,15 +95,19 @@ interface TeamCreatorProps {
             <div className="text-slate-300 text-sm font-bold text-center">{totalPlayers} joueurs</div>
             <div className="flex gap-2 mt-4">
               <button
-                className={`flex-1 py-2 rounded-xl font-black text-xs uppercase tracking-widest border-2 ${mode === 'teams' ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
-                onClick={() => setMode('teams')}
-              >Choisir le nombre d'équipes</button>
+                className={`flex-1 py-2 rounded-xl font-black text-xs uppercase tracking-widest border transition-all ${mode === "teams" ? "bg-blue-600 text-white border-blue-600" : "bg-slate-900 text-blue-400 border-slate-700"}`}
+                onClick={() => setMode("teams")}
+              >
+                Choisir le nombre d'équipes
+              </button>
               <button
-                className={`flex-1 py-2 rounded-xl font-black text-xs uppercase tracking-widest border-2 ${mode === 'playersPerTeam' ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
-                onClick={() => setMode('playersPerTeam')}
-              >Choisir joueurs par équipe</button>
+                className={`flex-1 py-2 rounded-xl font-black text-xs uppercase tracking-widest border transition-all ${mode === "players" ? "bg-blue-600 text-white border-blue-600" : "bg-slate-900 text-blue-400 border-slate-700"}`}
+                onClick={() => setMode("players")}
+              >
+                Choisir joueurs/équipe
+              </button>
             </div>
-            {mode === 'teams' ? (
+            {mode === "teams" ? (
               <>
                 <label className="text-slate-400 text-xs uppercase tracking-widest font-black mb-1 mt-4">Nombre d'équipes</label>
                 <input
@@ -135,8 +134,16 @@ interface TeamCreatorProps {
                 <div className="text-slate-300 text-sm font-bold text-center">{playersPerTeam} joueurs/équipe</div>
               </>
             )}
-            <div className="mt-4 text-blue-300 font-bold text-center text-sm">
-              {getReadableFormat()}
+            {/* Affichage de la répartition */}
+            <div className="mt-4 text-center text-blue-300 font-bold text-sm">
+              {(() => {
+                const dist = getDistribution(totalPlayers, numTeams);
+                if (dist.every(n => n === dist[0])) {
+                  return `${numTeams} équipes : ${dist[0]} joueurs par équipe`;
+                } else {
+                  return `${numTeams} équipes : ` + dist.map(n => `${n}`).join(" – ") + " joueurs";
+                }
+              })()}
             </div>
           </div>
         </section>
@@ -155,7 +162,7 @@ interface TeamCreatorProps {
             <div className="space-y-4">
               {teams.map((team, idx) => (
                 <div key={idx} className="bg-slate-900 rounded-xl border border-slate-700 p-4">
-                  <h4 className="text-lg font-black text-blue-400 mb-2">{team.name} ({team.members.length} joueurs)</h4>
+                  <h4 className="text-lg font-black text-blue-400 mb-2">{team.name}</h4>
                   <ul className="text-white font-bold space-y-1">
                     {team.members.map((member, i) => (
                       <li key={i}>• {member}</li>
