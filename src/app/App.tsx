@@ -1,21 +1,12 @@
+import { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Composant OverlayPortal pour le fond flou, animé
-function OverlayPortal({ show }: { show: boolean }) {
+// Composant OverlayPortal pour le fond flou, synchronisé manuellement
+function OverlayPortal({ show, isClosing }: { show: boolean, isClosing: boolean }) {
+  if (!show && !isClosing) return null;
   return ReactDOM.createPortal(
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-30 backdrop-blur-sm bg-black/60"
-          style={{ pointerEvents: 'auto' }}
-        />
-      )}
-    </AnimatePresence>,
+    <div className="fixed inset-0 z-30 backdrop-blur-sm bg-black/60" style={{ pointerEvents: 'auto', transition: 'opacity 0.25s' }} />,
     document.body
   );
 }
@@ -318,7 +309,10 @@ export default function App() {
 
               {/* Overlay options Plus */}
               {/* Fond flou et sombre, toujours visible pendant la transition */}
-              <OverlayPortal show={showOptions} />
+              <OverlayPortal show={showOptions} isClosing={isClosing} />
+              // ...existing code...
+              const [isClosing, setIsClosing] = useState(false);
+
               <AnimatePresence>
                 {showOptions && (
                   <motion.div
@@ -328,6 +322,12 @@ export default function App() {
                     exit={{ scale: 0.95, opacity: 0 }}
                     transition={{ duration: 0.25 }}
                     className="fixed inset-0 z-50 flex items-center justify-center"
+                    onAnimationStart={() => {
+                      if (!showOptions) setIsClosing(true);
+                    }}
+                    onAnimationComplete={() => {
+                      if (!showOptions) setIsClosing(false);
+                    }}
                   >
                     <div className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center">
                       <button
