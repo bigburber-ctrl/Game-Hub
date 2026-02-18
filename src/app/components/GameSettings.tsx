@@ -472,7 +472,7 @@ export function GameSettings({ gameType, playersCount, onBack, onStart, initialC
         </button>
       </div>
 
-
+git add . && git commit -m "auto: save & push" && git push origin main
       {/* ===== MODAL RULES ===== */}
       <AnimatePresence>
         {showRules && (
