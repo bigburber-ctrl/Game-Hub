@@ -360,7 +360,7 @@ export default function App() {
                           return;
                         }
                         setShowOptions(false);
-                        setGameState("custom-impostor");
+                        setTimeout(() => setGameState("custom-impostor"), 250);
                       }}
                       className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
                         players.length < 3
@@ -372,13 +372,19 @@ export default function App() {
                       🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
                     </button>
                     <button
-                      onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
+                      onClick={() => {
+                        setShowOptions(false);
+                        setTimeout(() => setGameState("fortune-wheel"), 250);
+                      }}
                       className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
                     >
                       🎡 Roue de la chance
                     </button>
                     <button
-                      onClick={() => { setShowOptions(false); setGameState("setup"); }}
+                      onClick={() => {
+                        setShowOptions(false);
+                        setTimeout(() => setGameState("setup"), 250);
+                      }}
                       className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
                     >
                       👥 Créateur d'équipe
