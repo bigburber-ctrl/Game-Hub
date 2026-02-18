@@ -1,131 +1,6 @@
 import ReactDOM from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Composant OverlayPortal pour le fond flou, animé
-// Portal pour le fond flou (z-40)
-function BlurPortal({ show, onClick }: { show: boolean; onClick: () => void }) {
-  return ReactDOM.createPortal(
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-40 backdrop-blur-md bg-black/60"
-          style={{ pointerEvents: 'auto' }}
-          onClick={onClick}
-        />
-      )}
-    </AnimatePresence>,
-    document.body
-  );
-}
-
-// Portal pour le menu Plus (z-50)
-function MenuPlusPortal({ show, children }: { show: boolean; children: React.ReactNode }) {
-  return ReactDOM.createPortal(
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-50 flex items-center justify-center"
-        >
-          {children}
-        </motion.div>
-      )}
-    </AnimatePresence>,
-    document.body
-  );
-}
-import React, { useState, useEffect } from "react";
-import { PlayerSetup } from "@/app/components/PlayerSetup";
-import { TrappedRound } from "@/app/components/TrappedRound";
-import { WordImpostor } from "@/app/components/WordImpostor";
-import { CustomImpostor } from "@/app/components/CustomImpostor";
-import { QuestionImpostor } from "@/app/components/QuestionImpostor";
-import { DinerExtreme } from "@/app/components/DinerExtreme";
-import { TrouveRegle } from "@/app/components/TrouveRegle";
-import { RoueDeLaChance } from "@/app/components/RoueDeLaChance";
-import { TeamCreator } from "@/app/components/TeamCreator";
-
-import { GameSettings, GameConfig } from "@/app/components/GameSettings";
-import { toast, Toaster } from "sonner";
-import { Gamepad2, Users, Utensils, Plus } from "lucide-react";
-
-type LastGameConfigs = Partial<Record<ConfigurableGameType, GameConfig>>;
-const LAST_GAME_CONFIGS_STORAGE_KEY = "gamehub_last_game_configs";
-
-// trigger vercel redeploy
-export type Player = {
-  id: string;
-  name: string;
-  score: number;
-};
-
-type AcceptedMission = {
-  id: string;
-  text: string;
-};
-
-type MissionHistoryItem = {
-  id: string;
-  draft: string;
-};
-
-type GameState = "home" | "setup" | "settings" | "playing" | "custom-impostor" | "diner-extreme" | "mission-review" | "fortune-wheel";
-type GameType = "trapped-round" | "word-impostor" | "question-impostor" | "trouve-regle" | "diner-extreme";
-type ConfigurableGameType = Exclude<GameType, "diner-extreme">;
-
-const GAME_METADATA: Record<GameType, { minPlayers: number }> = {
-  "trapped-round": { minPlayers: 3 },
-  "word-impostor": { minPlayers: 3 },
-  "question-impostor": { minPlayers: 3 },
-  "trouve-regle": { minPlayers: 3 },
-  "diner-extreme": { minPlayers: 1 },
-};
-
-export default function App() {
-  const [gameState, setGameState] = useState<GameState>("home");
-  const [showOptions, setShowOptions] = useState(false);
-  const [activeGame, setActiveGame] = useState<ConfigurableGameType | null>(null);
-  const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
-  const [lastGameConfigs, setLastGameConfigs] = useState<LastGameConfigs>(() => {
-    try {
-      const saved = localStorage.getItem(LAST_GAME_CONFIGS_STORAGE_KEY);
-      return saved ? (JSON.parse(saved) as LastGameConfigs) : {};
-    } catch {
-      return {};
-    }
-  });
-  const [acceptedMissions, setAcceptedMissions] = useState<AcceptedMission[]>([]);
-  const [missionDraft, setMissionDraft] = useState<string>("");
-  const [missionGenerated, setMissionGenerated] = useState<string>("");
-  const [missionReviewStep, setMissionReviewStep] = useState<"review" | "recap">("review");
-  const [missionReviewCurrent, setMissionReviewCurrent] = useState<number>(0);
-  const [missionReviewTotal, setMissionReviewTotal] = useState<number>(0);
-  const missionDeckRef = React.useRef<string[]>([]);
-  const fallbackPoolRef = React.useRef<string[] | null>(null);
-  const missionHistoryRef = React.useRef<MissionHistoryItem[]>([]);
-  const [missionHistoryIndex, setMissionHistoryIndex] = useState<number>(-1);
-  
-  const [players, setPlayers] = useState<Player[]>(() => {
-    const saved = localStorage.getItem("gamehub_players");
-    return saved ? JSON.parse(saved) : [
-      { id: "1", name: "Joueur 1", score: 0 },
-      { id: "2", name: "Joueur 2", score: 0 },
-      { id: "3", name: "Joueur 3", score: 0 },
-    ];
-  });
-
-  useEffect(() => {
-    localStorage.setItem("gamehub_players", JSON.stringify(players));
-  }, [players]);
-
-  useEffect(() => {
+  // Système de triage de mission supprimé
     try {
       localStorage.setItem(LAST_GAME_CONFIGS_STORAGE_KEY, JSON.stringify(lastGameConfigs));
     } catch {
@@ -224,70 +99,7 @@ export default function App() {
     setMissionDraft(next);
   };
 
-  const goToPreviousMission = () => {
-    persistCurrentDraftToHistory(missionDraft);
-    const prevIndex = missionHistoryIndex - 1;
-    if (prevIndex < 0) return;
-    const prev = missionHistoryRef.current[prevIndex]?.draft ?? "";
-    setMissionHistoryIndex(prevIndex);
-    setMissionReviewCurrent(prevIndex + 1);
-    setMissionGenerated(prev);
-    setMissionDraft(prev);
-  };
-
-  const startMissionReview = () => {
-    const pool = getFallbackMissionsPool();
-    setMissionReviewTotal(pool.length);
-
-    const hasExistingSession =
-      acceptedMissions.length > 0 ||
-      missionReviewCurrent > 0 ||
-      missionGenerated.trim().length > 0 ||
-      missionDeckRef.current.length > 0;
-
-    if (!hasExistingSession) {
-      setAcceptedMissions([]);
-      setMissionReviewStep("review");
-      resetMissionDeck();
-      drawNextMissionFromPool();
-      setGameState("mission-review");
-      return;
-    }
-
-    // Reprendre là où on en était
-    setGameState("mission-review");
-    if (missionGenerated.trim().length === 0) {
-      drawNextMissionFromPool();
-    } else if (missionDraft.trim().length === 0) {
-      setMissionDraft(missionGenerated);
-    }
-  };
-
-  const acceptCurrentMission = () => {
-    const trimmed = missionDraft.replace(/\s+/g, " ").trim();
-    if (!trimmed) {
-      toast.error("Mission vide");
-      return;
-    }
-    persistCurrentDraftToHistory(trimmed);
-    const currentHistoryId = missionHistoryRef.current[missionHistoryIndex]?.id;
-    const stableId = currentHistoryId ?? `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
-
-    setAcceptedMissions((prev) => {
-      const existingIndex = prev.findIndex((m) => m.id === stableId);
-      if (existingIndex === -1) return [...prev, { id: stableId, text: trimmed }];
-      return prev.map((m) => (m.id === stableId ? { ...m, text: trimmed } : m));
-    });
-    drawNextMissionFromPool();
-  };
-
-  const rejectCurrentMission = () => {
-    drawNextMissionFromPool();
-  };
-
-  const finishMissionReview = () => {
-    setMissionReviewStep("recap");
-  };
+  // Système de triage de mission supprimé
 
   return (
     <div className="min-h-dvh bg-[#0f172a] text-slate-100 font-sans selection:bg-purple-500/30 overflow-x-hidden">
@@ -516,9 +328,7 @@ export default function App() {
             />
           )}
 
-          {gameState === "mission-review" && (
-            {/* Système de triage de mission supprimé */}
-          )}
+          {/* Système de triage de mission supprimé */}
 
           {gameState === "diner-extreme" && (
             <DinerExtreme
