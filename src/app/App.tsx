@@ -281,13 +281,13 @@ export default function App() {
                 >
                   <Gamepad2 size={48} />
                 </motion.div>
-                <div className="flex items-center justify-center gap-2">
+                <div className="relative flex items-center justify-center">
                   <h1 className="text-4xl font-black tracking-tight text-white uppercase italic flex items-center">
                     <span>Game <span className="text-purple-500">Hub</span></span>
                   </h1>
                   <button
                     onClick={() => setShowOptions(true)}
-                    className="ml-2 w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
+                    className="absolute top-0 right-0 w-10 h-10 flex items-center justify-center rounded-md bg-purple-700/90 text-white font-bold shadow-2xl hover:bg-purple-800 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 border-2 border-purple-400"
                     aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
                     aria-expanded={showOptions}
                     style={{ boxShadow: '0 4px 24px 0 rgba(80,0,120,0.25)' }}
