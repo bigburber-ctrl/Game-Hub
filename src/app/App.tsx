@@ -296,13 +296,14 @@ export default function App() {
               </div>
 
               {/* Overlay options Plus */}
-              <AnimatePresence>
+              <AnimatePresence mode="sync">
                 {showOptions && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                    className="fixed inset-0 z-40 flex items-center justify-center bg-black/60"
+                    style={{ backdropFilter: 'blur(6px)' }}
                   >
                     <motion.div
                       initial={{ scale: 0.95, opacity: 0 }}
