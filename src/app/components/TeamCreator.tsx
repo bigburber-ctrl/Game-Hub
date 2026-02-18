@@ -15,14 +15,12 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
 
   // Calcul dynamique
   function getDistribution(tp: number, nt: number): number[] {
-    // Répartit tp joueurs en nt équipes le plus équitablement possible
     const base = Math.floor(tp / nt);
     const extra = tp % nt;
     return Array.from({ length: nt }, (_, i) => base + (i < extra ? 1 : 0));
   }
 
   // Quand totalPlayers change, recalcule les sliders
-  // Synchronisation bidirectionnelle
   React.useEffect(() => {
     setPlayersPerTeam(Math.max(1, Math.floor(totalPlayers / numTeams)));
   }, [numTeams, totalPlayers]);
@@ -63,7 +61,7 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
       </header>
 
       <div className="flex flex-col flex-1 overflow-y-auto pb-8 pr-1">
-        {/* Nouvelle interface paramètres */}
+        {/* Nouvelle section paramètres */}
         <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 mb-6">
           <div className="flex items-center gap-6 justify-center">
             <div className="flex flex-col items-center">
@@ -102,9 +100,8 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
           {/* Affichage de la répartition */}
           <div className="mt-6 text-center text-blue-300 font-bold text-lg">
             {(() => {
-              const dist = getDistribution(totalPlayers, numTeams);
-              const min = Math.min(...dist);
-              const max = Math.max(...dist);
+              const min = Math.floor(totalPlayers / numTeams);
+              const max = Math.ceil(totalPlayers / numTeams);
               if (min === max) {
                 return `${numTeams} équipes : ${min} joueurs par équipe`;
               } else {
@@ -116,12 +113,12 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
 
         <button
           onClick={generateTeams}
-          className="w-full mt-2 py-5 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-3"
+          className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-3 mb-6"
         >
           Générer les équipes <Shuffle size={20} />
         </button>
 
-        {/* Grille responsive pour les équipes générées */}
+        {/* Section équipes générées en grille responsive */}
         {teams.length > 0 && (
           <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 mt-6">
             <div className="flex items-center gap-3 text-blue-400 mb-2">
@@ -131,7 +128,7 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
             <div
               className={
                 teams.length <= 4
-                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+                  ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
                   : teams.length <= 6
                   ? "grid grid-cols-2 md:grid-cols-3 gap-4"
                   : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
