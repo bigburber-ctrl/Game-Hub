@@ -357,8 +357,8 @@ export default function App() {
                       animate={{ backgroundColor: "rgba(0,0,0,0.6)" }}
                       exit={{ backgroundColor: "rgba(0,0,0,0)" }}
                       transition={{ duration: 0.28 }}
-                      className="fixed inset-0 z-40 backdrop-blur-sm cursor-pointer"
-                      style={{ opacity: 1 }}
+                      className="fixed inset-0 z-40 cursor-pointer"
+                      style={{ opacity: 1, backdropFilter: 'blur(6px)' }}
                       onClick={() => setShowOptions(false)}
                     />
                     {/* Menu Plus */}
