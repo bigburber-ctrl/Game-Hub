@@ -309,7 +309,8 @@ export default function App() {
 
               {/* Overlay options Plus */}
               {/* Fond flou et sombre, toujours visible pendant la transition */}
-              <OverlayPortal show={showOptions} isClosing={isClosing} />
+              {/* Le fond flou ne s'affiche que si le menu Plus est visible ou en fermeture */}
+              <OverlayPortal show={showOptions || isClosing} isClosing={isClosing} />
               // ...existing code...
               const [isClosing, setIsClosing] = useState(false);
 
@@ -329,7 +330,7 @@ export default function App() {
                       if (!showOptions) setIsClosing(false);
                     }}
                   >
-                    <div className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center">
+                    <div className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center z-50">
                       <button
                         onClick={() => setShowOptions(false)}
                         className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
