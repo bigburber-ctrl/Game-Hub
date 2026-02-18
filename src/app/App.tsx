@@ -8,7 +8,6 @@ function BlurPortal({ show, onClick }: { show: boolean; onClick: () => void }) {
     <AnimatePresence>
       {show && (
         <motion.div
-          key="blur-portal"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -25,20 +24,13 @@ function BlurPortal({ show, onClick }: { show: boolean; onClick: () => void }) {
 
 // Portal pour le menu Plus (z-50)
 function MenuPlusPortal({ show, children }: { show: boolean; children: React.ReactNode }) {
-  const [visible, setVisible] = React.useState(show);
-  React.useEffect(() => {
-    if (show) setVisible(true);
-  }, [show]);
   return ReactDOM.createPortal(
-    <AnimatePresence
-      onExitComplete={() => setVisible(false)}
-    >
-      {visible && (
+    <AnimatePresence>
+      {show && (
         <motion.div
-          key="menu-plus"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: show ? 1 : 0 }}
-          exit={{ opacity: 0 }}
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
           transition={{ duration: 0.25 }}
           className="fixed inset-0 z-50 flex items-center justify-center"
         >
@@ -347,69 +339,52 @@ export default function App() {
 
               {/* Overlay options Plus */}
               {/* Fond flou et sombre, toujours visible pendant la transition */}
-              {/* Synchronisation : menu fade-out, puis blur */}
               <BlurPortal show={showOptions} onClick={() => setShowOptions(false)} />
               <MenuPlusPortal show={showOptions}>
-                <AnimatePresence
-                  onExitComplete={() => {
-                    // Après le fade-out du menu, on retire le blur
-                    setShowOptions(false);
-                  }}
-                >
-                  {showOptions && (
-                    <motion.div
-                      key="menu-plus"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.28 }}
-                      className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center"
+                <div className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center">
+                  <button
+                    onClick={() => setShowOptions(false)}
+                    className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
+                    aria-label="Retour"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  </button>
+                  <div className="flex flex-col w-full mt-6 gap-3">
+                    <div className="w-full text-center mb-2">
+                      <span className="text-lg font-black text-white uppercase tracking-tight italic">Plus</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (players.length < 3) {
+                          toast.error("Il faut au moins 3 joueurs !");
+                          return;
+                        }
+                        setShowOptions(false);
+                        setGameState("custom-impostor");
+                      }}
+                      className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
+                        players.length < 3
+                          ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale"
+                          : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
+                      }`}
+                      disabled={players.length < 3}
                     >
-                      <button
-                        onClick={() => setShowOptions(false)}
-                        className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
-                        aria-label="Retour"
-                      >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                      </button>
-                      <div className="flex flex-col w-full mt-6 gap-3">
-                        <div className="w-full text-center mb-2">
-                          <span className="text-lg font-black text-white uppercase tracking-tight italic">Plus</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (players.length < 3) {
-                              toast.error("Il faut au moins 3 joueurs !");
-                              return;
-                            }
-                            setShowOptions(false);
-                            setGameState("custom-impostor");
-                          }}
-                          className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
-                            players.length < 3
-                              ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale"
-                              : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
-                          }`}
-                          disabled={players.length < 3}
-                        >
-                          🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
-                        </button>
-                        <button
-                          onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
-                          className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
-                        >
-                          🎡 Roue de la chance
-                        </button>
-                        <button
-                          onClick={() => { setShowOptions(false); setGameState("setup"); }}
-                          className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
-                        >
-                          👥 Créateur d'équipe
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+                    </button>
+                    <button
+                      onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
+                      className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                    >
+                      🎡 Roue de la chance
+                    </button>
+                    <button
+                      onClick={() => { setShowOptions(false); setGameState("setup"); }}
+                      className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                    >
+                      👥 Créateur d'équipe
+                    </button>
+                  </div>
+                </div>
               </MenuPlusPortal>
               {/* Bloc supprimé : menu Plus géré par MenuPlusPortal */}
 
