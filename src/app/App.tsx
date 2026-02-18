@@ -50,7 +50,7 @@ import { QuestionImpostor } from "@/app/components/QuestionImpostor";
 import { DinerExtreme } from "@/app/components/DinerExtreme";
 import { TrouveRegle } from "@/app/components/TrouveRegle";
 import { RoueDeLaChance } from "@/app/components/RoueDeLaChance";
-import { TeamCreator } from "./components/TeamCreator";
+import { TeamCreator } from "@/app/components/TeamCreator";
 
 import { GameSettings, GameConfig } from "@/app/components/GameSettings";
 import { toast, Toaster } from "sonner";
@@ -76,7 +76,7 @@ type MissionHistoryItem = {
   draft: string;
 };
 
-type GameState = "home" | "setup" | "settings" | "playing" | "custom-impostor" | "diner-extreme" | "mission-review" | "fortune-wheel" | "team-creator";
+type GameState = "home" | "setup" | "settings" | "playing" | "custom-impostor" | "diner-extreme" | "mission-review" | "fortune-wheel";
 type GameType = "trapped-round" | "word-impostor" | "question-impostor" | "trouve-regle" | "diner-extreme";
 type ConfigurableGameType = Exclude<GameType, "diner-extreme">;
 
@@ -379,13 +379,10 @@ export default function App() {
                         setShowOptions(false);
                         setTimeout(() => setGameState("team-creator"), 250);
                       }}
-                      className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                      className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-blue-600/10 border-blue-500/20 text-blue-400 hover:bg-blue-600/20 active:scale-95 shadow"
                     >
                       👥 Créateur d'équipe
                     </button>
-                            {gameState === "team-creator" && (
-                              <TeamCreator players={players} onBack={resetToHome} />
-                            )
                   </div>
                 </div>
               </MenuPlusPortal>
@@ -582,6 +579,9 @@ export default function App() {
 
           {gameState === "fortune-wheel" && (
             <RoueDeLaChance onBack={resetToHome} />
+          )}
+          {gameState === "team-creator" && (
+            <TeamCreator players={players} onBack={resetToHome} />
           )}
         </AnimatePresence>
       </div>

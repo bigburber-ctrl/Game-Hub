@@ -8,29 +8,20 @@ interface TeamCreatorProps {
 }
 
 export function TeamCreator({ players, onBack }: TeamCreatorProps) {
-  const [mode, setMode] = useState<"teams" | "players">("teams");
-  const [teamsCount, setTeamsCount] = useState(2);
-  const [playersPerTeam, setPlayersPerTeam] = useState(2);
-  const [teams, setTeams] = useState<string[][]>([]);
-
-  // Calcul automatique
-  const maxTeams = Math.max(2, Math.floor(players.length / 2));
-  const maxPlayersPerTeam = Math.max(2, players.length);
+  const [numTeams, setNumTeams] = useState(2);
+  const [playersPerTeam, setPlayersPerTeam] = useState(Math.max(2, Math.floor(players.length / 2)));
+  const [teams, setTeams] = useState<{ name: string; members: string[] }[]>([]);
 
   function generateTeams() {
-    let shuffled = [...players].sort(() => Math.random() - 0.5);
-    let result: string[][] = [];
-    if (mode === "teams") {
-      for (let i = 0; i < teamsCount; i++) result.push([]);
-      shuffled.forEach((p, idx) => {
-        result[idx % teamsCount].push(p.name);
-      });
-    } else {
-      const teamCount = Math.ceil(players.length / playersPerTeam);
-      for (let i = 0; i < teamCount; i++) result.push([]);
-      shuffled.forEach((p, idx) => {
-        result[Math.floor(idx / playersPerTeam)].push(p.name);
-      });
+    const shuffled = [...players].sort(() => Math.random() - 0.5);
+    const result: { name: string; members: string[] }[] = [];
+    let idx = 0;
+    for (let t = 0; t < numTeams; t++) {
+      const members = [];
+      for (let p = 0; p < playersPerTeam && idx < shuffled.length; p++, idx++) {
+        members.push(shuffled[idx].name);
+      }
+      result.push({ name: `Équipe ${t + 1}`, members });
     }
     setTeams(result);
   }
@@ -43,7 +34,7 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
             <ChevronLeft size={24} />
           </button>
           <h1 className="text-2xl font-black uppercase italic tracking-tight">
-            Créateur <span className="text-blue-400">d'équipe</span>
+            Créateur <span className="text-blue-500">d'équipe</span>
           </h1>
         </div>
       </header>
@@ -54,69 +45,48 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
             <Group size={20} className="text-blue-400" />
             <h3 className="font-bold uppercase text-xs tracking-widest">Paramètres</h3>
           </div>
-          <div className="flex gap-4 items-center">
-            <button
-              className={`px-4 py-2 rounded-xl border-2 font-black uppercase tracking-widest text-xs transition-all ${mode === "teams" ? "bg-blue-700/10 border-blue-500 text-white" : "bg-slate-900 border-slate-700 text-slate-400"}`}
-              onClick={() => setMode("teams")}
-            >
-              Nombre d'équipes
-            </button>
-            <button
-              className={`px-4 py-2 rounded-xl border-2 font-black uppercase tracking-widest text-xs transition-all ${mode === "players" ? "bg-blue-700/10 border-blue-500 text-white" : "bg-slate-900 border-slate-700 text-slate-400"}`}
-              onClick={() => setMode("players")}
-            >
-              Joueurs par équipe
-            </button>
+          <div className="flex flex-col gap-4">
+            <label className="text-slate-400 text-xs uppercase tracking-widest font-black mb-1">Nombre d'équipes</label>
+            <input
+              type="range"
+              min={2}
+              max={Math.max(2, Math.floor(players.length / 2))}
+              value={numTeams}
+              onChange={e => setNumTeams(parseInt(e.target.value))}
+              className="slider w-full accent-blue-500"
+            />
+            <div className="text-slate-300 text-sm font-bold text-center">{numTeams} équipes</div>
+            <label className="text-slate-400 text-xs uppercase tracking-widest font-black mb-1">Joueurs par équipe</label>
+            <input
+              type="range"
+              min={2}
+              max={Math.max(2, Math.floor(players.length / numTeams))}
+              value={playersPerTeam}
+              onChange={e => setPlayersPerTeam(parseInt(e.target.value))}
+              className="slider w-full accent-blue-500"
+            />
+            <div className="text-slate-300 text-sm font-bold text-center">{playersPerTeam} joueurs/équipe</div>
           </div>
-          {mode === "teams" ? (
-            <div className="flex items-center gap-3 mt-4">
-              <span className="text-sm font-bold text-slate-300">Nombre d'équipes :</span>
-              <input
-                type="number"
-                min={2}
-                max={maxTeams}
-                value={teamsCount}
-                onChange={e => setTeamsCount(Math.max(2, Math.min(maxTeams, parseInt(e.target.value))))}
-                className="w-16 py-2 px-3 rounded-xl bg-slate-900 text-white border border-slate-700 text-center font-black"
-              />
-              <span className="text-xs text-slate-400">(max {maxTeams})</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3 mt-4">
-              <span className="text-sm font-bold text-slate-300">Joueurs par équipe :</span>
-              <input
-                type="number"
-                min={2}
-                max={maxPlayersPerTeam}
-                value={playersPerTeam}
-                onChange={e => setPlayersPerTeam(Math.max(2, Math.min(maxPlayersPerTeam, parseInt(e.target.value))))}
-                className="w-16 py-2 px-3 rounded-xl bg-slate-900 text-white border border-slate-700 text-center font-black"
-              />
-              <span className="text-xs text-slate-400">(max {maxPlayersPerTeam})</span>
-            </div>
-          )}
         </section>
-
         <button
           onClick={generateTeams}
-          className="w-full mt-6 py-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-3"
+          className="w-full mt-6 py-5 bg-gradient-to-r from-blue-600 to-blue-400 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-3"
         >
           Générer les équipes <Shuffle size={20} />
         </button>
-
         {teams.length > 0 && (
-          <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 space-y-4 mt-6">
+          <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 mt-6 space-y-4">
             <div className="flex items-center gap-3 text-blue-400 mb-2">
               <Users size={20} className="text-blue-400" />
-              <h3 className="font-bold uppercase text-xs tracking-widest">Équipes</h3>
+              <h3 className="font-bold uppercase text-xs tracking-widest">Équipes générées</h3>
             </div>
-            <div className="grid gap-4">
+            <div className="space-y-4">
               {teams.map((team, idx) => (
                 <div key={idx} className="bg-slate-900 rounded-xl border border-slate-700 p-4">
-                  <h4 className="text-blue-300 font-black uppercase tracking-widest text-sm mb-2">Équipe {idx + 1}</h4>
-                  <ul className="space-y-1">
-                    {team.map((name, i) => (
-                      <li key={i} className="text-white font-bold text-sm">{name}</li>
+                  <h4 className="text-lg font-black text-blue-400 mb-2">{team.name}</h4>
+                  <ul className="text-white font-bold space-y-1">
+                    {team.members.map((member, i) => (
+                      <li key={i}>• {member}</li>
                     ))}
                   </ul>
                 </div>
