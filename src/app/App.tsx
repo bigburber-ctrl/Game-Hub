@@ -1,3 +1,4 @@
+import ReactDOM from "react-dom";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PlayerSetup } from "@/app/components/PlayerSetup";
@@ -203,74 +204,78 @@ export default function App() {
     const pool = getFallbackMissionsPool();
     setMissionReviewTotal(pool.length);
 
-    const hasExistingSession =
-      acceptedMissions.length > 0 ||
-      missionReviewCurrent > 0 ||
-      missionGenerated.trim().length > 0 ||
-      missionDeckRef.current.length > 0;
-
-    if (!hasExistingSession) {
-      setAcceptedMissions([]);
-      setMissionReviewStep("review");
-      resetMissionDeck();
-      drawNextMissionFromPool();
-      setGameState("mission-review");
-      return;
-    }
-
-    // Reprendre là où on en était
-    setGameState("mission-review");
-    if (missionGenerated.trim().length === 0) {
-      drawNextMissionFromPool();
-    } else if (missionDraft.trim().length === 0) {
-      setMissionDraft(missionGenerated);
-    }
-  };
-
-  const acceptCurrentMission = () => {
-    const trimmed = missionDraft.replace(/\s+/g, " ").trim();
-    if (!trimmed) {
-      toast.error("Mission vide");
-      return;
-    }
-    persistCurrentDraftToHistory(trimmed);
-    const currentHistoryId = missionHistoryRef.current[missionHistoryIndex]?.id;
-    const stableId = currentHistoryId ?? `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
-
-    setAcceptedMissions((prev) => {
-      const existingIndex = prev.findIndex((m) => m.id === stableId);
-      if (existingIndex === -1) return [...prev, { id: stableId, text: trimmed }];
-      return prev.map((m) => (m.id === stableId ? { ...m, text: trimmed } : m));
-    });
-    drawNextMissionFromPool();
-  };
-
-  const rejectCurrentMission = () => {
-    drawNextMissionFromPool();
-  };
-
-  const finishMissionReview = () => {
-    setMissionReviewStep("recap");
-  };
-
-  return (
-    <div className="min-h-dvh bg-[#0f172a] text-slate-100 font-sans selection:bg-purple-500/30 overflow-x-hidden">
-      <Toaster position="top-center" expand={false} richColors />
-      
-
-
-      <div
-        className="mx-auto min-h-dvh flex flex-col p-4 relative max-w-md"
-      >
-        <AnimatePresence mode="wait">
-          {gameState === "home" && (
-            <motion.div
-              key="home"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex-1 flex flex-col gap-8 pt-12"
-            >
+    return (
+      <div className={`min-h-screen w-full flex flex-col bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900${showOptions ? ' blur-sm' : ''}`}>
+        {/* ...existing code... */}
+        {/* Portail pour le menu Plus */}
+        {typeof window !== "undefined" && document.body && ReactDOM.createPortal(
+          <>
+            {showOptions && (
+              <div className="fixed inset-0 z-40 bg-black/60 transition-opacity duration-200" />
+            )}
+            <AnimatePresence>
+              {showOptions && (
+                <motion.div
+                  key="plus-menu-content"
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center"
+                >
+                  <div className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center">
+                    <button
+                      onClick={() => setShowOptions(false)}
+                      className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
+                      aria-label="Retour"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <div className="flex flex-col w-full mt-6 gap-3">
+                      <div className="w-full text-center mb-2">
+                        <span className="text-lg font-black text-white uppercase tracking-tight italic">Plus</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (players.length < 3) {
+                            toast.error("Il faut au moins 3 joueurs !");
+                            return;
+                          }
+                          setShowOptions(false);
+                          setGameState("custom-impostor");
+                        }}
+                        className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
+                          players.length < 3 
+                            ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale" 
+                            : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
+                        }`}
+                        disabled={players.length < 3}
+                      >
+                        🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
+                      </button>
+                      <button
+                        onClick={() => { setShowOptions(false); setGameState("fortune-wheel"); }}
+                        className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                      >
+                        🎡 Roue de la chance
+                      </button>
+                      <button
+                        onClick={() => { setShowOptions(false); setGameState("setup"); }}
+                        className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
+                      >
+                        👥 Créateur d'équipe
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>,
+          document.body
+        )}
+        {/* ...existing code... */}
+      </div>
+    );
               <div className="text-center space-y-2 relative">
                 <motion.div
                   initial={{ scale: 0.8 }}
