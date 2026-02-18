@@ -403,10 +403,11 @@ export default function App() {
                   Gérer les Joueurs ({players.length})
                 </button>
                 <button
-                  onClick={startMissionReview}
+                  onClick={() => {/* Tirage missions désactivé */}}
                   className="w-full py-4 px-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-300 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all hover:scale-[1.01] active:scale-95 shadow-lg"
+                  disabled
                 >
-                  🎯 Tirer des missions
+                  🎯 Tirer des missions (désactivé)
                 </button>
               </div>
 
@@ -529,116 +530,7 @@ export default function App() {
           )}
 
           {gameState === "mission-review" && (
-            <motion.div
-              key="mission-review"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex-1 flex flex-col gap-8 pt-12"
-            >
-              {missionReviewStep === "review" ? (
-                <div className="space-y-6">
-                  <div className="text-center space-y-2">
-                    <p className="text-slate-400 text-xs font-black uppercase tracking-widest">
-                      {missionReviewTotal > 0 ? `${missionReviewCurrent}/${missionReviewTotal}` : "0/0"}
-                    </p>
-                    <h2 className="text-2xl font-black">🎯 Mission générée</h2>
-                    <p className="text-slate-300 text-sm">Modifie si besoin, puis Oui/Non. “Terminé” affiche le récap.</p>
-                  </div>
-
-                  {missionHistoryIndex > 0 && (
-                    <button
-                      onClick={goToPreviousMission}
-                      className="w-full py-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold hover:bg-slate-700/60 transition"
-                    >
-                      ⬅️ Retour à la mission d’avant
-                    </button>
-                  )}
-
-                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4">
-                    <p className="text-slate-400 text-xs uppercase tracking-widest font-black mb-2">Proposition</p>
-                    <p className="text-white font-bold">{missionGenerated}</p>
-
-                    <div className="mt-4">
-                      <p className="text-slate-400 text-xs uppercase tracking-widest font-black mb-2">Ta version (modifiable)</p>
-                      <textarea
-                        value={missionDraft}
-                        onChange={(e) => {
-                          const next = e.target.value;
-                          setMissionDraft(next);
-                          persistCurrentDraftToHistory(next);
-                        }}
-                        rows={4}
-                        className="w-full rounded-xl bg-slate-900/60 border border-slate-700/60 p-3 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/40"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={acceptCurrentMission}
-                      className="w-full py-4 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition"
-                    >
-                      ✅ Oui
-                    </button>
-                    <button
-                      onClick={rejectCurrentMission}
-                      className="w-full py-4 rounded-xl bg-slate-700 text-white font-bold hover:bg-slate-600 transition"
-                    >
-                      ❌ Non
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={finishMissionReview}
-                    className="w-full py-3 rounded-xl bg-purple-600/20 border border-purple-500/30 text-purple-200 font-bold hover:bg-purple-600/30 transition"
-                  >
-                    Terminé (voir le récap) ✅
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-black">Récapitulatif de tes missions</h2>
-                    <p className="text-slate-300 text-sm">Voici les missions que tu as gardées, dans l’ordre.</p>
-                  </div>
-
-                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4">
-                    <p className="text-slate-400 text-xs uppercase tracking-widest font-black mb-2">Format code</p>
-                    {acceptedMissions.length === 0 ? (
-                      <p className="text-slate-400 text-sm">—</p>
-                    ) : (
-                      <pre className="text-slate-200 text-sm whitespace-pre-wrap leading-tight">
-                        {acceptedMissions
-                          .map((m) => normalizeMission(m.text))
-                          .filter(Boolean)
-                          .map((m) => `"${m}",`)
-                          .join("\n")}
-                      </pre>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setMissionReviewStep("review");
-                      if (missionGenerated.trim().length > 0 && missionDraft.trim().length === 0) {
-                        setMissionDraft(missionGenerated);
-                      }
-                    }}
-                    className="w-full py-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold hover:bg-slate-700/60 transition"
-                  >
-                    Continuer à générer des missions
-                  </button>
-                </div>
-              )}
-
-              <button
-                onClick={resetToHome}
-                className="w-full py-4 rounded-2xl bg-purple-600/20 border border-purple-500/30 text-purple-300 font-bold uppercase tracking-widest text-xs hover:bg-purple-600/30 transition"
-              >
-                Retour au Hub 🏠
-              </button>
-            </motion.div>
+            {/* Système de triage de mission supprimé */}
           )}
 
           {gameState === "diner-extreme" && (
