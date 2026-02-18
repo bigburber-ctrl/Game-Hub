@@ -9,20 +9,19 @@ interface CustomImpostorProps {
   onBack: () => void;
 }
 
+
 export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
-  const [step, setStep] = useState<"setup" | "reveal" | "describe" | "vote_instructions" | "reveal_result">("setup");
+  const [step, setStep] = useState<"setup" | "reveal" | "result">("setup");
   const [impostorCount, setImpostorCount] = useState(1);
   const [impostorsIds, setImpostorsIds] = useState<string[]>([]);
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
   const [showRole, setShowRole] = useState(false);
-  const [startingPlayerId, setStartingPlayerId] = useState<string>("");
 
   const startDistribution = () => {
     const shuffled = [...players].sort(() => Math.random() - 0.5);
     setImpostorsIds(shuffled.slice(0, impostorCount).map(p => p.id));
     setCurrentPlayerIdx(0);
     setShowRole(false);
-    setStartingPlayerId(players[Math.floor(Math.random() * players.length)].id);
     setStep("reveal");
   };
 
@@ -31,7 +30,7 @@ export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
       setCurrentPlayerIdx(currentPlayerIdx + 1);
       setShowRole(false);
     } else {
-      setStep("describe");
+      setStep("result");
     }
   };
 
@@ -123,62 +122,7 @@ export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
           </motion.div>
         )}
 
-        {step === "describe" && (
-          <motion.div key="describe" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col justify-center gap-6 text-center">
-            <div className="p-6 rounded-3xl bg-slate-800/50 border-2 border-slate-700 relative overflow-hidden">
-              <Users size={40} className="mx-auto text-emerald-500 mb-4" />
-              <h3 className="text-2xl font-black text-white uppercase italic tracking-tight mb-2 leading-none">Tour de table</h3>
-              <p className="text-slate-400 text-xs leading-relaxed mb-6">
-                Suivez l'ordre circulaire. Une seule description par personne.
-              </p>
-              <div className="space-y-3 text-left">
-                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                  <p className="text-[10px] uppercase font-bold text-emerald-500 tracking-widest mb-1">Le joueur qui commence :</p>
-                  <p className="text-lg font-black text-white uppercase italic">
-                    {players.find(p => p.id === startingPlayerId)?.name}
-                  </p>
-                </div>
-                <div className="p-4 bg-slate-900/50 rounded-xl border border-slate-700">
-                  <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-2">Ordre de parole :</p>
-                  <div className="flex flex-wrap gap-2">
-                    {(() => {
-                      const startIndex = players.findIndex(p => p.id === startingPlayerId);
-                      const ordered = [...players.slice(startIndex), ...players.slice(0, startIndex)];
-                      return ordered.map((p, i) => (
-                        <div key={p.id} className="flex items-center gap-2">
-                          <span className="text-white font-bold text-sm uppercase italic">{p.name}</span>
-                          {i < ordered.length - 1 && <span className="text-slate-700 text-xs">→</span>}
-                        </div>
-                      ));
-                    })()}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <button onClick={() => setStep("vote_instructions")}
-              className="py-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black uppercase italic tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all">
-              Passer au Vote
-            </button>
-          </motion.div>
-        )}
-
-        {step === "vote_instructions" && (
-          <motion.div key="vote" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col justify-center text-center gap-8">
-            <div className="space-y-6">
-              <ShieldAlert size={64} className="mx-auto text-emerald-500 mb-4 animate-pulse" />
-              <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">Votez !</h2>
-              <p className="text-slate-400 max-w-[280px] mx-auto leading-relaxed">
-                Discutez et désignez les <span className="text-white font-bold">{impostorsIds.length}</span> suspects à haute voix.
-              </p>
-            </div>
-            <button onClick={() => setStep("reveal_result")}
-              className="mt-8 py-5 bg-emerald-600 text-white font-black uppercase italic rounded-2xl active:scale-95 transition-all shadow-xl shadow-emerald-900/40">
-              Découvrir les imposteurs
-            </button>
-          </motion.div>
-        )}
-
-        {step === "reveal_result" && (
+        {step === "result" && (
           <motion.div key="result" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex-1 flex flex-col justify-center text-center gap-8">
             <div className="space-y-6">
               <Award size={80} className="mx-auto text-emerald-500 mb-4" />
