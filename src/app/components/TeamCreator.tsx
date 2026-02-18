@@ -137,11 +137,13 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
             {/* Affichage de la répartition */}
             <div className="mt-4 text-center text-blue-300 font-bold text-sm">
               {(() => {
-                const dist = getDistribution(totalPlayers, numTeams);
-                if (dist.every(n => n === dist[0])) {
-                  return `${numTeams} équipes : ${dist[0]} joueurs par équipe`;
+                // Calcul min-max
+                const min = Math.floor(totalPlayers / numTeams);
+                const max = Math.ceil(totalPlayers / numTeams);
+                if (min === max) {
+                  return `${numTeams} équipes : ${min} joueurs par équipe`;
                 } else {
-                  return `${numTeams} équipes : ` + dist.map(n => `${n}`).join(" – ") + " joueurs";
+                  return `${numTeams} équipes : ${min}–${max} joueurs par équipe`;
                 }
               })()}
             </div>
