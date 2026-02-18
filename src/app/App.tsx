@@ -287,7 +287,7 @@ export default function App() {
                   </h1>
                   <button
                     onClick={() => setShowOptions(true)}
-                    className="absolute -top-25 right-0 w-10 h-10 flex items-center justify-center rounded-md bg-slate-800/50 border border-slate-700/50 text-white font-bold shadow-lg hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    className="absolute -top-35 right-0 w-10 h-10 flex items-center justify-center rounded-md bg-slate-800/50 border border-slate-700/50 text-white font-bold shadow-lg hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400"
                     aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
                     aria-expanded={showOptions}
                   >
