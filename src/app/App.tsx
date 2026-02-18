@@ -55,7 +55,6 @@ import { RAW_DINER_TRI_POOL } from "@/app/components/DinerMissionsTriPool";
 import { GameSettings, GameConfig } from "@/app/components/GameSettings";
 import { toast, Toaster } from "sonner";
 import { Gamepad2, Users, Utensils, Plus } from "lucide-react";
-import { TeamCreator } from "./components/TeamCreator";
 
 type LastGameConfigs = Partial<Record<ConfigurableGameType, GameConfig>>;
 const LAST_GAME_CONFIGS_STORAGE_KEY = "gamehub_last_game_configs";
@@ -77,7 +76,7 @@ type MissionHistoryItem = {
   draft: string;
 };
 
-type GameState = "home" | "setup" | "settings" | "playing" | "custom-impostor" | "diner-extreme" | "mission-review" | "fortune-wheel" | "team-creator";
+type GameState = "home" | "setup" | "settings" | "playing" | "custom-impostor" | "diner-extreme" | "mission-review" | "fortune-wheel";
 type GameType = "trapped-round" | "word-impostor" | "question-impostor" | "trouve-regle" | "diner-extreme";
 type ConfigurableGameType = Exclude<GameType, "diner-extreme">;
 
@@ -384,7 +383,7 @@ export default function App() {
                     <button
                       onClick={() => {
                         setShowOptions(false);
-                        setTimeout(() => setGameState("team-creator"), 250);
+                        setTimeout(() => setGameState("setup"), 250);
                       }}
                       className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
                     >
@@ -586,10 +585,6 @@ export default function App() {
 
           {gameState === "fortune-wheel" && (
             <RoueDeLaChance onBack={resetToHome} />
-          )}
-
-          {gameState === "team-creator" && (
-            <TeamCreator players={players} onBack={resetToHome} />
           )}
         </AnimatePresence>
       </div>
