@@ -104,38 +104,66 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
             {mode === "teams" ? (
               <>
                 <label className="text-slate-400 text-xs uppercase tracking-widest font-black mb-1 mt-4">Nombre d'équipes</label>
-                <div className="flex flex-wrap gap-2 justify-center mt-2">
-                  {Array.from({ length: players.length }, (_, i) => i + 1).map(n => (
-                    <button
-                      key={n}
-                      className={`px-3 py-2 rounded-xl font-bold text-xs border transition-all ${numTeams === n ? "bg-blue-600 text-white border-blue-600" : "bg-slate-900 text-blue-400 border-slate-700"}`}
-                      onClick={() => {
-                        setNumTeams(n);
-                        setPlayersPerTeam(Math.max(1, Math.floor(players.length / n)));
-                      }}
-                    >
-                      {n}
-                    </button>
-                  ))}
+                <div className="flex gap-4 justify-center mt-2">
+                  <select
+                    className="px-3 py-2 rounded-xl font-bold text-xs border bg-slate-900 text-blue-400 border-slate-700"
+                    value={numTeams}
+                    onChange={e => {
+                      const n = parseInt(e.target.value);
+                      setNumTeams(n);
+                      setPlayersPerTeam(Math.max(1, Math.floor(players.length / n)));
+                    }}
+                  >
+                    {Array.from({ length: players.length }, (_, i) => i + 1).map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="px-3 py-2 rounded-xl font-bold text-xs border bg-slate-900 text-blue-400 border-slate-700"
+                    value={playersPerTeam}
+                    onChange={e => {
+                      const n = parseInt(e.target.value);
+                      setPlayersPerTeam(n);
+                      setNumTeams(Math.max(1, Math.floor(players.length / n)));
+                    }}
+                  >
+                    {Array.from({ length: players.length }, (_, i) => i + 1).map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="text-slate-300 text-sm font-bold text-center mt-2">{numTeams} équipes</div>
               </>
             ) : (
               <>
                 <label className="text-slate-400 text-xs uppercase tracking-widest font-black mb-1 mt-4">Joueurs par équipe</label>
-                <div className="flex flex-wrap gap-2 justify-center mt-2">
-                  {Array.from({ length: players.length }, (_, i) => i + 1).map(n => (
-                    <button
-                      key={n}
-                      className={`px-3 py-2 rounded-xl font-bold text-xs border transition-all ${playersPerTeam === n ? "bg-blue-600 text-white border-blue-600" : "bg-slate-900 text-blue-400 border-slate-700"}`}
-                      onClick={() => {
-                        setPlayersPerTeam(n);
-                        setNumTeams(Math.max(1, Math.floor(players.length / n)));
-                      }}
-                    >
-                      {n}
-                    </button>
-                  ))}
+                <div className="flex gap-4 justify-center mt-2">
+                  <select
+                    className="px-3 py-2 rounded-xl font-bold text-xs border bg-slate-900 text-blue-400 border-slate-700"
+                    value={numTeams}
+                    onChange={e => {
+                      const n = parseInt(e.target.value);
+                      setNumTeams(n);
+                      setPlayersPerTeam(Math.max(1, Math.floor(players.length / n)));
+                    }}
+                  >
+                    {Array.from({ length: players.length }, (_, i) => i + 1).map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="px-3 py-2 rounded-xl font-bold text-xs border bg-slate-900 text-blue-400 border-slate-700"
+                    value={playersPerTeam}
+                    onChange={e => {
+                      const n = parseInt(e.target.value);
+                      setPlayersPerTeam(n);
+                      setNumTeams(Math.max(1, Math.floor(players.length / n)));
+                    }}
+                  >
+                    {Array.from({ length: players.length }, (_, i) => i + 1).map(n => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="text-slate-300 text-sm font-bold text-center mt-2">{playersPerTeam} joueurs/équipe</div>
               </>
