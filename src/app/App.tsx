@@ -50,7 +50,6 @@ import { QuestionImpostor } from "@/app/components/QuestionImpostor";
 import { DinerExtreme } from "@/app/components/DinerExtreme";
 import { TrouveRegle } from "@/app/components/TrouveRegle";
 import { RoueDeLaChance } from "@/app/components/RoueDeLaChance";
-import { RAW_DINER_TRI_POOL } from "@/app/components/DinerMissionsTriPool";
 
 import { GameSettings, GameConfig } from "@/app/components/GameSettings";
 import { toast, Toaster } from "sonner";
@@ -175,12 +174,6 @@ export default function App() {
 
   const getFallbackMissionsPool = () => {
     if (fallbackPoolRef.current) return fallbackPoolRef.current;
-    const pool = RAW_DINER_TRI_POOL
-      .map((mission) => mission.replace(/,\s*$/, "."))
-      .map(normalizeMission)
-      .filter(Boolean);
-    fallbackPoolRef.current = pool;
-    return pool;
   };
 
   const resetMissionDeck = () => {
