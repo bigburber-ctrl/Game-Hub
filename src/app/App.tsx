@@ -296,31 +296,21 @@ export default function App() {
               </div>
 
               {/* Overlay options Plus */}
+              {/* Fond flou et sombre, toujours visible pendant la transition */}
+              {showOptions && (
+                <div className="fixed inset-0 z-40 backdrop-blur-sm bg-black/60" />
+              )}
               <AnimatePresence>
                 {showOptions && (
                   <motion.div
-                    key="plus-menu-overlay"
-                    initial={{ opacity: 1 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 1 }}
-                    className="fixed inset-0 z-40 flex items-center justify-center"
+                    key="plus-menu-content"
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.95, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center"
                   >
-                    {/* Fond flou et sombre, toujours visible pendant la transition */}
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="absolute inset-0 w-full h-full backdrop-blur-sm bg-black/60"
-                    />
-                    {/* Contenu du menu Plus */}
-                    <motion.div
-                      initial={{ scale: 0.95, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.95, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center z-10"
-                    >
+                    <div className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center">
                       <button
                         onClick={() => setShowOptions(false)}
                         className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
@@ -363,7 +353,7 @@ export default function App() {
                           👥 Créateur d'équipe
                         </button>
                       </div>
-                    </motion.div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
