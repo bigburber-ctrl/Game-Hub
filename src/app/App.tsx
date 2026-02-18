@@ -298,7 +298,7 @@ export default function App() {
               {/* Overlay options Plus */}
               {/* Fond flou et sombre, toujours visible pendant la transition */}
               {showOptions && (
-                <div className="fixed inset-0 z-40 backdrop-blur-sm bg-black/60" />
+                <div className="fixed inset-0 z-40 backdrop-blur-sm bg-black/60" style={{ pointerEvents: 'auto' }} />
               )}
               <AnimatePresence>
                 {showOptions && (
