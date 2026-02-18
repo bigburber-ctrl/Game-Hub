@@ -52,7 +52,11 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
     let idx = 0;
     const result: { name: string; members: string[] }[] = [];
     for (let t = 0; t < numTeams; t++) {
-      const members = [];
+    const totalPlayers = players.length;
+    const [numTeams, setNumTeams] = useState(2);
+    const [playersPerTeam, setPlayersPerTeam] = useState(Math.max(1, Math.floor(totalPlayers / 2)));
+    const [teams, setTeams] = useState<{ name: string; members: string[] }[]>([]);
+    const [mode, setMode] = useState<"teams" | "players">("teams");
       for (let p = 0; p < dist[t] && idx < shuffled.length; p++, idx++) {
         members.push(shuffled[idx]?.name ?? `Joueur ${idx + 1}`);
       }
@@ -63,13 +67,13 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
 
   //
 
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex flex-col flex-1">
-      <header className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 text-slate-400 hover:bg-slate-800 rounded-full">
-            <ChevronLeft size={24} />
-          </button>
+    React.useEffect(() => {
+      setPlayersPerTeam(Math.max(1, Math.floor(totalPlayers / numTeams)));
+    }, [numTeams, totalPlayers]);
+
+    React.useEffect(() => {
+      setNumTeams(Math.max(1, Math.floor(totalPlayers / playersPerTeam)));
+    }, [playersPerTeam, totalPlayers]);
           <h1 className="text-2xl font-black uppercase italic tracking-tight">
             Créateur <span className="text-blue-500">d'équipe</span>
           </h1>
