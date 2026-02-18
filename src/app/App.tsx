@@ -363,7 +363,6 @@ export default function App() {
                       }`}
                       disabled={players.length < 3}
                     >
-                      
                       🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
                     </button>
                     <button
