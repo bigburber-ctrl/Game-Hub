@@ -83,16 +83,10 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
             <h3 className="font-bold uppercase text-xs tracking-widest">Paramètres</h3>
           </div>
           <div className="flex flex-col gap-4">
-            <label className="text-slate-400 text-xs uppercase tracking-widest font-black mb-1">Nombre total de joueurs</label>
-            <input
-              type="range"
-              min={3}
-              max={15}
-              value={totalPlayers}
-              onChange={e => setTotalPlayers(parseInt(e.target.value))}
-              className="slider w-full accent-blue-500"
-            />
-            <div className="text-slate-300 text-sm font-bold text-center">{totalPlayers} joueurs</div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-slate-400 text-xs uppercase tracking-widest font-black">Joueurs inscrits :</span>
+              <span className="text-blue-400 font-bold text-lg">{players.length}</span>
+            </div>
             <div className="flex gap-2 mt-4">
               <button
                 className={`flex-1 py-2 rounded-xl font-black text-xs uppercase tracking-widest border transition-all ${mode === "teams" ? "bg-blue-600 text-white border-blue-600" : "bg-slate-900 text-blue-400 border-slate-700"}`}
@@ -110,28 +104,40 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
             {mode === "teams" ? (
               <>
                 <label className="text-slate-400 text-xs uppercase tracking-widest font-black mb-1 mt-4">Nombre d'équipes</label>
-                <input
-                  type="range"
-                  min={1}
-                  max={totalPlayers}
-                  value={numTeams}
-                  onChange={e => setNumTeams(parseInt(e.target.value))}
-                  className="slider w-full accent-blue-500"
-                />
-                <div className="text-slate-300 text-sm font-bold text-center">{numTeams} équipes</div>
+                <div className="flex flex-wrap gap-2 justify-center mt-2">
+                  {Array.from({ length: players.length }, (_, i) => i + 1).map(n => (
+                    <button
+                      key={n}
+                      className={`px-3 py-2 rounded-xl font-bold text-xs border transition-all ${numTeams === n ? "bg-blue-600 text-white border-blue-600" : "bg-slate-900 text-blue-400 border-slate-700"}`}
+                      onClick={() => {
+                        setNumTeams(n);
+                        setPlayersPerTeam(Math.max(1, Math.floor(players.length / n)));
+                      }}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-slate-300 text-sm font-bold text-center mt-2">{numTeams} équipes</div>
               </>
             ) : (
               <>
                 <label className="text-slate-400 text-xs uppercase tracking-widest font-black mb-1 mt-4">Joueurs par équipe</label>
-                <input
-                  type="range"
-                  min={1}
-                  max={totalPlayers}
-                  value={playersPerTeam}
-                  onChange={e => setPlayersPerTeam(parseInt(e.target.value))}
-                  className="slider w-full accent-blue-500"
-                />
-                <div className="text-slate-300 text-sm font-bold text-center">{playersPerTeam} joueurs/équipe</div>
+                <div className="flex flex-wrap gap-2 justify-center mt-2">
+                  {Array.from({ length: players.length }, (_, i) => i + 1).map(n => (
+                    <button
+                      key={n}
+                      className={`px-3 py-2 rounded-xl font-bold text-xs border transition-all ${playersPerTeam === n ? "bg-blue-600 text-white border-blue-600" : "bg-slate-900 text-blue-400 border-slate-700"}`}
+                      onClick={() => {
+                        setPlayersPerTeam(n);
+                        setNumTeams(Math.max(1, Math.floor(players.length / n)));
+                      }}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-slate-300 text-sm font-bold text-center mt-2">{playersPerTeam} joueurs/équipe</div>
               </>
             )}
             {/* Affichage de la répartition */}
