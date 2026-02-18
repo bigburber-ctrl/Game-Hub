@@ -347,17 +347,27 @@ export default function App() {
 
               {/* Overlay options Plus */}
               {/* Fond flou et sombre, toujours visible pendant la transition */}
-              <BlurPortal show={showOptions} onClick={() => setShowOptions(false)} />
-              <MenuPlusPortal show={showOptions}>
-                <AnimatePresence>
-                  {showOptions && (
+              <AnimatePresence>
+                {showOptions && (
+                  <>
+                    {/* Fond flou et sombre */}
+                    <motion.div
+                      key="blur"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.28 }}
+                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm cursor-pointer"
+                      onClick={() => setShowOptions(false)}
+                    />
+                    {/* Menu Plus */}
                     <motion.div
                       key="menu-plus"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.28 }}
-                      className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center"
+                      className="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center"
                     >
                       <button
                         onClick={() => setShowOptions(false)}
@@ -402,9 +412,9 @@ export default function App() {
                         </button>
                       </div>
                     </motion.div>
-                  )}
-                </AnimatePresence>
-              </MenuPlusPortal>
+                  </>
+                )}
+              </AnimatePresence>
               {/* Bloc supprimé : menu Plus géré par MenuPlusPortal */}
 
               <div className="flex flex-col gap-2 mt-2">
