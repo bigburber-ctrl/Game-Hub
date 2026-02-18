@@ -472,6 +472,7 @@ export function GameSettings({ gameType, playersCount, onBack, onStart, initialC
         </button>
       </div>
 
+
       {/* ===== MODAL RULES ===== */}
       <AnimatePresence>
         {showRules && (
