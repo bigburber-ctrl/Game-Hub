@@ -1,4 +1,4 @@
-﻿// Mesure la largeur r├®elle du texte SVG pour tronquer proprement
+﻿// Mesure la largeur réelle du texte SVG pour tronquer proprement
 function measureTextWidth(
   text: string,
   fontSize: number,
@@ -96,7 +96,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // R├®cup├¿re les noms des joueurs depuis localStorage
+  // Récupère les noms des joueurs depuis localStorage
   function getPlayerNames(): string[] {
     try {
       const raw = localStorage.getItem("gamehub_players");
@@ -112,7 +112,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   function handleReplaceWithPlayers() {
     const names = getPlayerNames();
     if (!names.length) {
-      toast.error("Aucun joueur trouv├®");
+      toast.error("Aucun joueur trouvé");
       setShowConfirm(false);
       return;
     }
@@ -121,11 +121,11 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
     setShowConfirm(false);
   }
 
-  // Pour le cas d'un seul choix, il faut afficher m├¬me si le label est vide ou unique
+  // Pour le cas d'un seul choix, il faut afficher même si le label est vide ou unique
   const activeItems = useMemo(
     () => {
       const filtered = items.filter((item) => !item.crossed);
-      // Si aucun label non vide, on garde au moins le premier non barr├®
+      // Si aucun label non vide, on garde au moins le premier non barré
       if (filtered.length === 1) return filtered;
       return filtered.filter((item) => item.label.trim().length > 0);
     },
@@ -254,7 +254,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
   const spinWheel = async () => {
     if (isSpinning) return;
     if (activeItems.length === 0) {
-      toast.error("Ajoute au moins 1 choix non barr├®");
+      toast.error("Ajoute au moins 1 choix non barré");
       return;
     }
 
@@ -373,7 +373,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
             className="bg-slate-900 rounded-2xl p-6 max-w-sm text-white shadow-2xl border-2 border-slate-700"
           >
             <h3 className="text-xl font-bold mb-4 text-center">Remplacer tous les choix par les noms des joueurs ?</h3>
-            <p className="text-orange-100 mb-6 text-center text-sm">Cette action est irr├®versible.</p>
+            <p className="text-orange-100 mb-6 text-center text-sm">Cette action est irréversible.</p>
             <div className="flex gap-3">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -430,7 +430,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                 className={`p-1 rounded-md shrink-0 transition-colors ${
                   item.crossed ? "text-emerald-400 hover:text-emerald-300" : "text-slate-500 hover:text-slate-300"
                 }`}
-                aria-label={item.crossed ? `D├®barrer ${item.label}` : `Barrer ${item.label}`}
+                aria-label={item.crossed ? `Débarrer ${item.label}` : `Barrer ${item.label}`}
               >
                 {item.crossed ? <RotateCcw size={16} /> : <CircleOff size={16} />}
               </button>
@@ -491,10 +491,10 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   let measured = measureTextWidth(displayLabel, labelFontSize);
                   if (measured > maxTextWidth) {
                     let i = displayLabel.length;
-                    while (i > 0 && measureTextWidth(displayLabel.slice(0, i) + "ÔÇª", labelFontSize) > maxTextWidth) {
+                    while (i > 0 && measureTextWidth(displayLabel.slice(0, i) + "…", labelFontSize) > maxTextWidth) {
                       i--;
                     }
-                    displayLabel = displayLabel.slice(0, i) + "ÔÇª";
+                    displayLabel = displayLabel.slice(0, i) + "…";
                   }
                   const clipId = `wheel-segment-clip-single`;
                   return (
@@ -504,7 +504,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                           <path d={ringSegmentPath(startDeg, endDeg, labelStartR - 6, WHEEL_RADIUS - 6)} />
                         </clipPath>
                       </defs>
-                      {/* Fond violet forc├® pour le cas unique */}
+                      {/* Fond violet forcé pour le cas unique */}
                       <circle
                         cx={WHEEL_CENTER}
                         cy={WHEEL_CENTER}
@@ -513,7 +513,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                       />
                       {/* Segment plein cercle */}
                       <path d={wedgePath(startDeg, endDeg)} fill={color} />
-                      {/* Ligne de s├®paration pour la coh├®rence visuelle */}
+                      {/* Ligne de séparation pour la cohérence visuelle */}
                       <line
                         x1={WHEEL_CENTER}
                         y1={WHEEL_CENTER}
@@ -554,10 +554,10 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
                   const maxTextWidth = labelEndR - labelStartR + 12;
                   if (measured > maxTextWidth) {
                     let i = displayLabel.length;
-                    while (i > 0 && measureTextWidth(displayLabel.slice(0, i) + "ÔÇª", labelFontSize) > maxTextWidth) {
+                    while (i > 0 && measureTextWidth(displayLabel.slice(0, i) + "…", labelFontSize) > maxTextWidth) {
                       i--;
                     }
-                    displayLabel = displayLabel.slice(0, i) + "ÔÇª";
+                    displayLabel = displayLabel.slice(0, i) + "…";
                   }
                   const clipId = `wheel-segment-clip-${index}-${item.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
                   return (
@@ -643,7 +643,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
             onClick={(event) => event.stopPropagation()}
           >
             <p className="text-center text-slate-300 font-black uppercase tracking-widest text-xs">
-              R├®sultat:
+              Résultat:
             </p>
             <p className="text-center text-white font-black text-4xl sm:text-5xl leading-tight break-words">
               {pendingChoice.label}
@@ -666,7 +666,7 @@ export function RoueDeLaChance({ onBack }: RoueDeLaChanceProps) {
               </button>
             </div>
             <p className="text-center text-[11px] text-slate-400">
-              Retirer barre lÔÇÖ├®l├®ment (il nÔÇÖest pas effac├®).
+              Retirer barre l’élément (il n’est pas effacé).
             </p>
           </div>
         </div>

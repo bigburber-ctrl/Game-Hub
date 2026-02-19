@@ -118,11 +118,11 @@ export default function App() {
   const selectGame = (game: GameType) => {
     const minRequired = GAME_METADATA[game].minPlayers;
     if (activePlayersCount < minRequired) {
-      toast.error(`Ce jeu n├®cessite au moins ${minRequired} joueurs !`);
+      toast.error(`Ce jeu nécessite au moins ${minRequired} joueurs !`);
       return;
     }
     
-    // Jeux ├á lancement direct
+    // Jeux à lancement direct
     if (game === "diner-extreme") {
       setGameState("diner-extreme");
       return;
@@ -177,7 +177,7 @@ export default function App() {
   };
 
   const drawNextMissionFromPool = () => {
-    // Toujours sauvegarder la version modifi├®e avant de changer de mission
+    // Toujours sauvegarder la version modifiée avant de changer de mission
     persistCurrentDraftToHistory(missionDraft);
 
     const pool = getFallbackMissionsPool();
@@ -189,7 +189,7 @@ export default function App() {
       setMissionHistoryIndex(-1);
     }
 
-    // Si on est revenu en arri├¿re, avancer dans l'historique au lieu de "consommer" une nouvelle mission
+    // Si on est revenu en arrière, avancer dans l'historique au lieu de "consommer" une nouvelle mission
     if (missionHistoryIndex < missionHistoryRef.current.length - 1) {
       const nextIndex = missionHistoryIndex + 1;
       setMissionHistoryIndex(nextIndex);
@@ -242,7 +242,7 @@ export default function App() {
       return;
     }
 
-    // Reprendre l├á o├╣ on en ├®tait
+    // Reprendre là où on en était
     setGameState("mission-review");
     if (missionGenerated.trim().length === 0) {
       drawNextMissionFromPool();
@@ -298,9 +298,9 @@ export default function App() {
               <button
                 onClick={() => setShowAppSettings((prev) => !prev)}
                 className="absolute top-2 left-2 z-30 w-11 h-11 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-200 text-lg flex items-center justify-center hover:bg-slate-700 transition-all active:scale-95 shadow-lg"
-                aria-label="Param├¿tres"
+                aria-label="Paramètres"
               >
-                ÔÜÖ´©Å
+                ⚙️
               </button>
 
               <button
@@ -308,7 +308,7 @@ export default function App() {
                 className="absolute top-2 right-2 z-30 w-11 h-11 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-200 text-lg flex items-center justify-center hover:bg-slate-700 transition-all active:scale-95 shadow-lg"
                 aria-label="Plus"
               >
-                <span className="text-purple-400">Ô×ò</span>
+                <span className="text-purple-400">✚</span>
               </button>
 
               {showAppSettings && (
@@ -331,12 +331,12 @@ export default function App() {
                     </button>
 
                     <div className="w-full text-center mt-1">
-                      <span className="text-lg font-black text-white uppercase tracking-tight italic">Param├¿tres</span>
+                      <span className="text-lg font-black text-white uppercase tracking-tight italic">Paramètres</span>
                     </div>
 
                     <div className="w-full p-4 rounded-xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-black uppercase tracking-widest text-slate-200">Vote t├®l├®phone</p>
+                        <p className="text-xs font-black uppercase tracking-widest text-slate-200">Vote sur téléphone</p>
                         <p className="text-[10px] text-slate-400">Actif sur tous les jeux</p>
                       </div>
                       <button onClick={() => setPhoneVoteEnabled((current) => !current)}>
@@ -391,7 +391,7 @@ export default function App() {
                         }`}
                         disabled={activePlayersCount < 3}
                       >
-                        ­ƒòÁ´©Å Jeu D'IMPOSTEUR PERSONNALIS├ë
+                        🕵️ Jeu d'imposteur personnalisé
                       </button>
 
                       <button
@@ -401,7 +401,7 @@ export default function App() {
                         }}
                         className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
                       >
-                        ­ƒÄí Roue de la chance
+                        🎡 Roue de la chance
                       </button>
 
                       <button
@@ -420,7 +420,7 @@ export default function App() {
                         }`}
                         disabled={activePlayersCount < 3}
                       >
-                        ­ƒæÑ Cr├®ateur d'├®quipe
+                        👥 Créateur d'équipe
                       </button>
                     </div>
                   </div>
@@ -447,14 +447,14 @@ export default function App() {
                   className="w-full py-6 px-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-300 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all hover:scale-[1.01] active:scale-95 shadow-lg"
                 >
                   <Users size={16} className="text-purple-400" />
-                  G├®rer les Joueurs ({activePlayersCount})
+                  Gérer les Joueurs ({activePlayersCount})
                 </button>
               </div>
 
               {activePlayersCount < 3 && (
                 <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl text-center">
                   <p className="text-amber-500 text-[10px] font-black uppercase tracking-widest">
-                    ÔÜá´©Å Ajoutez au moins 3 joueurs pour d├®bloquer les jeux
+                    ⚠️ Ajoutez au moins 3 joueurs pour débloquer les jeux
                   </p>
                 </div>
               )}
@@ -471,9 +471,9 @@ export default function App() {
                 >
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">­ƒÄ¡ Mission Comportementale</h2>
+                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic"><span className="not-italic mr-1">🎭</span>Mission Comportementale</h2>
                       <p className="text-purple-100/70 text-sm leading-tight max-w-[800px]">
-                        Les imposteurs doivent accomplir des missions comportementales secr├¿tes pendant que les innocents essaient de les identifier.
+                        Les imposteurs doivent accomplir des missions comportementales secrètes pendant que les innocents essaient de les identifier.
                       </p>
                     </div>
                   </div>
@@ -490,9 +490,9 @@ export default function App() {
                 >
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">­ƒôÅ TROUVE LA R├êGLE</h2>
+                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic"><span className="not-italic mr-1">🔍</span>TROUVE LA RÈGLE</h2>
                       <p className="text-blue-100/80 text-sm leading-tight max-w-[800px]">
-                        Suivez une r├¿gle secr├¿teÔÇª pendant que les enqu├¬teurs essaient de la d├®couvrir.
+                        Suivez une règle secrète… pendant que les enquêteurs essaient de la découvrir.
                       </p>
                     </div>
                   </div>
@@ -509,9 +509,9 @@ export default function App() {
                 >
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">­ƒòÁ´©Å Qui est l'Imposteur ?</h2>
+                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic"><span className="not-italic mr-1">🕵️</span>Qui est l'Imposteur ?</h2>
                       <p className="text-emerald-100/70 text-sm leading-tight max-w-[800px]">
-                        Trouvez qui n'a pas le m├¬me mot que les autres en ├®coutant les indices donn├®s par chaque joueur.
+                        Trouvez qui n'a pas le même mot que les autres en écoutant les indices donnés par chaque joueur.
                       </p>
                     </div>
                   </div>
@@ -528,9 +528,9 @@ export default function App() {
                 >
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">ÔØô LA QUESTION DIFF├ëRENTE</h2>
+                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic"><span className="not-italic mr-1">❓</span>LA QUESTION DIFFÉRENTE</h2>
                       <p className="text-amber-100/70 text-sm leading-tight max-w-[800px]">
-                        Tout le monde r├®pond ├á une question, mais l'imposteur a une question l├®g├¿rement diff├®rente...
+                        Tout le monde répond à une question, mais l'imposteur a une question légèrement différente...
                       </p>
                     </div>
                   </div>
@@ -548,11 +548,11 @@ export default function App() {
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
                       <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">
-                        ­ƒì¢´©Å D├ÄNER DE L'EXTR├èME
+                        <span className="not-italic mr-1">🍽️</span>DÎNER DE L'EXTRÊME
                         <span className="ml-2 text-[10px] font-black tracking-widest text-white/70 normal-case">multi-cell</span>
                       </h2>
                       <p className="text-orange-100/70 text-sm leading-tight max-w-[800px]">
-                        Accomplissez des missions secr├¿tes pendant le repas, mais attention ├á ne pas vous faire cr├ómer!
+                        Accomplissez des missions secrètes pendant le repas, mais attention à ne pas vous faire cramer !
                       </p>
                     </div>
                   </div>
@@ -569,9 +569,9 @@ export default function App() {
                 >
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">­ƒòÂ´©Å SABOTAGE SILENCIEUX</h2>
+                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic"><span className="not-italic mr-1">🕶️</span>SABOTAGE SILENCIEUX</h2>
                       <p className="text-fuchsia-100/80 text-sm leading-tight max-w-[800px]">
-                        R├®ussissez un d├®fi collectif en 2 minutes pendant quÔÇÖun saboteur secret tente de faire ├®chouer le groupe sans se faire rep├®rer.
+                        Réussissez un défi collectif en 2 minutes pendant qu’un saboteur secret tente de faire échouer le groupe sans se faire repérer.
                       </p>
                     </div>
                   </div>
@@ -602,8 +602,8 @@ export default function App() {
                     <p className="text-slate-400 text-xs font-black uppercase tracking-widest">
                       {missionReviewTotal > 0 ? `${missionReviewCurrent}/${missionReviewTotal}` : "0/0"}
                     </p>
-                    <h2 className="text-2xl font-black">­ƒÄ» Mission g├®n├®r├®e</h2>
-                    <p className="text-slate-300 text-sm">Modifie si besoin, puis Oui/Non. ÔÇ£Termin├®ÔÇØ affiche le r├®cap.</p>
+                    <h2 className="text-2xl font-black">🎯 Mission générée</h2>
+                    <p className="text-slate-300 text-sm">Modifie si besoin, puis Oui/Non. “Terminé” affiche le récap.</p>
                   </div>
 
                   {missionHistoryIndex > 0 && (
@@ -611,7 +611,7 @@ export default function App() {
                       onClick={goToPreviousMission}
                       className="w-full py-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold hover:bg-slate-700/60 transition"
                     >
-                      Ô¼à´©Å Retour ├á la mission dÔÇÖavant
+                      ⬅️ Retour à la mission d’avant
                     </button>
                   )}
 
@@ -639,13 +639,13 @@ export default function App() {
                       onClick={acceptCurrentMission}
                       className="w-full py-4 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition"
                     >
-                      Ô£à Oui
+                      ✅ Oui
                     </button>
                     <button
                       onClick={rejectCurrentMission}
                       className="w-full py-4 rounded-xl bg-slate-700 text-white font-bold hover:bg-slate-600 transition"
                     >
-                      ÔØî Non
+                      ❌ Non
                     </button>
                   </div>
 
@@ -653,20 +653,20 @@ export default function App() {
                     onClick={finishMissionReview}
                     className="w-full py-3 rounded-xl bg-purple-600/20 border border-purple-500/30 text-purple-200 font-bold hover:bg-purple-600/30 transition"
                   >
-                    Termin├® (voir le r├®cap) Ô£à
+                    Terminé (voir le récap) ✅
                   </button>
                 </div>
               ) : (
                 <div className="space-y-6">
                   <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-black">R├®capitulatif de tes missions</h2>
-                    <p className="text-slate-300 text-sm">Voici les missions que tu as gard├®es, dans lÔÇÖordre.</p>
+                    <h2 className="text-2xl font-black">Récapitulatif de tes missions</h2>
+                    <p className="text-slate-300 text-sm">Voici les missions que tu as gardées, dans l’ordre.</p>
                   </div>
 
                   <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4">
                     <p className="text-slate-400 text-xs uppercase tracking-widest font-black mb-2">Format code</p>
                     {acceptedMissions.length === 0 ? (
-                      <p className="text-slate-400 text-sm">ÔÇö</p>
+                      <p className="text-slate-400 text-sm">—</p>
                     ) : (
                       <pre className="text-slate-200 text-sm whitespace-pre-wrap leading-tight">
                         {acceptedMissions
@@ -687,7 +687,7 @@ export default function App() {
                     }}
                     className="w-full py-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold hover:bg-slate-700/60 transition"
                   >
-                    Continuer ├á g├®n├®rer des missions
+                    Continuer à générer des missions
                   </button>
                 </div>
               )}
@@ -696,7 +696,7 @@ export default function App() {
                 onClick={resetToHome}
                 className="w-full py-4 rounded-2xl bg-purple-600/20 border border-purple-500/30 text-purple-300 font-bold uppercase tracking-widest text-xs hover:bg-purple-600/30 transition"
               >
-                Retour au Hub ­ƒÅá
+                Retour au Hub 🔙
               </button>
             </motion.div>
           )}

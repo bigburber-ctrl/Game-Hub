@@ -57,7 +57,7 @@ export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
               <ChevronLeft size={24} />
             </button>
             <h1 className="text-2xl font-black uppercase italic tracking-tight">
-              Param├¿tres <span className="text-emerald-500">Du Jeu</span>
+              Paramètres <span className="text-emerald-500">du jeu</span>
             </h1>
           </div>
           <div className="w-10" />
@@ -134,7 +134,7 @@ export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
     >
       <div className="space-y-8 text-center">
         <div className="space-y-4">
-          <p className="text-slate-400 uppercase font-bold tracking-widest text-xs">Passe l'appareil ├á</p>
+          <p className="text-slate-400 uppercase font-bold tracking-widest text-xs">Passe l'appareil à</p>
           <h3 className="text-4xl font-black text-white italic uppercase break-words">{players[currentPlayerIdx]?.name}</h3>
         </div>
 
@@ -144,12 +144,12 @@ export function CustomImpostor({ players, onBack }: CustomImpostorProps) {
               <div className="p-6 bg-emerald-500/10 rounded-full text-emerald-400 animate-pulse">
                 <Eye size={48} />
               </div>
-              <p className="font-black uppercase italic text-emerald-400">Voir mon r├┤le</p>
+              <p className="font-black uppercase italic text-emerald-400">Voir mon rôle</p>
             </button>
           ) : (
             <div className="space-y-6 animate-in zoom-in duration-300">
               <div className="space-y-2">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ton r├┤le est</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ton rôle est</p>
                 {players[currentPlayerIdx] && impostorsIds.includes(players[currentPlayerIdx].id) ? (
                   <h4 className="text-4xl font-black text-red-500 uppercase italic tracking-tighter">IMPOSTEUR</h4>
                 ) : (

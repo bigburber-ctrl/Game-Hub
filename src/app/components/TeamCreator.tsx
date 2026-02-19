@@ -108,7 +108,7 @@ export function TeamCreator({ onBack, players }: TeamCreatorProps) {
             <ChevronLeft size={24} />
           </button>
           <h1 className="text-2xl font-black uppercase italic tracking-tight">
-            Cr├®ateur <span className="text-blue-500">D'├®quipe</span>
+            Créateur <span className="text-blue-500">d'équipe</span>
           </h1>
         </div>
         <div className="w-10" />
@@ -118,7 +118,7 @@ export function TeamCreator({ onBack, players }: TeamCreatorProps) {
         <section className="bg-slate-800/50 p-6 rounded-3xl border border-slate-700/50 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <h3 className="font-bold uppercase text-[10px] tracking-widest text-slate-300">Nombre d'├®quipes</h3>
+              <h3 className="font-bold uppercase text-[10px] tracking-widest text-slate-300">Nombre d'équipes</h3>
               <select
                 value={teamCount}
                 onChange={(event) => setTeamsFromDropdown(parseInt(event.target.value, 10))}
@@ -133,7 +133,7 @@ export function TeamCreator({ onBack, players }: TeamCreatorProps) {
             </div>
 
             <div className="space-y-2">
-              <h3 className="font-bold uppercase text-[10px] tracking-widest text-slate-300">Joueurs par ├®quipe</h3>
+              <h3 className="font-bold uppercase text-[10px] tracking-widest text-slate-300">Joueurs par équipe</h3>
               <select
                 value={selectedTargetLabel}
                 onChange={(event) => {
@@ -156,7 +156,7 @@ export function TeamCreator({ onBack, players }: TeamCreatorProps) {
             onClick={generateTeams}
             className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 transition-all"
           >
-            G├®n├®rer les ├®quipes
+            Générer les équipes
           </button>
         </section>
 
@@ -166,14 +166,14 @@ export function TeamCreator({ onBack, players }: TeamCreatorProps) {
                   {generatedTeams.map((team, index) => (
                     <div key={index} className="p-4 bg-slate-900 rounded-xl border border-slate-700">
                       <p className="text-blue-300 font-black text-xs uppercase tracking-widest mb-2">
-                        ├ëquipe {index + 1}
+                        Équipe {index + 1}
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {team.map((name, memberIndex) => {
                           const maxLen = 14;
                           let displayName = name;
                           if (displayName.length > maxLen) {
-                            displayName = displayName.slice(0, maxLen - 2) + "ÔÇª";
+                            displayName = displayName.slice(0, maxLen - 2) + "…";
                           }
                           return (
                             <span key={`${name}-${memberIndex}`} className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-100 text-xs font-bold">
