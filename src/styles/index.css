@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+html,
+body,
+#root {
+  background-color: #7c3aed;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
 @source '../**/*.{js,ts,jsx,tsx}';
 
 @custom-variant dark (&:is(.dark *));
