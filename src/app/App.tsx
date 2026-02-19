@@ -1,47 +1,5 @@
-import ReactDOM from "react-dom";
+﻿import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Composant OverlayPortal pour le fond flou, animé
-// Portal pour le fond flou (z-40)
-function BlurPortal({ show, onClick }: { show: boolean; onClick: () => void }) {
-  return ReactDOM.createPortal(
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-40 backdrop-blur-md bg-black/60"
-          style={{ pointerEvents: 'auto' }}
-          onClick={onClick}
-        />
-      )}
-    </AnimatePresence>,
-    document.body
-  );
-}
-
-// Portal pour le menu Plus (z-50)
-function MenuPlusPortal({ show, children }: { show: boolean; children: React.ReactNode }) {
-  return ReactDOM.createPortal(
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-50 flex items-center justify-center"
-        >
-          {children}
-        </motion.div>
-      )}
-    </AnimatePresence>,
-    document.body
-  );
-}
-import React, { useState, useEffect } from "react";
 import { PlayerSetup } from "@/app/components/PlayerSetup";
 import { TrappedRound } from "@/app/components/TrappedRound";
 import { WordImpostor } from "@/app/components/WordImpostor";
@@ -51,19 +9,22 @@ import { DinerExtreme } from "@/app/components/DinerExtreme";
 import { TrouveRegle } from "@/app/components/TrouveRegle";
 import { RoueDeLaChance } from "@/app/components/RoueDeLaChance";
 import { TeamCreator } from "@/app/components/TeamCreator";
+import { SabotageSilencieux } from "./components/SabotageSilencieux";
+import { RAW_DINER_TRI_POOL } from "./components/DinerMissionsTriPool";
 
 import { GameSettings, GameConfig } from "@/app/components/GameSettings";
 import { toast, Toaster } from "sonner";
-import { Gamepad2, Users, Utensils, Plus } from "lucide-react";
+import { Gamepad2, Users, ToggleLeft, ToggleRight } from "lucide-react";
 
 type LastGameConfigs = Partial<Record<ConfigurableGameType, GameConfig>>;
 const LAST_GAME_CONFIGS_STORAGE_KEY = "gamehub_last_game_configs";
+const PHONE_VOTE_ENABLED_STORAGE_KEY = "gamehub_phone_vote_enabled";
 
-// trigger vercel redeploy
 export type Player = {
   id: string;
   name: string;
   score: number;
+  excluded?: boolean;
 };
 
 type AcceptedMission = {
@@ -76,8 +37,8 @@ type MissionHistoryItem = {
   draft: string;
 };
 
-type GameState = "home" | "setup" | "settings" | "playing" | "custom-impostor" | "diner-extreme" | "mission-review" | "fortune-wheel";
-type GameType = "trapped-round" | "word-impostor" | "question-impostor" | "trouve-regle" | "diner-extreme";
+type GameState = "home" | "setup" | "settings" | "playing" | "custom-impostor" | "diner-extreme" | "mission-review" | "fortune-wheel" | "team-creator" | "sabotage-silencieux";
+type GameType = "trapped-round" | "word-impostor" | "question-impostor" | "trouve-regle" | "diner-extreme" | "sabotage-silencieux";
 type ConfigurableGameType = Exclude<GameType, "diner-extreme">;
 
 const GAME_METADATA: Record<GameType, { minPlayers: number }> = {
@@ -86,11 +47,18 @@ const GAME_METADATA: Record<GameType, { minPlayers: number }> = {
   "question-impostor": { minPlayers: 3 },
   "trouve-regle": { minPlayers: 3 },
   "diner-extreme": { minPlayers: 1 },
+  "sabotage-silencieux": { minPlayers: 3 },
 };
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>("home");
-  const [showOptions, setShowOptions] = useState(false);
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [showAppSettings, setShowAppSettings] = useState(false);
+  const [phoneVoteEnabled, setPhoneVoteEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem(PHONE_VOTE_ENABLED_STORAGE_KEY);
+    if (saved === null) return true;
+    return saved === "true";
+  });
   const [activeGame, setActiveGame] = useState<ConfigurableGameType | null>(null);
   const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
   const [lastGameConfigs, setLastGameConfigs] = useState<LastGameConfigs>(() => {
@@ -114,12 +82,22 @@ export default function App() {
   
   const [players, setPlayers] = useState<Player[]>(() => {
     const saved = localStorage.getItem("gamehub_players");
-    return saved ? JSON.parse(saved) : [
-      { id: "1", name: "Joueur 1", score: 0 },
-      { id: "2", name: "Joueur 2", score: 0 },
-      { id: "3", name: "Joueur 3", score: 0 },
+    if (saved) {
+      const parsed = JSON.parse(saved) as Player[];
+      return parsed.map((player) => ({
+        ...player,
+        excluded: Boolean(player.excluded),
+      }));
+    }
+    return [
+      { id: "1", name: "Joueur 1", score: 0, excluded: false },
+      { id: "2", name: "Joueur 2", score: 0, excluded: false },
+      { id: "3", name: "Joueur 3", score: 0, excluded: false },
     ];
   });
+
+  const activePlayers = useMemo(() => players.filter((player) => !player.excluded), [players]);
+  const activePlayersCount = activePlayers.length;
 
   useEffect(() => {
     localStorage.setItem("gamehub_players", JSON.stringify(players));
@@ -133,19 +111,23 @@ export default function App() {
     }
   }, [lastGameConfigs]);
 
+  useEffect(() => {
+    localStorage.setItem(PHONE_VOTE_ENABLED_STORAGE_KEY, String(phoneVoteEnabled));
+  }, [phoneVoteEnabled]);
+
   const selectGame = (game: GameType) => {
     const minRequired = GAME_METADATA[game].minPlayers;
-    if (players.length < minRequired) {
-      toast.error(`Ce jeu nécessite au moins ${minRequired} joueurs !`);
+    if (activePlayersCount < minRequired) {
+      toast.error(`Ce jeu n├®cessite au moins ${minRequired} joueurs !`);
       return;
     }
     
-    // Pour Dîner de l'Extrême, aller directement au jeu
+    // Jeux ├á lancement direct
     if (game === "diner-extreme") {
       setGameState("diner-extreme");
       return;
     }
-    
+
     setActiveGame(game);
     setGameState("settings");
   };
@@ -175,6 +157,12 @@ export default function App() {
 
   const getFallbackMissionsPool = () => {
     if (fallbackPoolRef.current) return fallbackPoolRef.current;
+    const pool = RAW_DINER_TRI_POOL
+      .map((mission) => mission.replace(/,\s*$/, "."))
+      .map(normalizeMission)
+      .filter(Boolean);
+    fallbackPoolRef.current = pool;
+    return pool;
   };
 
   const resetMissionDeck = () => {
@@ -189,7 +177,7 @@ export default function App() {
   };
 
   const drawNextMissionFromPool = () => {
-    // Toujours sauvegarder la version modifiée avant de changer de mission
+    // Toujours sauvegarder la version modifi├®e avant de changer de mission
     persistCurrentDraftToHistory(missionDraft);
 
     const pool = getFallbackMissionsPool();
@@ -201,7 +189,7 @@ export default function App() {
       setMissionHistoryIndex(-1);
     }
 
-    // Si on est revenu en arrière, avancer dans l'historique au lieu de "consommer" une nouvelle mission
+    // Si on est revenu en arri├¿re, avancer dans l'historique au lieu de "consommer" une nouvelle mission
     if (missionHistoryIndex < missionHistoryRef.current.length - 1) {
       const nextIndex = missionHistoryIndex + 1;
       setMissionHistoryIndex(nextIndex);
@@ -254,7 +242,7 @@ export default function App() {
       return;
     }
 
-    // Reprendre là où on en était
+    // Reprendre l├á o├╣ on en ├®tait
     setGameState("mission-review");
     if (missionGenerated.trim().length === 0) {
       drawNextMissionFromPool();
@@ -293,10 +281,10 @@ export default function App() {
     <div className="min-h-dvh bg-[#0f172a] text-slate-100 font-sans selection:bg-purple-500/30 overflow-x-hidden">
       <Toaster position="top-center" expand={false} richColors />
       
-
-
       <div
-        className="mx-auto min-h-dvh flex flex-col p-4 relative max-w-md"
+        className={`mx-auto min-h-dvh flex flex-col p-4 relative ${
+          gameState === "mission-review" ? "max-w-2xl" : "max-w-md"
+        }`}
       >
         <AnimatePresence mode="wait">
           {gameState === "home" && (
@@ -305,9 +293,141 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="flex-1 flex flex-col gap-8 pt-12"
+              className="flex-1 flex flex-col gap-8 pt-12 relative"
             >
-              <div className="text-center space-y-2 relative">
+              <button
+                onClick={() => setShowAppSettings((prev) => !prev)}
+                className="absolute top-2 left-2 z-30 w-11 h-11 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-200 text-lg flex items-center justify-center hover:bg-slate-700 transition-all active:scale-95 shadow-lg"
+                aria-label="Param├¿tres"
+              >
+                ÔÜÖ´©Å
+              </button>
+
+              <button
+                onClick={() => setShowMoreOptions((prev) => !prev)}
+                className="absolute top-2 right-2 z-30 w-11 h-11 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-200 text-lg flex items-center justify-center hover:bg-slate-700 transition-all active:scale-95 shadow-lg"
+                aria-label="Plus"
+              >
+                <span className="text-purple-400">Ô×ò</span>
+              </button>
+
+              {showAppSettings && (
+                <div
+                  className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+                  onClick={() => setShowAppSettings(false)}
+                >
+                  <div
+                    className="relative bg-slate-900 border-2 border-slate-700 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => setShowAppSettings(false)}
+                      className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
+                      aria-label="Retour"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                    </button>
+
+                    <div className="w-full text-center mt-1">
+                      <span className="text-lg font-black text-white uppercase tracking-tight italic">Param├¿tres</span>
+                    </div>
+
+                    <div className="w-full p-4 rounded-xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-widest text-slate-200">Vote t├®l├®phone</p>
+                        <p className="text-[10px] text-slate-400">Actif sur tous les jeux</p>
+                      </div>
+                      <button onClick={() => setPhoneVoteEnabled((current) => !current)}>
+                        {phoneVoteEnabled ? (
+                          <ToggleRight size={32} className="text-fuchsia-500" />
+                        ) : (
+                          <ToggleLeft size={32} className="text-slate-600" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {showMoreOptions && (
+                <div
+                  className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+                  onClick={() => setShowMoreOptions(false)}
+                >
+                  <div
+                    className="relative bg-slate-900 border-2 border-slate-700 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => setShowMoreOptions(false)}
+                      className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
+                      aria-label="Retour"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                    </button>
+
+                    <div className="w-full text-center mt-1">
+                      <span className="text-lg font-black text-white uppercase tracking-tight italic">Plus</span>
+                    </div>
+
+                    <div className="flex flex-col w-full gap-3">
+                      <button
+                        onClick={() => {
+                          if (activePlayersCount < 3) {
+                            toast.error("Il faut au moins 3 joueurs !");
+                            return;
+                          }
+                          setShowMoreOptions(false);
+                          setTimeout(() => setGameState("custom-impostor"), 200);
+                        }}
+                        className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
+                          activePlayersCount < 3
+                            ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale"
+                            : "bg-emerald-600/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-600/20 active:scale-95 shadow"
+                        }`}
+                        disabled={activePlayersCount < 3}
+                      >
+                        ­ƒòÁ´©Å Jeu D'IMPOSTEUR PERSONNALIS├ë
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setShowMoreOptions(false);
+                          setTimeout(() => setGameState("fortune-wheel"), 200);
+                        }}
+                        className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
+                      >
+                        ­ƒÄí Roue de la chance
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (activePlayersCount < 3) {
+                            toast.error("Il faut au moins 3 joueurs !");
+                            return;
+                          }
+                          setShowMoreOptions(false);
+                          setTimeout(() => setGameState("team-creator"), 200);
+                        }}
+                        className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
+                          activePlayersCount < 3
+                            ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale"
+                            : "bg-blue-600/10 border-blue-500/20 text-blue-400 hover:bg-blue-600/20 active:scale-95 shadow"
+                        }`}
+                        disabled={activePlayersCount < 3}
+                      >
+                        ­ƒæÑ Cr├®ateur d'├®quipe
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-center space-y-2">
                 <motion.div
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
@@ -315,93 +435,26 @@ export default function App() {
                 >
                   <Gamepad2 size={48} />
                 </motion.div>
-                <div className="relative flex items-center justify-center">
-                  <h1 className="text-4xl font-black tracking-tight text-white uppercase italic flex items-center">
-                    <span>Game <span className="text-purple-500">Hub</span></span>
-                  </h1>
-                  <button
-                    onClick={() => setShowOptions(true)}
-                    className="absolute -top-35 right-0 w-10 h-10 flex items-center justify-center rounded-md bg-slate-800/50 border border-slate-700/50 text-white font-bold shadow-lg hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-purple-400"
-                    aria-label={showOptions ? 'Fermer les options' : 'Ouvrir les options'}
-                    aria-expanded={showOptions}
-                  >
-                    <span className="text-lg">➕</span>
-                  </button>
-                </div>
+                <h1 className="text-4xl font-black tracking-tight text-white uppercase italic">
+                  Game <span className="text-purple-500">Hub</span>
+                </h1>
                 <p className="text-slate-400 text-sm">Le multijoueur local ultime</p>
               </div>
 
-              {/* Overlay options Plus */}
-              {/* Fond flou et sombre, toujours visible pendant la transition */}
-              <BlurPortal show={showOptions} onClick={() => setShowOptions(false)} />
-              <MenuPlusPortal show={showOptions}>
-                <div className="relative bg-slate-900 border-2 border-purple-700/40 rounded-2xl shadow-2xl p-8 w-full max-w-xs flex flex-col gap-6 items-center">
-                  <button
-                    onClick={() => setShowOptions(false)}
-                    className="absolute top-3 left-3 p-2 rounded-full bg-transparent hover:bg-slate-700 text-slate-400 hover:text-white transition flex items-center justify-center"
-                    aria-label="Retour"
-                  >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevron-left"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                  </button>
-                  <div className="flex flex-col w-full mt-6 gap-3">
-                    <div className="w-full text-center mb-2">
-                      <span className="text-lg font-black text-white uppercase tracking-tight italic">Plus</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (players.length < 3) {
-                          toast.error("Il faut au moins 3 joueurs !");
-                          return;
-                        }
-                        setShowOptions(false);
-                        setTimeout(() => setGameState("custom-impostor"), 250);
-                      }}
-                      className={`w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all ${
-                        players.length < 3
-                          ? "bg-slate-800/50 border-slate-700/30 text-slate-600 cursor-not-allowed grayscale"
-                          : "bg-purple-600/10 border-purple-500/20 text-purple-400 hover:bg-purple-600/20 active:scale-95 shadow"
-                      }`}
-                      disabled={players.length < 3}
-                    >
-                      🕵️ Jeu D'IMPOSTEUR PERSONNALISÉ
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowOptions(false);
-                        setTimeout(() => setGameState("fortune-wheel"), 250);
-                      }}
-                      className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-slate-800/60 border-slate-700/30 text-slate-200 hover:bg-slate-700/60 active:scale-95 shadow"
-                    >
-                      🎡 Roue de la chance
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowOptions(false);
-                        setTimeout(() => setGameState("team-creator"), 250);
-                      }}
-                      className="w-full py-4 border font-black text-[12px] uppercase tracking-[0.2em] rounded-xl transition-all bg-blue-600/10 border-blue-500/20 text-blue-400 hover:bg-blue-600/20 active:scale-95 shadow"
-                    >
-                      👥 Créateur d'équipe
-                    </button>
-                  </div>
-                </div>
-              </MenuPlusPortal>
-              {/* Bloc supprimé : menu Plus géré par MenuPlusPortal */}
-
-              <div className="flex flex-col gap-2 mt-2">
+              <div className="flex flex-col gap-2">
                 <button
                   onClick={() => setGameState("setup")}
                   className="w-full py-6 px-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-300 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-700 transition-all hover:scale-[1.01] active:scale-95 shadow-lg"
                 >
                   <Users size={16} className="text-purple-400" />
-                  Gérer les Joueurs ({players.length})
+                  G├®rer les Joueurs ({activePlayersCount})
                 </button>
               </div>
 
-              {players.length < 3 && (
+              {activePlayersCount < 3 && (
                 <div className="bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl text-center">
                   <p className="text-amber-500 text-[10px] font-black uppercase tracking-widest">
-                    ⚠️ Ajoutez au moins 3 joueurs pour débloquer les jeux
+                    ÔÜá´©Å Ajoutez au moins 3 joueurs pour d├®bloquer les jeux
                   </p>
                 </div>
               )}
@@ -409,18 +462,18 @@ export default function App() {
               <div className="grid gap-4">
                 <button
                   onClick={() => selectGame("trapped-round")}
-                  disabled={players.length < GAME_METADATA["trapped-round"].minPlayers}
+                  disabled={activePlayersCount < GAME_METADATA["trapped-round"].minPlayers}
                   className={`group relative overflow-hidden bg-gradient-to-br from-purple-600 to-indigo-700 p-6 rounded-2xl text-left transition-all shadow-lg shadow-purple-900/20 ${
-                    players.length < GAME_METADATA["trapped-round"].minPlayers 
+                    activePlayersCount < GAME_METADATA["trapped-round"].minPlayers 
                       ? "opacity-50 grayscale cursor-not-allowed" 
                       : "hover:scale-[1.02] active:scale-95"
                   }`}
                 >
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">🎭 Mission Comportementale</h2>
+                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">­ƒÄ¡ Mission Comportementale</h2>
                       <p className="text-purple-100/70 text-sm leading-tight max-w-[800px]">
-                        Les imposteurs doivent accomplir des missions comportementales secrètes pendant que les innocents essaient de les identifier.
+                        Les imposteurs doivent accomplir des missions comportementales secr├¿tes pendant que les innocents essaient de les identifier.
                       </p>
                     </div>
                   </div>
@@ -428,18 +481,18 @@ export default function App() {
 
                 <button
                   onClick={() => selectGame("trouve-regle")}
-                  disabled={players.length < GAME_METADATA["trouve-regle"].minPlayers}
+                  disabled={activePlayersCount < GAME_METADATA["trouve-regle"].minPlayers}
                   className={`group relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-2xl text-left transition-all shadow-lg shadow-blue-700/40 ${
-                    players.length < GAME_METADATA["trouve-regle"].minPlayers 
+                    activePlayersCount < GAME_METADATA["trouve-regle"].minPlayers 
                       ? "opacity-50 grayscale cursor-not-allowed" 
                       : "hover:scale-[1.02] active:scale-95"
                   }`}
                 >
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">📏 TROUVE LA RÈGLE</h2>
+                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">­ƒôÅ TROUVE LA R├êGLE</h2>
                       <p className="text-blue-100/80 text-sm leading-tight max-w-[800px]">
-                        Suivez une règle secrète… pendant que les enquêteurs essaient de la découvrir.
+                        Suivez une r├¿gle secr├¿teÔÇª pendant que les enqu├¬teurs essaient de la d├®couvrir.
                       </p>
                     </div>
                   </div>
@@ -447,18 +500,18 @@ export default function App() {
 
                 <button
                   onClick={() => selectGame("word-impostor")}
-                  disabled={players.length < GAME_METADATA["word-impostor"].minPlayers}
+                  disabled={activePlayersCount < GAME_METADATA["word-impostor"].minPlayers}
                   className={`group relative overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-700 p-6 rounded-2xl text-left transition-all shadow-lg shadow-emerald-900/20 ${
-                    players.length < GAME_METADATA["word-impostor"].minPlayers 
+                    activePlayersCount < GAME_METADATA["word-impostor"].minPlayers 
                       ? "opacity-50 grayscale cursor-not-allowed" 
                       : "hover:scale-[1.02] active:scale-95"
                   }`}
                 >
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">🕵️ Qui est l'Imposteur ?</h2>
+                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">­ƒòÁ´©Å Qui est l'Imposteur ?</h2>
                       <p className="text-emerald-100/70 text-sm leading-tight max-w-[800px]">
-                        Trouvez qui n'a pas le même mot que les autres en écoutant les indices donnés par chaque joueur.
+                        Trouvez qui n'a pas le m├¬me mot que les autres en ├®coutant les indices donn├®s par chaque joueur.
                       </p>
                     </div>
                   </div>
@@ -466,18 +519,18 @@ export default function App() {
 
                 <button
                   onClick={() => selectGame("question-impostor")}
-                  disabled={players.length < GAME_METADATA["question-impostor"].minPlayers}
+                  disabled={activePlayersCount < GAME_METADATA["question-impostor"].minPlayers}
                   className={`group relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-700 p-6 rounded-2xl text-left transition-all shadow-lg shadow-amber-900/20 ${
-                    players.length < GAME_METADATA["question-impostor"].minPlayers 
+                    activePlayersCount < GAME_METADATA["question-impostor"].minPlayers 
                       ? "opacity-50 grayscale cursor-not-allowed" 
                       : "hover:scale-[1.02] active:scale-95"
                   }`}
                 >
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
-                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">❓ LA QUESTION DIFFÉRENTE</h2>
+                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">ÔØô LA QUESTION DIFF├ëRENTE</h2>
                       <p className="text-amber-100/70 text-sm leading-tight max-w-[800px]">
-                        Tout le monde répond à une question, mais l'imposteur a une question légèrement différente...
+                        Tout le monde r├®pond ├á une question, mais l'imposteur a une question l├®g├¿rement diff├®rente...
                       </p>
                     </div>
                   </div>
@@ -485,9 +538,9 @@ export default function App() {
 
                 <button
                   onClick={() => selectGame("diner-extreme")}
-                  disabled={players.length < GAME_METADATA["diner-extreme"].minPlayers}
+                  disabled={activePlayersCount < GAME_METADATA["diner-extreme"].minPlayers}
                   className={`group relative overflow-hidden bg-gradient-to-br from-red-600 to-red-700 p-6 rounded-2xl text-left transition-all shadow-lg shadow-orange-900/20 ${
-                    players.length < GAME_METADATA["diner-extreme"].minPlayers 
+                    activePlayersCount < GAME_METADATA["diner-extreme"].minPlayers 
                       ? "opacity-50 grayscale" 
                       : "hover:scale-[1.02] active:scale-95"
                   }`}
@@ -495,11 +548,30 @@ export default function App() {
                   <div className="relative z-10 flex items-start justify-between">
                     <div>
                       <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">
-                        🍽️ DÎNER DE L'EXTRÊME
+                        ­ƒì¢´©Å D├ÄNER DE L'EXTR├èME
                         <span className="ml-2 text-[10px] font-black tracking-widest text-white/70 normal-case">multi-cell</span>
                       </h2>
                       <p className="text-orange-100/70 text-sm leading-tight max-w-[800px]">
-                        Accomplissez des missions secrètes pendant le repas, mais attention à ne pas vous faire crâmer!
+                        Accomplissez des missions secr├¿tes pendant le repas, mais attention ├á ne pas vous faire cr├ómer!
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => selectGame("sabotage-silencieux")}
+                  disabled={activePlayersCount < GAME_METADATA["sabotage-silencieux"].minPlayers}
+                  className={`group relative overflow-hidden bg-gradient-to-br from-fuchsia-600 to-pink-700 p-6 rounded-2xl text-left transition-all shadow-lg shadow-fuchsia-900/20 ${
+                    activePlayersCount < GAME_METADATA["sabotage-silencieux"].minPlayers
+                      ? "opacity-50 grayscale"
+                      : "hover:scale-[1.02] active:scale-95"
+                  }`}
+                >
+                  <div className="relative z-10 flex items-start justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold text-white mb-1 uppercase tracking-wide italic">­ƒòÂ´©Å SABOTAGE SILENCIEUX</h2>
+                      <p className="text-fuchsia-100/80 text-sm leading-tight max-w-[800px]">
+                        R├®ussissez un d├®fi collectif en 2 minutes pendant quÔÇÖun saboteur secret tente de faire ├®chouer le groupe sans se faire rep├®rer.
                       </p>
                     </div>
                   </div>
@@ -517,12 +589,121 @@ export default function App() {
           )}
 
           {gameState === "mission-review" && (
-            {/* Système de triage de mission supprimé */}
+            <motion.div
+              key="mission-review"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="flex-1 flex flex-col gap-8 pt-12"
+            >
+              {missionReviewStep === "review" ? (
+                <div className="space-y-6">
+                  <div className="text-center space-y-2">
+                    <p className="text-slate-400 text-xs font-black uppercase tracking-widest">
+                      {missionReviewTotal > 0 ? `${missionReviewCurrent}/${missionReviewTotal}` : "0/0"}
+                    </p>
+                    <h2 className="text-2xl font-black">­ƒÄ» Mission g├®n├®r├®e</h2>
+                    <p className="text-slate-300 text-sm">Modifie si besoin, puis Oui/Non. ÔÇ£Termin├®ÔÇØ affiche le r├®cap.</p>
+                  </div>
+
+                  {missionHistoryIndex > 0 && (
+                    <button
+                      onClick={goToPreviousMission}
+                      className="w-full py-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold hover:bg-slate-700/60 transition"
+                    >
+                      Ô¼à´©Å Retour ├á la mission dÔÇÖavant
+                    </button>
+                  )}
+
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4">
+                    <p className="text-slate-400 text-xs uppercase tracking-widest font-black mb-2">Proposition</p>
+                    <p className="text-white font-bold">{missionGenerated}</p>
+
+                    <div className="mt-4">
+                      <p className="text-slate-400 text-xs uppercase tracking-widest font-black mb-2">Ta version (modifiable)</p>
+                      <textarea
+                        value={missionDraft}
+                        onChange={(e) => {
+                          const next = e.target.value;
+                          setMissionDraft(next);
+                          persistCurrentDraftToHistory(next);
+                        }}
+                        rows={4}
+                        className="w-full rounded-xl bg-slate-900/60 border border-slate-700/60 p-3 text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={acceptCurrentMission}
+                      className="w-full py-4 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition"
+                    >
+                      Ô£à Oui
+                    </button>
+                    <button
+                      onClick={rejectCurrentMission}
+                      className="w-full py-4 rounded-xl bg-slate-700 text-white font-bold hover:bg-slate-600 transition"
+                    >
+                      ÔØî Non
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={finishMissionReview}
+                    className="w-full py-3 rounded-xl bg-purple-600/20 border border-purple-500/30 text-purple-200 font-bold hover:bg-purple-600/30 transition"
+                  >
+                    Termin├® (voir le r├®cap) Ô£à
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="text-center space-y-2">
+                    <h2 className="text-2xl font-black">R├®capitulatif de tes missions</h2>
+                    <p className="text-slate-300 text-sm">Voici les missions que tu as gard├®es, dans lÔÇÖordre.</p>
+                  </div>
+
+                  <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4">
+                    <p className="text-slate-400 text-xs uppercase tracking-widest font-black mb-2">Format code</p>
+                    {acceptedMissions.length === 0 ? (
+                      <p className="text-slate-400 text-sm">ÔÇö</p>
+                    ) : (
+                      <pre className="text-slate-200 text-sm whitespace-pre-wrap leading-tight">
+                        {acceptedMissions
+                          .map((m) => normalizeMission(m.text))
+                          .filter(Boolean)
+                          .map((m) => `"${m}",`)
+                          .join("\n")}
+                      </pre>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setMissionReviewStep("review");
+                      if (missionGenerated.trim().length > 0 && missionDraft.trim().length === 0) {
+                        setMissionDraft(missionGenerated);
+                      }
+                    }}
+                    className="w-full py-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-200 font-bold hover:bg-slate-700/60 transition"
+                  >
+                    Continuer ├á g├®n├®rer des missions
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={resetToHome}
+                className="w-full py-4 rounded-2xl bg-purple-600/20 border border-purple-500/30 text-purple-300 font-bold uppercase tracking-widest text-xs hover:bg-purple-600/30 transition"
+              >
+                Retour au Hub ­ƒÅá
+              </button>
+            </motion.div>
           )}
 
           {gameState === "diner-extreme" && (
             <DinerExtreme
-              players={players}
+              players={activePlayers}
               onBack={resetToHome}
             />
           )}
@@ -531,7 +712,7 @@ export default function App() {
             <GameSettings
               key={activeGame}
               gameType={activeGame}
-              playersCount={players.length}
+              playersCount={activePlayersCount}
               onBack={resetToHome}
               onStart={startGame}
               initialConfig={lastGameConfigs[activeGame]}
@@ -540,31 +721,34 @@ export default function App() {
 
           {gameState === "playing" && activeGame === "trapped-round" && gameConfig && (
             <TrappedRound
-              players={players}
+              players={activePlayers}
               config={gameConfig}
+              enablePhoneVote={phoneVoteEnabled}
               onBack={resetToHome}
             />
           )}
 
           {gameState === "playing" && activeGame === "word-impostor" && gameConfig && (
             <WordImpostor
-              players={players}
+              players={activePlayers}
               config={gameConfig}
+              enablePhoneVote={phoneVoteEnabled}
               onBack={resetToHome}
             />
           )}
 
           {gameState === "playing" && activeGame === "question-impostor" && gameConfig && (
             <QuestionImpostor
-              players={players}
+              players={activePlayers}
               config={gameConfig}
+              enablePhoneVote={phoneVoteEnabled}
               onBack={resetToHome}
             />
           )}
 
           {gameState === "playing" && activeGame === "trouve-regle" && gameConfig && (
             <TrouveRegle
-              players={players}
+              players={activePlayers}
               config={gameConfig}
               onBack={resetToHome}
             />
@@ -572,7 +756,7 @@ export default function App() {
 
           {gameState === "custom-impostor" && (
             <CustomImpostor
-              players={players}
+              players={activePlayers}
               onBack={resetToHome}
             />
           )}
@@ -580,8 +764,13 @@ export default function App() {
           {gameState === "fortune-wheel" && (
             <RoueDeLaChance onBack={resetToHome} />
           )}
+
           {gameState === "team-creator" && (
-            <TeamCreator players={players} onBack={resetToHome} />
+            <TeamCreator onBack={resetToHome} players={activePlayers} />
+          )}
+
+          {gameState === "playing" && activeGame === "sabotage-silencieux" && gameConfig && (
+            <SabotageSilencieux players={activePlayers} config={gameConfig} enablePhoneVote={phoneVoteEnabled} onBack={resetToHome} />
           )}
         </AnimatePresence>
       </div>
