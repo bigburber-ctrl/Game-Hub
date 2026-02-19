@@ -1,3 +1,4 @@
 {
-  "outputDirectory": "src/dist"
+  "buildCommand": "npm --prefix utils run build",
+  "outputDirectory": "utils/dist"
 }
