@@ -14,7 +14,7 @@ import { RAW_DINER_TRI_POOL } from "./components/DinerMissionsTriPool";
 
 import { GameSettings, GameConfig } from "@/app/components/GameSettings";
 import { toast, Toaster } from "sonner";
-import { Users, ToggleLeft, ToggleRight } from "lucide-react";
+import { Gamepad2, Users, ToggleLeft, ToggleRight } from "lucide-react";
 
 type LastGameConfigs = Partial<Record<ConfigurableGameType, GameConfig>>;
 const LAST_GAME_CONFIGS_STORAGE_KEY = "gamehub_last_game_configs";
@@ -56,7 +56,7 @@ export default function App() {
   const [showAppSettings, setShowAppSettings] = useState(false);
   const [phoneVoteEnabled, setPhoneVoteEnabled] = useState<boolean>(() => {
     const saved = localStorage.getItem(PHONE_VOTE_ENABLED_STORAGE_KEY);
-    if (saved === null) return true;
+    if (saved === null) return false;
     return saved === "true";
   });
   const [activeGame, setActiveGame] = useState<ConfigurableGameType | null>(null);
@@ -431,13 +431,9 @@ export default function App() {
                 <motion.div
                   initial={{ scale: 0.8 }}
                   animate={{ scale: 1 }}
-                  className="inline-flex p-2 rounded-3xl bg-purple-600/20 text-purple-400 mb-4"
+                  className="inline-flex p-4 rounded-3xl bg-purple-600/20 text-purple-400 mb-4"
                 >
-                  <img
-                    src="/logo.svg.jpg"
-                    alt="Game Hub"
-                    className="w-16 h-16 rounded-2xl object-cover"
-                  />
+                  <Gamepad2 size={48} />
                 </motion.div>
                 <h1 className="text-4xl font-black tracking-tight text-white uppercase italic">
                   Game <span className="text-purple-500">Hub</span>
