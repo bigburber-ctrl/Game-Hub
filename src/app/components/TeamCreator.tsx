@@ -30,7 +30,6 @@ export function TeamCreator({ players, onBack }: TeamCreatorProps) {
       label: min === max ? `${n} (${min})` : `${n} (${min}-${max})`
     };
   });
-  const totalPlayers = players.length;
   const [numTeams, setNumTeams] = useState(2);
   const [playersPerTeam, setPlayersPerTeam] = useState(Math.max(1, Math.floor(totalPlayers / 2)));
   const [teams, setTeams] = useState<{ name: string; members: string[] }[]>([]);
