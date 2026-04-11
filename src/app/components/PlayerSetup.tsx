@@ -1,0 +1,431 @@
+import React, { useRef, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragCancelEvent,
+  type DragMoveEvent,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { Player } from "@/app/App";
+import { Plus, Trash2, User, ChevronLeft, Pencil, GripVertical, CircleOff, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
+
+interface PlayerSetupProps {
+  players: Player[];
+  setPlayers: React.Dispatch<React.SetStateAction<Player[]>>;
+  onBack: () => void;
+}
+
+export function PlayerSetup({ players, setPlayers, onBack }: PlayerSetupProps) {
+  const [newName, setNewName] = useState("");
+  const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
+  const [hiddenPlayerId, setHiddenPlayerId] = useState<string | null>(null);
+  const [activeOverlayWidth, setActiveOverlayWidth] = useState<number>(320);
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const rowElementRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const nameInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const resetDragTimeoutRef = useRef<number | null>(null);
+  const lastCenterYRef = useRef<number | null>(null);
+  const DIRECTION_DEADZONE_PX = 1.5;
+  const SWAP_UP_OVERLAP_RATIO = 0.55;
+  const SWAP_DOWN_OVERLAP_RATIO = 0.45;
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 2 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 50, tolerance: 10 },
+    })
+  );
+
+  const clearDragStates = (delayMs = 0) => {
+    if (resetDragTimeoutRef.current !== null) {
+      window.clearTimeout(resetDragTimeoutRef.current);
+      resetDragTimeoutRef.current = null;
+    }
+
+    if (delayMs <= 0) {
+      setActivePlayerId(null);
+      setHiddenPlayerId(null);
+      return;
+    }
+
+    resetDragTimeoutRef.current = window.setTimeout(() => {
+      setActivePlayerId(null);
+      setHiddenPlayerId(null);
+      resetDragTimeoutRef.current = null;
+    }, delayMs);
+  };
+
+  const addPlayer = () => {
+    if (!newName.trim()) return;
+    if (players.length >= 15) {
+      toast.error("Maximum 15 joueurs");
+      return;
+    }
+    const newPlayer: Player = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: newName.trim(),
+      score: 0,
+      excluded: false,
+    };
+    setPlayers([...players, newPlayer]);
+    setNewName("");
+  };
+
+  const removePlayer = (id: string) => {
+    setPlayers(players.filter((p) => p.id !== id));
+  };
+
+  const updatePlayerName = (id: string, name: string) => {
+    setPlayers(players.map((p) => (p.id === id ? { ...p, name } : p)));
+  };
+
+  const setExcluded = (id: string, excluded: boolean) => {
+    setPlayers(players.map((player) => (player.id === id ? { ...player, excluded } : player)));
+  };
+
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    const activeId = String(active.id);
+    setActivePlayerId(activeId);
+    setHiddenPlayerId(activeId);
+    lastCenterYRef.current = null;
+
+    const activeRow = document.querySelector<HTMLElement>(`[data-player-row-id="${activeId}"]`);
+    const rowWidth = activeRow?.getBoundingClientRect().width;
+    if (typeof rowWidth === "number" && rowWidth > 0) {
+      setActiveOverlayWidth(rowWidth);
+      return;
+    }
+
+    const listWidth = listContainerRef.current?.getBoundingClientRect().width;
+    if (typeof listWidth === "number" && listWidth > 0) {
+      setActiveOverlayWidth(listWidth);
+      return;
+    }
+
+    const initialWidth = active.rect.current.initial?.width;
+    if (typeof initialWidth === "number" && initialWidth > 0) {
+      setActiveOverlayWidth(initialWidth);
+    }
+  };
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    clearDragStates(120);
+    lastCenterYRef.current = null;
+    if (!over || active.id === over.id) return;
+  };
+
+  const handleDragMove = ({ active }: DragMoveEvent) => {
+    const activeId = String(active.id);
+    const translatedRect = active.rect.current.translated;
+    const currentTopY = translatedRect?.top ?? null;
+    const currentBottomY = translatedRect?.bottom ?? null;
+    const currentCenterY = translatedRect
+      ? translatedRect.top + translatedRect.height / 2
+      : null;
+
+    if (currentCenterY == null || currentTopY == null || currentBottomY == null) return;
+
+    const previousCenterY = lastCenterYRef.current;
+    lastCenterYRef.current = currentCenterY;
+    if (previousCenterY == null) return;
+
+    const movementDeltaY = currentCenterY - previousCenterY;
+    if (Math.abs(movementDeltaY) < DIRECTION_DEADZONE_PX) return;
+
+    const direction: "up" | "down" = movementDeltaY < 0 ? "up" : "down";
+
+    setPlayers((prevPlayers) => {
+      let nextPlayers = prevPlayers;
+      let activeIndex = nextPlayers.findIndex((player) => player.id === activeId);
+      if (activeIndex < 0) return prevPlayers;
+      let hasMoved = false;
+
+      if (direction === "up") {
+        while (activeIndex > 0) {
+          const upperId = nextPlayers[activeIndex - 1].id;
+          const upperRow = rowElementRefs.current[upperId];
+          if (!upperRow) break;
+          const upperRect = upperRow.getBoundingClientRect();
+          const upperTriggerY = upperRect.top + upperRect.height * SWAP_UP_OVERLAP_RATIO;
+          if (currentTopY <= upperTriggerY) {
+            nextPlayers = arrayMove(nextPlayers, activeIndex, activeIndex - 1);
+            activeIndex -= 1;
+            hasMoved = true;
+            continue;
+          }
+          break;
+        }
+      }
+
+      if (direction === "down") {
+        while (activeIndex < nextPlayers.length - 1) {
+          const lowerId = nextPlayers[activeIndex + 1].id;
+          const lowerRow = rowElementRefs.current[lowerId];
+          if (!lowerRow) break;
+          const lowerRect = lowerRow.getBoundingClientRect();
+          const lowerTriggerY = lowerRect.top + lowerRect.height * SWAP_DOWN_OVERLAP_RATIO;
+          if (currentBottomY >= lowerTriggerY) {
+            nextPlayers = arrayMove(nextPlayers, activeIndex, activeIndex + 1);
+            activeIndex += 1;
+            hasMoved = true;
+            continue;
+          }
+          break;
+        }
+      }
+
+      return hasMoved ? nextPlayers : prevPlayers;
+    });
+  };
+
+  const handleDragCancel = (_event: DragCancelEvent) => {
+    clearDragStates(0);
+    lastCenterYRef.current = null;
+  };
+
+  const activePlayer = activePlayerId
+    ? players.find((player) => player.id === activePlayerId) ?? null
+    : null;
+  const activePlayerIndex = activePlayerId
+    ? players.findIndex((player) => player.id === activePlayerId)
+    : -1;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="flex flex-col flex-1 h-full"
+    >
+      <header className="flex items-center gap-4 mb-8">
+        <button
+          onClick={onBack}
+          className="p-2 hover:bg-slate-800 rounded-full text-slate-400"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <h1 className="text-2xl font-bold uppercase tracking-tight italic">
+          Gérer les <span className="text-purple-500">Joueurs</span>
+        </h1>
+      </header>
+
+      <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 mb-6">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Nom du joueur..."
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addPlayer()}
+            className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+          />
+          <button
+            onClick={addPlayer}
+            className="bg-purple-600 hover:bg-purple-500 text-white p-3 rounded-xl transition-colors active:scale-95"
+          >
+            <Plus size={24} />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pr-1 max-h-[60vh]">
+        {players.length === 0 ? (
+          <div className="text-center py-12 text-slate-500">
+            <User size={48} className="mx-auto mb-4 opacity-20" />
+            <p>Ajoutez au moins 1 joueurs pour commencer</p>
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            modifiers={[restrictToVerticalAxis]}
+            onDragStart={handleDragStart}
+            onDragMove={handleDragMove}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <div ref={listContainerRef} className="flex flex-col gap-3 w-full">
+              {players.map((player, index) => (
+                <PlayerRow
+                  key={player.id}
+                  player={player}
+                  index={index}
+                  isHidden={hiddenPlayerId === player.id}
+                  rowElementRefs={rowElementRefs}
+                  nameInputRefs={nameInputRefs}
+                  removePlayer={removePlayer}
+                  updatePlayerName={updatePlayerName}
+                  setExcluded={setExcluded}
+                />
+              ))}
+            </div>
+
+            <DragOverlay>
+              {activePlayer ? (
+                <PlayerRowPreview
+                  player={activePlayer}
+                  index={activePlayerIndex}
+                  width={activeOverlayWidth}
+                />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
+      </div>
+
+      <div className="mt-8 pt-6 border-t border-slate-800">
+        <button
+          onClick={onBack}
+          disabled={players.length < 1}
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-lg hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:scale-100"
+        >
+          Valider la Liste
+        </button>
+        <p className="text-center text-slate-500 text-xs mt-4">
+          Les joueurs sont automatiquement sauvegardés sur cet appareil.
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+interface PlayerRowProps {
+  player: Player;
+  index: number;
+  isHidden: boolean;
+  rowElementRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
+  nameInputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
+  removePlayer: (id: string) => void;
+  updatePlayerName: (id: string, name: string) => void;
+  setExcluded: (id: string, excluded: boolean) => void;
+}
+
+function PlayerRow({
+  player,
+  index,
+  isHidden,
+  rowElementRefs,
+  nameInputRefs,
+  removePlayer,
+  updatePlayerName,
+  setExcluded,
+}: PlayerRowProps) {
+  const { setNodeRef: setDropRef } = useDroppable({ id: player.id });
+  const { attributes, listeners, setNodeRef: setDragRef } = useDraggable({ id: player.id });
+
+  const setRowRefs = (element: HTMLDivElement | null) => {
+    rowElementRefs.current[player.id] = element;
+    setDropRef(element);
+    setDragRef(element);
+  };
+
+  return (
+    <motion.div
+      ref={setRowRefs}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`group w-full flex items-center gap-2 sm:gap-3 bg-slate-800 p-2 pl-3 pr-2 sm:pl-4 rounded-xl border border-slate-700 hover:border-slate-600 transition-all shadow-sm ${isHidden ? "invisible" : "visible"}`}
+      data-player-row-id={player.id}
+    >
+      <span className="text-slate-500 font-mono text-sm w-4 shrink-0">{index + 1}</span>
+      <button
+        type="button"
+        onPointerDown={(event) => {
+          event.preventDefault();
+        }}
+        {...attributes}
+        {...listeners}
+        className="p-1 text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing touch-none shrink-0"
+        aria-label={`Déplacer ${player.name}`}
+      >
+        <GripVertical size={16} />
+      </button>
+      <button
+        onClick={() => setExcluded(player.id, !player.excluded)}
+        className={`p-1 rounded-md shrink-0 transition-colors ${
+          player.excluded ? "text-emerald-400 hover:text-emerald-300" : "text-slate-500 hover:text-slate-300"
+        }`}
+        aria-label={player.excluded ? `Réactiver ${player.name}` : `Exclure temporairement ${player.name}`}
+      >
+        {player.excluded ? <RotateCcw size={16} /> : <CircleOff size={16} />}
+      </button>
+      <input
+        type="text"
+        value={player.name}
+        ref={(element) => {
+          nameInputRefs.current[player.id] = element;
+        }}
+        onChange={(e) => updatePlayerName(player.id, e.target.value)}
+        className={`flex-1 min-w-0 bg-transparent border-none p-0 focus:ring-0 font-medium ${
+          player.excluded ? "text-slate-500 line-through" : "text-white"
+        }`}
+      />
+      <button
+        onClick={() => nameInputRefs.current[player.id]?.focus()}
+        className="p-2 text-slate-500 hover:text-sky-400 transition-colors shrink-0"
+        aria-label={`Modifier le nom de ${player.name}`}
+      >
+        <Pencil size={16} />
+      </button>
+      <button
+        onClick={() => removePlayer(player.id)}
+        className="p-2 text-slate-500 hover:text-red-400 transition-colors shrink-0"
+      >
+        <Trash2 size={18} />
+      </button>
+    </motion.div>
+  );
+}
+
+interface PlayerRowPreviewProps {
+  player: Player;
+  index: number;
+  width: number;
+}
+
+function PlayerRowPreview({ player, index, width }: PlayerRowPreviewProps) {
+  return (
+    <div
+      className="w-full flex items-center gap-2 sm:gap-3 bg-slate-800 p-2 pl-3 pr-2 sm:pl-4 rounded-xl border border-slate-700 shadow-2xl"
+      style={{ width: `${width}px`, minWidth: `${width}px` }}
+    >
+      <span className="text-slate-500 font-mono text-sm w-4 shrink-0">{Math.max(1, index + 1)}</span>
+      <span className="p-1 text-slate-500 shrink-0">
+        <GripVertical size={16} />
+      </span>
+      <span
+        className={`p-1 rounded-md shrink-0 ${
+          player.excluded ? "text-emerald-400" : "text-slate-500"
+        }`}
+      >
+        {player.excluded ? <RotateCcw size={16} /> : <CircleOff size={16} />}
+      </span>
+      <span
+        className={`flex-1 font-medium truncate ${
+          player.excluded ? "text-slate-500 line-through" : "text-white"
+        }`}
+      >
+        {player.name}
+      </span>
+      <span className="p-2 text-slate-500 shrink-0">
+        <Pencil size={16} />
+      </span>
+      <span className="p-2 text-slate-500 shrink-0">
+        <Trash2 size={18} />
+      </span>
+    </div>
+  );
+}

@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start Localhost",
+			"type": "shell",
+			"command": "if (Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue) { Write-Host 'Localhost already running on 127.0.0.1:5173' } else { Set-Location utils; npm run dev }",
+			"isBackground": true
+		}
+	]
+}
